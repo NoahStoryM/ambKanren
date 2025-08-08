@@ -15,9 +15,8 @@
 
 (: walk (→ Term Substitution Term))
 (define (walk u s)
-  (or (and (var? u)
-           (hash-has-key? s u)
-           (walk (hash-ref s u) s))
+  (if (and (var? u) (hash-has-key? s u))
+      (walk (hash-ref s u) s)
       u))
 
 (: ext-s (→ Var Term Substitution Substitution))
