@@ -14,7 +14,10 @@
 (define empty-s (state #hash() 0))
 
 (: walk (→ Term Substitution Term))
-(define (walk u s) (or (and (var? u) (hash-ref s u #f)) u))
+(define (walk u s)
+  (or (and (var? u)
+           (walk (hash-ref s u #f) s))
+      u))
 
 (: ext-s (→ Var Term Substitution Substitution))
 (define (ext-s x v s) (hash-set s x v))
