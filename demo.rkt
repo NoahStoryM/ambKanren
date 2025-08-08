@@ -38,12 +38,12 @@
   (if pr (walk (cdr pr) s) u))
 
 (: walk* (→ Term Substitution Term))
-(define (walk* v s)
-  (let ([v (walk v s)])
-    (if (pair? v)
-        (cons (walk* (car v) s)
-              (walk* (cdr v) s))
-        v)))
+(define (walk* u s)
+  (let ([u (walk u s)])
+    (if (pair? u)
+        (cons (walk* (car u) s)
+              (walk* (cdr u) s))
+        u)))
 
 
 (: unify (→ Term Term Substitution Substitution))
