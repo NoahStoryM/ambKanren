@@ -10,30 +10,60 @@
 (: var=? (→ Var Var Boolean))
 (define (var=? x1 x2) (= (var-counter x1) (var-counter x2)))
 
-(: empty-s State)
-(define empty-s (state #hash() 0))
+(: empty-s Substitution)
+(: ext-s (→ Var Term Substitution Substitution))
+(: size-s (→ Substitution Index))
+(: in-s? (→ Var Substitution Boolean))
+(: apply-s (→ Substitution Var Term))
+(define empty-s #hash())
+(define (ext-s x v s) (hash-set s x v))
+(define (size-s s) (hash-count s))
+(define (in-s? v s) (hash-has-key? s v))
+(define (apply-s s v) (hash-ref s v))
+
 
 (: walk (→ Term Substitution Term))
-(define (walk u s)
-  (if (and (var? u) (hash-has-key? s u))
-      (walk (hash-ref s u) s)
-      u))
+(define (walk v s)
+  (if (and (var? v) (in-s? v s))
+      (walk (apply-s s v) s)
+      v))
 
-(: ext-s (→ Var Term Substitution Substitution))
-(define (ext-s x v s) (hash-set s x v))
+(: walk* (→ Term Substitution Term))
+(define (walk* v s)
+  (let ([v (walk v s)])
+    (if (pair? v)
+        (cons (walk* (car v) s)
+              (walk* (cdr v) s))
+        v)))
 
 
 (: unify (→ Term Term Substitution Substitution))
-(define (unify u v s)
-  (let ([u (walk u s)] [v (walk v s)])
+(define (unify v w s)
+  (let ([v (walk v s)] [w (walk w s)])
     (cond
-      [(and (var? u) (var? v) (var=? u v)) s]
-      [(var? u) (ext-s u v s)]
-      [(var? v) (ext-s v u s)]
-      [(and (pair? u) (pair? v))
-       (unify (cdr u) (cdr v) (unify (car u) (car v) s))]
-      [(eqv? u v) s]
+      [(and (var? v) (var? w) (var=? v w)) s]
+      [(var? v) (ext-s v w s)]
+      [(var? w) (ext-s w v s)]
+      [(and (pair? v) (pair? w))
+       (unify (cdr v) (cdr w) (unify (car v) (car w) s))]
+      [(equal? v w) s]
       [else (amb)])))
+
+
+(: reify-name (→ Index Symbol))
+(define (reify-name n)
+  (string->symbol (format "_.~a" n)))
+
+(: reify-s (→ Term Substitution Substitution))
+(define (reify-s v s)
+  (let ([v (walk v s)])
+    (cond
+      [(var? v) (ext-s v (reify-name (size-s s)) s)]
+      [(pair? v) (reify-s (cdr v) (reify-s (car v) s))]
+      [else s])))
+
+(: reify (→ Term Term))
+(define (reify v) (walk* v (reify-s v empty-s)))
 
 
 (: fail Goal)

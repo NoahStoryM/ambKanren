@@ -16,9 +16,9 @@
 
 
 (: == (→ Term Term Goal))
-(define ((== u v) s/c)
+(define ((== v w) s/c)
   (match-define (state s c) s/c)
-  (state (unify u v s) c))
+  (state (unify v w s) c))
 
 
 (define-syntax fresh
@@ -35,9 +35,13 @@
 
 
 (define-syntax-rule (run n^ (x) g* ...)
-  (let ([n : Real n^] [g (fresh (x) g* ...)])
+  (let ([n : Real n^]
+        [x (var 0)]
+        [g (fresh (x) g* ...)]
+        [s/c (state empty-s 0)])
     (for/list : (Listof Term)
-              ([t (in-amb (walk (var 0) (state-substitution (g empty-s))))]
+              ([s/c (in-amb (g s/c))]
                [_ (in-range n)])
-      t)))
+      (match-define (state s c) s/c)
+      (reify (walk x s)))))
 (define-syntax-rule (run* (x) g* ...) (run +inf.0 (x) g* ...))
