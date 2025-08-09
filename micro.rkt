@@ -1,11 +1,12 @@
 #lang typed/racket/base
 
-(require "types.rkt"
+(require "private/types.rkt"
          racket/match
          racket/sequence
          typed/amb)
 
-(provide (all-defined-out) (rename-out [== ≡]))
+(provide (all-from-out "private/types.rkt")
+         (all-defined-out) )
 
 (: var=? (→ Var Var Boolean))
 (define (var=? x1 x2) (= (var-counter x1) (var-counter x2)))
@@ -119,12 +120,3 @@
   (match-define (state s c) s/c)
   (define g (f (var c)))
   (g (state s (add1 c))))
-
-
-(define-syntax cond-aux
-  (syntax-rules (else)
-    [(_ disj) (disj)]
-    [(_ disj [else g ...]) (conj g ...)]
-    [(_ disj [g ...]) (conj g ...)]
-    [(_ disj [g ...] c ...)
-     (disj (conj g ...) (cond-aux disj c ...))]))

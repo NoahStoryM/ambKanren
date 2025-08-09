@@ -1,4 +1,5 @@
 #lang typed/racket/base
 
-(require "base.rkt")
+(require "micro.rkt"
+         "base.rkt")
 (provide (all-from-out "base.rkt"))
