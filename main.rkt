@@ -19,7 +19,7 @@
               ([s/c (in-amb (g s/c))]
                [_ (in-range n)])
       (match-define (state s c) s/c)
-      (reify (walk x s)))))
+      (reify (walk* x s)))))
 (define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
 
 
