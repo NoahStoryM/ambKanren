@@ -26,15 +26,14 @@
 
 (: unify (→ Term Term Substitution Substitution))
 (define (unify v w s)
-  (let ([v (walk v s)] [w (walk w s)])
-    (cond
-      [(and (var? v) (var? w) (var=? v w)) s]
-      [(var? v) (ext-s v w s)]
-      [(var? w) (ext-s w v s)]
-      [(and (pair? v) (pair? w))
-       (unify (cdr v) (cdr w) (unify (car v) (car w) s))]
-      [(equal? v w) s]
-      [else (amb)])))
+  (match* ((walk v s) (walk w s))
+    [((? var? v) (? var? w)) #:when (var=? v w) s]
+    [((? var? v) w) (ext-s v w s)]
+    [(v (? var? w)) (ext-s w v s)]
+    [((cons v0 v1) (cons w0 w1))
+     (unify v1 w1 (unify v0 w0 s))]
+    [(v w) #:when (equal? v w) s]
+    [(_ _) (amb)]))
 
 
 (: fail Goal)

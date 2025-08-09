@@ -7,7 +7,7 @@
 
 
 (: var=? (→ Var Var Boolean))
-(define (var=? x1 x2) (= (var-counter x1) (var-counter x2)))
+(define (var=? x1 x2) (equal? x1 x2))
 
 
 (: empty-s Substitution)

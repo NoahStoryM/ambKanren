@@ -10,11 +10,11 @@
 
 (: walk* (→ Term Substitution Term))
 (define (walk* v s)
-  (let ([v (walk v s)])
-    (if (pair? v)
-        (cons (walk* (car v) s)
-              (walk* (cdr v) s))
-        v)))
+  (match (walk v s)
+    [(cons v0 v1)
+     (cons (walk* v0 s)
+           (walk* v1 s))]
+    [v v]))
 
 
 (: reify-name (→ Index Symbol))
@@ -23,11 +23,10 @@
 
 (: reify-s (→ Term Substitution Substitution))
 (define (reify-s v s)
-  (let ([v (walk v s)])
-    (cond
-      [(var? v) (ext-s v (reify-name (size-s s)) s)]
-      [(pair? v) (reify-s (cdr v) (reify-s (car v) s))]
-      [else s])))
+  (match (walk v s)
+    [(? var? v) (ext-s v (reify-name (size-s s)) s)]
+    [(cons v0 v1) (reify-s v1 (reify-s v0 s))]
+    [_ s]))
 
 (: reify (→ Term Term))
 (define (reify v) (walk* v (reify-s v empty-s)))
