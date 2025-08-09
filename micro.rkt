@@ -70,7 +70,7 @@
 (: fail Goal)
 (: succeed Goal)
 (define (fail _) (amb))
-(define (succeed s/c) s/c)
+(define (succeed s/c) (amb s/c))
 
 
 (: disje (→ Goal * Goal))
