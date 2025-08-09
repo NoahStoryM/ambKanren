@@ -10,27 +10,11 @@
          (all-defined-out))
 
 
-(: var=? (→ Var Var Boolean))
-(define (var=? x1 x2) (= (var-counter x1) (var-counter x2)))
-
-
 (: walk (→ Term Substitution Term))
 (define (walk v s)
   (if (and (var? v) (in-s? v s))
       (walk (apply-s s v) s)
       v))
-
-
-(: empty-s Substitution)
-(: ext-s (→ Var Term Substitution Substitution))
-(: size-s (→ Substitution Index))
-(: in-s? (→ Var Substitution Boolean))
-(: apply-s (→ Substitution Var Term))
-(define empty-s #hash())
-(define (ext-s x v s) (hash-set s x v))
-(define (size-s s) (hash-count s))
-(define (in-s? v s) (hash-has-key? s v))
-(define (apply-s s v) (hash-ref s v))
 
 
 (: == (→ Term Term Goal))
@@ -78,7 +62,7 @@
   (match (remq* (list succeed) g*)
     ['() succeed]
     [`(,g) g]
-    [g* (λ (s/c) (for/fold ([s/c s/c]) ([g (in-list g*)]) (g s/c)))]))
+    [g* (λ (s/c) (foldl apply-goal s/c g*))]))
 
 
 (: call/fresh (→ (→ Var Goal) Goal))
