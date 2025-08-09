@@ -8,7 +8,7 @@
          fail succeed
          == (rename-out [== ≡])
          fresh
-         conde ife)
+         cond-aux conde ife)
 
 
 (: == (→ Term Term Goal))
