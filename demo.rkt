@@ -85,7 +85,7 @@
 (define list->amb
   (match-λ
     ['() (amb)]
-    [`(,a) a]
+    [`(,a) (amb a)]
     [`(,a . ,a*) (amb a (list->amb a*))]))
 
 (: apply-goal (→ Goal State State))
@@ -100,7 +100,7 @@
 (: fail Goal)
 (: succeed Goal)
 (define (fail _) (amb))
-(define (succeed s/c) s/c)
+(define (succeed s/c) (amb s/c))
 
 (: == (→ Term Term Goal))
 (define ((== u v) s/c)
