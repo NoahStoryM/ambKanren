@@ -5,7 +5,9 @@
 (require racket/match typed/amb)
 (provide (all-defined-out))
 
-(define-type Term (∪ Boolean Complex Char Bytes String Keyword Null Symbol Var (Pair Term Term)))
+(define-type Term
+  (∪ Boolean Complex Char Bytes String Keyword Null Symbol
+     Var (Pair Term Term)))
 (define-type Substitution (Listof (Pair Var Term)))
 (define-type Goal (→ State State))
 
