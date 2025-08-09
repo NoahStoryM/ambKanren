@@ -2,7 +2,6 @@
 
 (require "micro.rkt"
          (except-in racket/match ==)
-         racket/sequence
          typed/amb)
 
 (provide (all-from-out "micro.rkt")
@@ -44,7 +43,6 @@
      (λ (s/c)
        (define s*
          (for/vector #:length len
-                     #:fill empty-sequence
                      ([g (in-list g*)])
                      : (Sequenceof State)
            (in-amb/do (g s/c))))
