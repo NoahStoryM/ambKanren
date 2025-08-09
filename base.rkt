@@ -35,7 +35,7 @@
 
 
 (define-syntax-rule (run n^ (x) g* ...)
-  (let ([n : Real n^]
+  (let ([n : Real (or n^ +inf.0)]
         [x (var 0)]
         [g (fresh (x) g* ...)]
         [s/c (state empty-s 0)])
@@ -44,4 +44,4 @@
                [_ (in-range n)])
       (match-define (state s c) s/c)
       (reify (walk x s)))))
-(define-syntax-rule (run* (x) g* ...) (run +inf.0 (x) g* ...))
+(define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
