@@ -3,7 +3,7 @@
 (provide (all-defined-out))
 
 (define-type Term
-  (∪ Boolean Complex Char Bytes String Keyword Null Symbol
+  (∪ Boolean Number Char Bytes String Keyword Null Symbol
      Var (Pair Term Term)))
 
 (struct var
