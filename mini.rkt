@@ -43,7 +43,8 @@
      (define len (length g*))
      (λ (s/c)
        (define s*
-         (for/vector #:length len #:fill empty-sequence
+         (for/vector #:length len
+                     #:fill empty-sequence
                      ([g (in-list g*)])
                      : (Sequenceof State)
            (in-amb/do (g s/c))))
