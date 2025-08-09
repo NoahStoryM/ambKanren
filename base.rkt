@@ -10,7 +10,6 @@
          ==
          fresh
          conde ife
-         condi ifi
          run run*
          (rename-out [== ≡] [run* run∞]))
 
@@ -35,10 +34,7 @@
     [(_ disj [g ...] c ...)
      (disj (conj g ...) (cond-aux disj c ...))]))
 (define-syntax-rule (conde c ...) (cond-aux disje c ...))
-(define-syntax-rule (condi c ...) (cond-aux disji c ...))
-
 (define-syntax-rule (ife g0 g1 g2) (conde [g0 g1] [else g2]))
-(define-syntax-rule (ifi g0 g1 g2) (condi [g0 g1] [else g2]))
 
 
 (define-syntax-rule (run n^ (x) g* ...)

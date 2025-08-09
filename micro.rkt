@@ -8,6 +8,7 @@
 (provide (all-from-out "private/types.rkt")
          (all-defined-out) )
 
+
 (: var=? (→ Var Var Boolean))
 (define (var=? x1 x2) (= (var-counter x1) (var-counter x2)))
 
