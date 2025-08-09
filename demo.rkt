@@ -1,3 +1,5 @@
+;; Jason Hemann and Dan Friedman
+;; microKanren, final implementation from paper
 #lang typed/racket/base
 
 (require racket/match typed/amb)
