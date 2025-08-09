@@ -1,7 +1,7 @@
 #lang typed/racket/base
 
 (require "private/types.rkt"
-         "micro.rkt"
+         "mini.rkt"
          racket/match
          typed/amb)
 
