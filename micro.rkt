@@ -2,16 +2,24 @@
 ;; microKanren, final implementation from paper
 #lang typed/racket/base
 
-(require "private/types.rkt"
+(require "nano.rkt"
          racket/match
          typed/amb)
 
-(provide (all-from-out "private/types.rkt")
-         (all-defined-out) )
+(provide (all-from-out "nano.rkt")
+         (all-defined-out))
 
 
 (: var=? (→ Var Var Boolean))
 (define (var=? x1 x2) (= (var-counter x1) (var-counter x2)))
+
+
+(: walk (→ Term Substitution Term))
+(define (walk v s)
+  (if (and (var? v) (in-s? v s))
+      (walk (apply-s s v) s)
+      v))
+
 
 (: empty-s Substitution)
 (: ext-s (→ Var Term Substitution Substitution))
@@ -25,11 +33,11 @@
 (define (apply-s s v) (hash-ref s v))
 
 
-(: walk (→ Term Substitution Term))
-(define (walk v s)
-  (if (and (var? v) (in-s? v s))
-      (walk (apply-s s v) s)
-      v))
+(: == (→ Term Term Goal))
+(define ((== v w) s/c)
+  (match-define (state s c) s/c)
+  (state (unify v w s) c))
+
 
 
 (: unify (→ Term Term Substitution Substitution))

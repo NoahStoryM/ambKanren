@@ -1,7 +1,7 @@
 #lang typed/racket/base
 
 (require "micro.rkt"
-         racket/match
+         (except-in racket/match ==)
          racket/sequence
          typed/amb)
 

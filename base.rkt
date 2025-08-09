@@ -1,20 +1,13 @@
 #lang typed/racket/base
 
-(require "private/types.rkt"
-         "micro.rkt"
+(require "micro.rkt"
          (except-in racket/match ==))
 
-(provide (all-from-out "private/types.rkt")
+(provide (all-from-out "micro.rkt")
          fail succeed
          == (rename-out [== ≡])
          fresh
          cond-aux conde ife)
-
-
-(: == (→ Term Term Goal))
-(define ((== v w) s/c)
-  (match-define (state s c) s/c)
-  (state (unify v w s) c))
 
 
 (define-syntax fresh
