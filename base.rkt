@@ -1,17 +1,14 @@
 #lang typed/racket/base
 
 (require "private/types.rkt"
-         "mini.rkt"
-         racket/match
-         typed/amb)
+         "micro.rkt"
+         (except-in racket/match ==))
 
 (provide (all-from-out "private/types.rkt")
          fail succeed
-         ==
+         == (rename-out [== ≡])
          fresh
-         conde ife
-         run run*
-         (rename-out [== ≡] [run* run∞]))
+         conde ife)
 
 
 (: == (→ Term Term Goal))
@@ -35,16 +32,3 @@
      (disj (conj g ...) (cond-aux disj c ...))]))
 (define-syntax-rule (conde c ...) (cond-aux disje c ...))
 (define-syntax-rule (ife g0 g1 g2) (conde [g0 g1] [else g2]))
-
-
-(define-syntax-rule (run n^ (x) g* ...)
-  (let ([n : Real (or n^ +inf.0)]
-        [x (var 0)]
-        [g (fresh (x) g* ...)]
-        [s/c (state empty-s 0)])
-    (for/list : (Listof Term)
-              ([s/c (in-amb (g s/c))]
-               [_ (in-range n)])
-      (match-define (state s c) s/c)
-      (reify (walk x s)))))
-(define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
