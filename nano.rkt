@@ -1,9 +1,15 @@
 #lang typed/racket/base
 
-(require "types.rkt")
+(require "types.rkt"
+         typed/amb)
 
 (provide (all-from-out "types.rkt")
          (all-defined-out))
+
+
+(: list->amb (∀ (a) (→ (Listof a) a)))
+(define (list->amb a*)
+  (for/amb : a #:length (length a*) #:fill (amb) ([a (in-list a*)]) a))
 
 
 (: var=? (→ Var Var Boolean))

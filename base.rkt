@@ -5,9 +5,13 @@
 
 (provide (all-from-out "micro.rkt")
          fail succeed
-         == (rename-out [== ≡])
+         ==
          fresh
-         cond-aux conde ife)
+         cond-aux conde ife
+         (rename-out
+          [fail F]
+          [succeed S]
+          [== ≡]))
 
 
 (define-syntax fresh
