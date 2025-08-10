@@ -6,6 +6,7 @@
   (namespace-require 'typed/racket/base)
   (namespace-require "../../milli.rkt")
   (namespace-require "../../main.rkt")
+  (namespace-require "../../arith.rkt")
   (namespace-require '(all-except typed/rackunit fail))
   (load "ch1.rktl")
   (load "ch2.rktl"))
