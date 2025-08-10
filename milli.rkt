@@ -43,11 +43,18 @@
        (define s*
          (for/vector #:length len
                      ([g (in-list g*)])
-                     : (Sequenceof State)
+                     : (Option (Sequenceof State))
            (in-amb/do (g s/c))))
-       (let loop ([i : Natural 0])
-         (define s (vector-ref s* i))
-         (define s/c
-           (or (for/or : (Option State) ([s/c : State s]) s/c)
-               (amb)))
-         (amb s/c (loop (if (= (- len i) 1) 0 (add1 i))))))]))
+       (let loop ([i : Natural 0] [j : Natural 0])
+         (if (= j len)
+             (amb)
+             (let ([i (if (= (- len i) 1) 0 (add1 i))]
+                   [s (vector-ref s* i)])
+               (cond
+                 [(not s)
+                  (loop i j)]
+                 [(for/or : (Option State) ([s/c : State s]) s/c)
+                  => (λ (s/c) (amb s/c (loop i j)))]
+                 [else
+                  (vector-set! s* i #f)
+                  (loop i (add1 j))])))))]))
