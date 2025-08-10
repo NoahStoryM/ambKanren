@@ -9,7 +9,7 @@
 
 (: list->amb (∀ (a) (→ (Listof a) a)))
 (define (list->amb a*)
-  (for/amb : a #:length (length a*) #:fill (amb) ([a (in-list a*)]) a))
+  (for/amb : a #:length (length a*) ([a (in-list a*)]) a))
 
 
 (: var=? (→ Var Var Boolean))
