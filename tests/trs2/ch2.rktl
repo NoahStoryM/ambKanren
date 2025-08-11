@@ -67,3 +67,90 @@
  (run* (l)
    (conso '(a b c) '(d e) l))
  '(((a b c) d e)))
+(check-equal?
+ (run* (x)
+   (conso x '(a b c) '(d a b c)))
+ '(d))
+(check-equal?
+ (run* (r)
+   (fresh (x y z)
+     (== `(e a d ,x) r)
+     (conso y `(a ,z c) r)))
+ '((e a d c)))
+(check-equal?
+ (run* (x)
+   (conso x `(a ,x c) `(d a ,x c)))
+ '(d))
+(check-equal?
+ (run* (l)
+   (fresh (x)
+     (== `(d a ,x c) l)
+     (conso x `(a ,x c) l)))
+ '((d a d c)))
+(check-equal?
+ (run* (l)
+   (fresh (x)
+     (conso x `(a ,x c) l)
+     (== `(d a ,x c) l)))
+ '((d a d c)))
+
+(check-equal?
+ (run* (l)
+   (fresh (d x y w s)
+     (conso w '(a n s) s)
+     (cdro l s)
+     (caro l x)
+     (== 'b x)
+     (cdro l d)
+     (caro d y)
+     (== 'e y)))
+ '((b e a n s)))
+
+(check-equal?
+ (run* (q)
+   (nullo '(grape raisin pear))
+   (== #t q))
+ '())
+(check-equal?
+ (run* (q)
+   (nullo '())
+   (== #t q))
+ '(#t))
+(check-equal?
+ (run* (x)
+   (nullo x))
+ '(()))
+
+(check-equal?
+ (run* (q)
+   (eqo 'pear 'plum)
+   (== #t q))
+ '())
+(check-equal?
+ (run* (r)
+   (fresh (x y)
+     (== (cons x (cons y 'salad)) r)))
+ '((_.0 _.1 . salad)))
+(check-equal?
+ (run* (q)
+   (pairo (cons q q))
+   (== #t q))
+ '(#t))
+(check-equal?
+ (run* (q)
+   (pairo '())
+   (== #t q))
+ '())
+(check-equal?
+ (run* (q)
+   (pairo 'pair)
+   (== #t q))
+ '())
+(check-equal?
+ (run* (x)
+   (pairo x))
+ '((_.0 . _.1)))
+(check-equal?
+ (run* (r)
+   (pairo (cons r 'pear)))
+ '(_.0))
