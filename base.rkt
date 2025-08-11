@@ -9,9 +9,12 @@
          fresh
          cond-aux conde ife
          (rename-out
-          [fail F]
-          [succeed S]
-          [== ≡]))
+          [succeed ⊤]
+          [fail ⊥]
+          [== ≡]
+          [fresh ∃]
+          [disje ∨]
+          [conj ∧]))
 
 
 (define-syntax fresh
