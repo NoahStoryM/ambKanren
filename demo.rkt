@@ -111,10 +111,12 @@
 
 (: conj (→ Goal * Goal))
 (define (conj . g*)
-  (match (remq* (list succeed) g*)
-    ['() succeed]
-    [`(,g) g]
-    [g* (λ (s/c) (foldl apply-goal s/c g*))]))
+  (if (memq fail g*)
+      fail
+      (match (remq* (list succeed) g*)
+        ['() succeed]
+        [`(,g) g]
+        [g* (λ (s/c) (foldl apply-goal s/c g*))])))
 
 
 (: == (→ Term Term Goal))
