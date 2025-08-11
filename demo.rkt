@@ -5,6 +5,7 @@
 (require racket/match typed/amb)
 (provide (all-defined-out))
 
+
 (define-type Term
   (∪ Boolean Number Char Bytes String Keyword Null Symbol
      Var (Pair Term Term)))
@@ -85,26 +86,36 @@
   (define g (f (var c)))
   (g (state s (add1 c))))
 
+
+(: fail Goal)
+(: succeed Goal)
+(define (fail _) (amb))
+(define (succeed s/c) (amb s/c))
+
 (: list->amb (∀ (a) (→ (Listof a) a)))
 (define list->amb
   (match-λ
     ['() (amb)]
-    [`(,a) (amb a)]
+    [`(,a) a]
     [`(,a . ,a*) (amb a (list->amb a*))]))
 
 (: apply-goal (→ Goal State State))
 (define (apply-goal g s/c) (g s/c))
 
 (: disj (→ Goal * Goal))
+(define (disj . g*)
+  (match (remq* (list fail) g*)
+    ['() fail]
+    [`(,g) g]
+    [g* (λ (s/c) ((list->amb g*) s/c))]))
+
 (: conj (→ Goal * Goal))
-(define ((disj . g*) s/c) ((list->amb g*) s/c))
-(define ((conj . g*) s/c) (foldl apply-goal s/c g*))
+(define (conj . g*)
+  (match (remq* (list succeed) g*)
+    ['() succeed]
+    [`(,g) g]
+    [g* (λ (s/c) (foldl apply-goal s/c g*))]))
 
-
-(: fail Goal)
-(: succeed Goal)
-(define (fail _) (amb))
-(define (succeed s/c) (amb s/c))
 
 (: == (→ Term Term Goal))
 (define ((== u v) s/c)
