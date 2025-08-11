@@ -9,6 +9,8 @@
      (== (let ([x v] [y w]) `(,x ,y)) r)))
  '((_.0 _.1)))
 
+(: caro (→ Term Term Goal))
+(define (caro p a) (fresh (d) (== (cons a d) p)))
 (check-equal?
  (run* (r)
    (caro '(a c o r n) r))
@@ -32,6 +34,8 @@
      (== (cons x y) r)))
  '((grape a)))
 
+(: cdro (→ Term Term Goal))
+(define (cdro p d) (fresh (a) (== (cons a d) p)))
 (check-equal?
  (run* (r)
    (fresh (v)
@@ -55,7 +59,6 @@
  (run* (x)
    (cdro '(c o r n) `(,x r n)))
  '(o))
-
 (check-equal?
  (run* (l)
    (fresh (x)
@@ -63,6 +66,9 @@
      (caro l x)
      (== 'a x)))
  '((a c o r n)))
+
+(: conso (→ Term Term Term Goal))
+(define (conso a d p) (== (cons a d) p))
 (check-equal?
  (run* (l)
    (conso '(a b c) '(d e) l))
@@ -106,6 +112,8 @@
      (== 'e y)))
  '((b e a n s)))
 
+(: nullo (→ Term Goal))
+(define (nullo x) (== '() x))
 (check-equal?
  (run* (q)
    (nullo '(grape raisin pear))
@@ -121,6 +129,8 @@
    (nullo x))
  '(()))
 
+(: eqo (→ Term Term Goal))
+(define (eqo x y) (== x y))
 (check-equal?
  (run* (q)
    (eqo 'pear 'plum)
@@ -131,6 +141,9 @@
    (fresh (x y)
      (== (cons x (cons y 'salad)) r)))
  '((_.0 _.1 . salad)))
+
+(: pairo (→ Term Goal))
+(define (pairo p) (fresh (a d) (== (cons a d) p)))
 (check-equal?
  (run* (q)
    (pairo (cons q q))
