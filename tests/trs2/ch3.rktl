@@ -118,6 +118,9 @@
    ((g g) (e e) (_.0 _.0) (_.1 _.1))
    ((g g) (e e) (_.0 _.0) (_.1 _.1) (_.2 _.2))))
 
+(: eq-car? (→ (Pair Term Term) Term Boolean))
+(define (eq-car? l x) (eq? (car l) x))
+
 (: eq-caro (→ Term Term Goal))
 (define (eq-caro l x) (caro l x))
 

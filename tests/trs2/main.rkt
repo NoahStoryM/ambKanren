@@ -8,4 +8,5 @@
   (namespace-require '(all-except typed/rackunit fail))
   (load "ch1.rktl")
   (load "ch2.rktl")
-  (load "ch3.rktl"))
+  (load "ch3.rktl")
+  (load "ch4.rktl"))
