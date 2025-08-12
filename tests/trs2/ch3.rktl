@@ -124,6 +124,7 @@
 (: membero (→ Term Term Goal))
 (define (membero x l)
   (conde
+    [(nullo l) fail]
     [(eq-caro l x) succeed]
     [else
      (fresh (d)
@@ -193,6 +194,7 @@
 (: pmembero1 (→ Term Term Goal))
 (define (pmembero1 x l)
   (conde
+    [(nullo l) fail]
     [(eq-caro l x) (cdro l '())]
     [else
      (fresh (d)
@@ -210,6 +212,7 @@
 (: pmembero2 (→ Term Term Goal))
 (define (pmembero2 x l)
   (conde
+    [(nullo l) fail]
     [(eq-caro l x) (cdro l '())]
     [(eq-caro l x) succeed]
     [else
@@ -225,6 +228,7 @@
 (: pmembero3 (→ Term Term Goal))
 (define (pmembero3 x l)
   (conde
+    [(nullo l) fail]
     [(eq-caro l x) (cdro l '())]
     [(eq-caro l x)
      (fresh (a d)
@@ -257,6 +261,7 @@
 (: pmembero4 (→ Term Term Goal))
 (define (pmembero4 x l)
   (conde
+    [(nullo l) fail]
     [(eq-caro l x)
      (fresh (a d)
        (cdro l `(,a . ,d)))]
