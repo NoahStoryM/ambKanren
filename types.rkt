@@ -7,7 +7,7 @@
      Var (Pair Term Term)))
 
 (struct var
-  ([counter : Natural])
+  ([tag : Any])
   #:type-name Var
   #:transparent)
 

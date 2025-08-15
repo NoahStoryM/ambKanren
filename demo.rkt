@@ -13,7 +13,7 @@
 (define-type Goal (→ State State))
 
 (struct var
-  ([counter : Natural])
+  ([tag : Any])
   #:type-name Var
   #:transparent)
 
@@ -24,7 +24,7 @@
   #:transparent)
 
 (: var=? (→ Var Var Boolean))
-(define (var=? x1 x2) (= (var-counter x1) (var-counter x2)))
+(define (var=? x1 x2) (equal? x1 x2))
 
 (: empty-s Substitution)
 (: ext-s (→ Var Term Substitution Substitution))
