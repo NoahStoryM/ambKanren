@@ -74,11 +74,10 @@
     [(nullo l) (== '() out)]
     [(eq-caro l x) (cdro l out)]
     [else
-     (fresh (a d)
+     (fresh (a d res)
        (conso a d l)
-       (fresh (res)
-         (rembero x d res)
-         (conso a res out)))]))
+       (conso a res out)
+       (rembero x d res))]))
 (check-equal?
  (run 1 (out)
    (fresh (y)
