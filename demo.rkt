@@ -6,6 +6,14 @@
 (provide (all-defined-out))
 
 
+(: list->amb (∀ (a) (→ (Listof a) a)))
+(define list->amb
+  (match-λ
+    ['() (amb)]
+    [`(,a) a]
+    [`(,a . ,a*) (amb a (list->amb a*))]))
+
+
 (define-type Term
   (∪ Boolean Number Char Bytes String Keyword Null Symbol
      Var (Pair Term Term)))
@@ -32,6 +40,9 @@
 (define empty-s '())
 (define (ext-s x v s) `([,x . ,v] . ,s))
 (define (size-s s) (length s))
+
+(: apply-goal (→ Goal State State))
+(define (apply-goal g s/c) (g s/c))
 
 
 (: walk (→ Term Substitution Term))
@@ -87,20 +98,15 @@
   (g (state s (add1 c))))
 
 
+(: == (→ Term Term Goal))
+(define ((== u v) s/c)
+  (match-define (state s c) s/c)
+  (state (unify u v s) c))
+
 (: fail Goal)
 (: succeed Goal)
 (define (fail _) (amb))
 (define (succeed s/c) (amb s/c))
-
-(: list->amb (∀ (a) (→ (Listof a) a)))
-(define list->amb
-  (match-λ
-    ['() (amb)]
-    [`(,a) a]
-    [`(,a . ,a*) (amb a (list->amb a*))]))
-
-(: apply-goal (→ Goal State State))
-(define (apply-goal g s/c) (g s/c))
 
 (: disj (→ Goal * Goal))
 (define (disj . g*)
@@ -119,25 +125,33 @@
         [g* (λ (s/c) (foldl apply-goal s/c g*))])))
 
 
-(: == (→ Term Term Goal))
-(define ((== u v) s/c)
-  (match-define (state s c) s/c)
-  (state (unify u v s) c))
+(define-syntax-rule (Zzz g)
+  (ann (λ (s/c) (g s/c)) Goal))
+
+(define-syntax disj+
+  (syntax-rules ()
+    [(_) fail]
+    [(_ g ...) (Zzz (disj g ...))]))
+
+(define-syntax conj+
+  (syntax-rules ()
+    [(_) succeed]
+    [(_ g ...) (Zzz (conj g ...))]))
 
 (define-syntax fresh
   (syntax-rules ()
     [(_ () g ...)
-     (conj g ...)]
+     (conj+ g ...)]
     [(_ (x x* ...) g ...)
      (call/fresh (λ (x) (fresh (x* ...) g ...)))]))
 
 (define-syntax conde
   (syntax-rules (else)
     [(_) fail]
-    [(_ [else g ...]) (conj g ...)]
-    [(_ [g ...]) (conj g ...)]
+    [(_ [else g ...]) (conj+ g ...)]
+    [(_ [g ...]) (conj+ g ...)]
     [(_ [g ...] c ...)
-     (disj (conj g ...) (conde c ...))]))
+     (disj+ (conj+ g ...) (conde c ...))]))
 
 (define-syntax-rule (run n^ (x) g* ...)
   (let ([n : Real (or n^ +inf.0)]
