@@ -7,6 +7,7 @@
 
 (provide (all-from-out "base.rkt")
          run run* (rename-out [run* run∞])
+         disji+
          condi ifi)
 
 
@@ -22,6 +23,10 @@
       (reify (walk* x s)))))
 (define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
 
+(define-syntax disji+
+  (syntax-rules ()
+    [(_) fail]
+    [(_ g ...) (Zzz (disji g ...))]))
 
-(define-syntax-rule (condi c ...) (cond-aux disji c ...))
+(define-syntax-rule (condi c ...) (cond-aux disji+ c ...))
 (define-syntax-rule (ifi g0 g1 g2) (condi [g0 g1] [else g2]))

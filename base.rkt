@@ -6,21 +6,23 @@
 (provide (all-from-out "micro.rkt")
          fail succeed
          ==
+         Zzz
          fresh
+         conj+ disje+
          cond-aux conde ife
          (rename-out
           [succeed ⊤]
           [fail ⊥]
           [== ≡]
           [fresh ∃]
-          [disj+ ∨]
+          [disje+ ∨]
           [conj+ ∧]))
 
 
 (define-syntax-rule (Zzz g)
   (ann (λ (s/c) (g s/c)) Goal))
 
-(define-syntax disj+
+(define-syntax disje+
   (syntax-rules ()
     [(_) fail]
     [(_ g ...) (Zzz (disje g ...))]))
@@ -37,10 +39,10 @@
 
 (define-syntax cond-aux
   (syntax-rules (else)
-    [(_ disj) (disj)]
-    [(_ disj [else g ...]) (conj+ g ...)]
-    [(_ disj [g ...]) (conj+ g ...)]
-    [(_ disj [g ...] c ...)
-     (disj (conj+ g ...) (cond-aux disj c ...))]))
-(define-syntax-rule (conde c ...) (cond-aux disj+ c ...))
+    [(_ disj+) (disj+)]
+    [(_ disj+ [else g ...]) (conj+ g ...)]
+    [(_ disj+ [g ...]) (conj+ g ...)]
+    [(_ disj+ [g ...] c ...)
+     (disj+ (conj+ g ...) (cond-aux disj+ c ...))]))
+(define-syntax-rule (conde c ...) (cond-aux disje+ c ...))
 (define-syntax-rule (ife g0 g1 g2) (conde [g0 g1] [else g2]))
