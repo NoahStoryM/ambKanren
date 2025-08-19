@@ -53,15 +53,6 @@
          (assf (λ ([v : Var]) (var=? u v)) s)))
   (if pr (walk (cdr pr) s) u))
 
-(: walk* (→ Term Substitution Term))
-(define (walk* u s)
-  (let ([u (walk u s)])
-    (if (pair? u)
-        (cons (walk* (car u) s)
-              (walk* (cdr u) s))
-        u)))
-
-
 (: unify (→ Term Term Substitution Substitution))
 (define (unify u v s)
   (let ([u (walk u s)] [v (walk v s)])
@@ -74,6 +65,33 @@
       [(eqv? u v) s]
       [else (amb)])))
 
+(: call/fresh (→ (→ Var Goal) Goal))
+(define ((call/fresh f) s/c)
+  (match-define (state s c) s/c)
+  (define g (f (var c)))
+  (g (state s (add1 c))))
+
+(: == (→ Term Term Goal))
+(define ((== u v) s/c)
+  (match-define (state s c) s/c)
+  (state (unify u v s) c))
+
+(: disj (→ Goal * Goal))
+(: conj (→ Goal * Goal))
+(define ((disj . g*) s/c) ((list->amb g*) s/c))
+(define ((conj . g*) s/c) (foldl apply-goal s/c g*))
+
+(define fail (disj))
+(define succeed (conj))
+
+
+(: walk* (→ Term Substitution Term))
+(define (walk* u s)
+  (let ([u (walk u s)])
+    (if (pair? u)
+        (cons (walk* (car u) s)
+              (walk* (cdr u) s))
+        u)))
 
 (: reify-name (→ Index Symbol))
 (define (reify-name n)
@@ -89,40 +107,6 @@
 
 (: reify (→ Term Term))
 (define (reify v) (walk* v (reify-s v empty-s)))
-
-
-(: call/fresh (→ (→ Var Goal) Goal))
-(define ((call/fresh f) s/c)
-  (match-define (state s c) s/c)
-  (define g (f (var c)))
-  (g (state s (add1 c))))
-
-
-(: == (→ Term Term Goal))
-(define ((== u v) s/c)
-  (match-define (state s c) s/c)
-  (state (unify u v s) c))
-
-(: fail Goal)
-(: succeed Goal)
-(define (fail _) (amb))
-(define (succeed s/c) (amb s/c))
-
-(: disj (→ Goal * Goal))
-(define (disj . g*)
-  (match (remq* (list fail) g*)
-    ['() fail]
-    [`(,g) g]
-    [g* (λ (s/c) ((list->amb g*) s/c))]))
-
-(: conj (→ Goal * Goal))
-(define (conj . g*)
-  (if (memq fail g*)
-      fail
-      (match (remq* (list succeed) g*)
-        ['() succeed]
-        [`(,g) g]
-        [g* (λ (s/c) (foldl apply-goal s/c g*))])))
 
 
 (define-syntax-rule (Zzz g)
