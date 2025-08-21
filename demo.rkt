@@ -43,24 +43,24 @@
 (: ext-s (→ Var Term Substitution Substitution))
 (define empty-s '())
 (define (size-s s) (length s))
-(define (ext-s x v s)
-  (when (occurs? x v s) (amb))
-  `([,x . ,v] . ,s))
+(define (ext-s x u s)
+  (when (occurs? x u s) (amb))
+  `([,x . ,u] . ,s))
 
 (: occurs? (→ Var Term Substitution Boolean))
-(define (occurs? x v s)
-  (let ([v (walk v s)])
-    (or (and (var? v)
-             (eqv? x v))
-        (and (pair? v)
-             (or (occurs? x (car v) s)
-                 (occurs? x (cdr v) s))))))
+(define (occurs? x u s)
+  (let ([u (walk u s)])
+    (or (and (var? u)
+             (eqv? x u))
+        (and (pair? u)
+             (or (occurs? x (car u) s)
+                 (occurs? x (cdr u) s))))))
 
 (: walk (→ Term Substitution Term))
 (define (walk u s)
   (cond
     [(and (var? u) (assoc u s var=?))
-     => (λ (pr) (walk (cdr pr) s))]
+     => (match-λ [(cons _ u) (walk u s)])]
     [else u]))
 
 (: unify (→ Term Term Substitution Substitution))
