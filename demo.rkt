@@ -59,9 +59,7 @@
 (: walk (→ Term Substitution Term))
 (define (walk u s)
   (: pr (Option (Pair Var Term)))
-  (define pr
-    (and (var? u)
-         (assf (λ ([v : Var]) (var=? u v)) s)))
+  (define pr (and (var? u) (assoc u s var=?)))
   (if pr (walk (cdr pr) s) u))
 
 (: unify (→ Term Term Substitution Substitution))
