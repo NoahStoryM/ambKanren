@@ -31,19 +31,30 @@
   #:type-name State
   #:transparent)
 
-(: var=? (→ Var Var Boolean))
-(define (var=? x1 x2) (equal? x1 x2))
-
-(: empty-s Substitution)
-(: ext-s (→ Var Term Substitution Substitution))
-(: size-s (→ Substitution Index))
-(define empty-s '())
-(define (ext-s x v s) `([,x . ,v] . ,s))
-(define (size-s s) (length s))
 
 (: apply-goal (→ Goal State State))
 (define (apply-goal g s/c) (g s/c))
 
+(: var=? (→ Var Var Boolean))
+(define (var=? x1 x2) (equal? x1 x2))
+
+(: empty-s Substitution)
+(: size-s (→ Substitution Index))
+(: ext-s (→ Var Term Substitution Substitution))
+(define empty-s '())
+(define (size-s s) (length s))
+(define (ext-s x v s)
+  (when (occurs? x v s) (amb))
+  `([,x . ,v] . ,s))
+
+(: occurs? (→ Var Term Substitution Boolean))
+(define (occurs? x v s)
+  (let ([v (walk v s)])
+    (or (and (var? v)
+             (eqv? x v))
+        (and (pair? v)
+             (or (occurs? x (car v) s)
+                 (occurs? x (cdr v) s))))))
 
 (: walk (→ Term Substitution Term))
 (define (walk u s)
