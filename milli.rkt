@@ -2,7 +2,8 @@
 
 (require "micro.rkt"
          (except-in racket/match ==)
-         typed/amb)
+         typed/amb
+         typed/data/queue)
 
 (provide (all-from-out "micro.rkt")
          (all-defined-out))
@@ -38,24 +39,16 @@
     ['() fail]
     [`(,g) g]
     [g*
-     (define len (length g*))
-     (: next (→ Natural Natural))
-     (define (next i) (if (= (- len i) 1) 0 (add1 i)))
      (λ (s/c)
-       (define s*
-         (for/vector #:length len
-                     ([g (in-list g*)])
-                     : (Option (Sequenceof State))
-           (in-amb/do (g s/c))))
-       (let loop ([i : Natural 0] [j : Natural 0])
-         (define s (vector-ref s* i))
-         (cond
-           [(not s)
-            (loop (next i) j)]
-           [(for/or : (Option State) ([s/c : State s]) s/c)
-            => (λ (s/c) (amb s/c (loop (next i) j)))]
-           [else
-            (vector-set! s* i #f)
-            (let ([j (add1 j)])
-              (when (= len j) (amb))
-              (loop (next i) j))])))]))
+       (: q (Queue (Sequenceof State) (Sequenceof State)))
+       (define q (make-queue))
+       (for ([g (in-list g*)])
+         (enqueue! q (in-amb/do (g s/c))))
+       (for*/amb : State
+                 ([_ (in-naturals)]
+                  #:break (queue-empty? q)
+                  [s (in-value (dequeue! q))]
+                  [s/c (in-value (for/or : (Option State) ([s/c : State s]) s/c))]
+                  #:when s/c)
+         (enqueue! q s)
+         s/c))]))

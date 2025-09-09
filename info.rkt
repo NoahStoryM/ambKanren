@@ -6,7 +6,7 @@
 
 (define pkg-desc "miniKanren based on amb")
 
-(define deps '("base" "typed-racket-lib" "typed-amb"))
+(define deps '("base" "typed-racket-lib" "typed-amb" "typed-data-queue"))
 (define build-deps '("rackunit-typed"))
 #;
 (define scribblings '(("scribblings/ambKanren.scrbl")))
