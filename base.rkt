@@ -8,24 +8,25 @@
          ==
          Zzz
          fresh
-         conj+ disje+
+         conj+ disj+
+         all-aux all
          cond-aux conde ife
          (rename-out
           [succeed ⊤]
           [fail ⊥]
           [== ≡]
           [fresh ∃]
-          [disje+ ∨]
+          [disj+ ∨]
           [conj+ ∧]))
 
 
 (define-syntax-rule (Zzz g)
   (ann (λ (s/c) (g s/c)) Goal))
 
-(define-syntax disje+
+(define-syntax disj+
   (syntax-rules ()
     [(_) fail]
-    [(_ g ...) (Zzz (disje g ...))]))
+    [(_ g ...) (Zzz (disj g ...))]))
 
 (define-syntax conj+
   (syntax-rules ()
@@ -37,6 +38,9 @@
     [(_ () g ...) (conj g ...)]
     [(_ (x x* ...) g ...) (call/fresh (λ (x) (fresh (x* ...) g ...)))]))
 
+(define-syntax-rule (all-aux conj+ g ...) (conj+ g ...))
+(define-syntax-rule (all g ...) (all-aux conj+ g ...))
+
 (define-syntax cond-aux
   (syntax-rules (else)
     [(_ disj+) (disj+)]
@@ -44,5 +48,5 @@
     [(_ disj+ [g ...]) (conj+ g ...)]
     [(_ disj+ [g ...] c ...)
      (disj+ (conj+ g ...) (cond-aux disj+ c ...))]))
-(define-syntax-rule (conde c ...) (cond-aux disje+ c ...))
+(define-syntax-rule (conde c ...) (cond-aux disj+ c ...))
 (define-syntax-rule (ife g0 g1 g2) (conde [g0 g1] [else g2]))

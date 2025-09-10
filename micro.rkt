@@ -42,12 +42,12 @@
 (define (succeed s/c) (amb s/c))
 
 
-(: disje (→ Goal * Goal))
-(define (disje . g*)
+(: disj (→ Goal * Goal))
+(define (disj . g*)
   (match (remq* (list fail) g*)
     ['() fail]
     [`(,g) g]
-    [g* (λ (s/c) ((list->amb g*) s/c))]))
+    [g* (λ (s/c) ((sequence->amb g*) s/c))]))
 
 (: conj (→ Goal * Goal))
 (define (conj . g*)

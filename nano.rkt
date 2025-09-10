@@ -1,15 +1,16 @@
 #lang typed/racket/base
 
 (require "types.rkt"
-         typed/amb)
+         typed/racket/unsafe
+         typed/amb
+         typed/goto)
 
 (provide (all-from-out "types.rkt")
          (all-defined-out))
 
 
-(: list->amb (∀ (a) (→ (Listof a) a)))
-(define (list->amb a*)
-  (for/amb : a #:length (length a*) ([a (in-list a*)]) a))
+(: sequence->amb (∀ (a) (→ (Sequenceof a) a)))
+(define (sequence->amb a*) (for/amb : a ([a a*]) a))
 
 
 (: var=? (→ Var Var Boolean))
@@ -30,3 +31,18 @@
 
 (: apply-goal (→ Goal State State))
 (define (apply-goal g s/c) (g s/c))
+
+
+(unsafe-require/typed data/queue
+  [make-queue (∀ (a) (→ (Sequenceof a)))]
+  [queue-length (→ SequenceTop Index)]
+  [enqueue-front! (∀ (a) (→ (Sequenceof a) a Void))]
+  [dequeue! (∀ (a) (→ (Sequenceof a) a))])
+(unsafe-require/typed "private/utils.rkt"
+  [rotate-queue! (→ SequenceTop Void)])
+
+(define rotate-tasks! rotate-queue!)
+(define make-tasks (inst make-queue Label))
+(define tasks-length queue-length)
+(define tasks-add! enqueue-front!)
+(define tasks-del! dequeue!)

@@ -68,3 +68,13 @@
      [else nevero])
    (== #t q))
  '(#t #t #t #t #t))
+
+(check-equal?
+ (run 1 (q)
+   (alli
+     (conde
+       [(== #f q) succeed]
+       [else (== #t q)])
+     alwayso)
+   (== #t q))
+ '(#t))
