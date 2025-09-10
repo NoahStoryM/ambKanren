@@ -78,3 +78,48 @@
      alwayso)
    (== #t q))
  '(#t))
+(check-equal?
+ (run 5 (q)
+   (alli
+     (conde
+       [(== #f q) succeed]
+       [else (== #t q)])
+     alwayso)
+   (== #t q))
+ '(#t #t #t #t #t))
+(check-equal?
+ (run 5 (q)
+   (alli
+     (conde
+       [(== #t q) succeed]
+       [else (== #f q)])
+     alwayso)
+   (== #t q))
+ '(#t #t #t #t #t))
+(check-equal?
+ (run 5 (q)
+   (all
+     (conde
+       [succeed succeed]
+       [else nevero])
+     alwayso)
+   (== #t q))
+ '(#t #t #t #t #t))
+(check-equal?
+ (run 5 (q)
+   (alli
+     (condi
+       [(== #f q) succeed]
+       [else (== #t q)])
+     alwayso)
+   (== #t q))
+ '(#t #t #t #t #t))
+(check-equal?
+ (run 5 (q)
+   (all
+     (condi
+       [succeed succeed]
+       [else nevero])
+     alwayso)
+   (== #t q))
+ '(#t #t #t #t #t))

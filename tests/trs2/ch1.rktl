@@ -1,3 +1,4 @@
+(displayln "Test code in chapter 1")
 (check-equal?
  (run* (q)
    fail)

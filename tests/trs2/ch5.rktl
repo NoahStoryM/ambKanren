@@ -1,3 +1,4 @@
+(displayln "Test code in chapter 5")
 (: appendo (→ Term Term Term Goal))
 (define (appendo l s out)
   (conde

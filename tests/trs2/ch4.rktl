@@ -1,3 +1,4 @@
+(displayln "Test code in chapter 4")
 (: mem (→ Term (Listof Term) (Option (Listof Term))))
 (define (mem x l)
   (cond

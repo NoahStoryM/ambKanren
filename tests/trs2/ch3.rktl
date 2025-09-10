@@ -1,3 +1,4 @@
+(displayln "Test code in chapter 3")
 (: listo (→ Term Goal))
 (define (listo l)
   (conde

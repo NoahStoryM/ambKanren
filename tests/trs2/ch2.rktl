@@ -1,3 +1,4 @@
+(displayln "Test code in chapter 2")
 (check-equal?
  (run* (r)
    (fresh (y x)
