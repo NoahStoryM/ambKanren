@@ -69,8 +69,7 @@
                             [current-amb-popper tasks-del!])
                (for/fold : (Sequenceof State)
                          ([s/c* (in-value s/c)])
-                         ([g (in-list g*)]
-                          [i (in-naturals)])
+                         ([g (in-list g*)])
                  (in-amb/do
                   (let* ([s/c (sequence->amb s/c*)]
                          [s/c* (in-amb/do (g s/c))])
