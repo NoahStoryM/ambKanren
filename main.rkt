@@ -22,6 +22,7 @@
         [s/c (state empty-s 0)])
     (define s/c*
       (parameterize ([current-amb-rotator void]
+                     [current-amb-shuffler void]
                      [current-amb-maker make-tasks]
                      [current-amb-length tasks-length]
                      [current-amb-pusher tasks-add!]
