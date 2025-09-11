@@ -47,7 +47,7 @@
   (match (remq* (list fail) g*)
     ['() fail]
     [`(,g) g]
-    [g* (λ (s/c) ((sequence->amb g*) s/c))]))
+    [g* (λ (s/c) ((list->amb g*) s/c))]))
 
 (: conj (→ Goal * Goal))
 (define (conj . g*)

@@ -10,7 +10,9 @@
 
 
 (: sequence->amb (∀ (a) (→ (Sequenceof a) a)))
+(: list->amb (∀ (a) (→ (Listof a) a)))
 (define (sequence->amb a*) (for/amb : a ([a a*]) a))
+(define (list->amb a*) (for/amb : a #:length (length a*) ([a a*]) a))
 
 
 (: var=? (→ Var Var Boolean))
