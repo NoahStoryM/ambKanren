@@ -20,8 +20,15 @@
         [x (var 0)]
         [g (fresh (x) g* ...)]
         [s/c (state empty-s 0)])
+    (define s/c*
+      (parameterize ([current-amb-rotator void]
+                     [current-amb-maker make-tasks]
+                     [current-amb-length tasks-length]
+                     [current-amb-pusher tasks-add!]
+                     [current-amb-popper tasks-del!])
+        (in-amb/do (g s/c))))
     (for/list : (Listof Term)
-              ([s/c (in-amb (g s/c))]
+              ([s/c s/c*]
                [_ (in-range n)])
       (match-define (state s c) s/c)
       (reify (walk* x s)))))

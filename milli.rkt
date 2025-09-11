@@ -63,16 +63,12 @@
         [g*
          (λ (s/c)
            (define s/c*
-             (parameterize ([current-amb-maker make-tasks]
-                            [current-amb-length tasks-length]
-                            [current-amb-pusher tasks-add!]
-                            [current-amb-popper tasks-del!])
-               (for/fold : (Sequenceof State)
-                         ([s/c* (in-value s/c)])
-                         ([g (in-list g*)])
-                 (in-amb/do
-                  (let* ([s/c (sequence->amb s/c*)]
-                         [s/c* (in-amb/do (g s/c))])
-                    (parameterize ([current-amb-rotator rotate-tasks!])
-                      (sequence->amb s/c*)))))))
+             (for/fold : (Sequenceof State)
+                       ([s/c* (in-value s/c)])
+                       ([g (in-list g*)])
+               (in-amb/do
+                (let* ([s/c (sequence->amb s/c*)]
+                       [s/c* (in-amb/do (g s/c))])
+                  (parameterize ([current-amb-rotator rotate-tasks!])
+                    (sequence->amb s/c*))))))
            (sequence->amb s/c*))])))

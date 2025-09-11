@@ -33,16 +33,10 @@
 (define (apply-goal g s/c) (g s/c))
 
 
-(unsafe-require/typed data/queue
-  [make-queue (∀ (a) (→ (Sequenceof a)))]
-  [queue-length (→ SequenceTop Index)]
-  [enqueue-front! (∀ (a) (→ (Sequenceof a) a Void))]
-  [dequeue! (∀ (a) (→ (Sequenceof a) a))])
 (unsafe-require/typed "private/utils.rkt"
   [rotate-queue! (→ SequenceTop Void)])
-
 (define rotate-tasks! rotate-queue!)
-(define make-tasks (inst make-queue Label))
-(define tasks-length queue-length)
-(define tasks-add! enqueue-front!)
-(define tasks-del! dequeue!)
+(define make-tasks (current-amb-maker))
+(define tasks-length (current-amb-length))
+(define tasks-add! (current-amb-pusher))
+(define tasks-del! (current-amb-popper))
