@@ -303,8 +303,13 @@
        (cdro l d)
        (memberrevo x d))]
     [else (eq-caro l x)]))
-(run* (x)
-  (memberrevo x '(pasta e fagioli)))
+(check-equal?
+ (run* (x)
+   (memberrevo x '(pasta e fagioli)))
+ '(fagioli e pasta))
 
 (: reverse-list (→ (Listof Term) (Listof Term)))
 (define (reverse-list l) (run* (y) (memberrevo y l)))
+(check-equal?
+ (reverse-list '(pasta e fagioli))
+ (reverse '(pasta e fagioli)))
