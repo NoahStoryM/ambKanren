@@ -35,15 +35,8 @@
       (reify (walk* x s)))))
 (define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
 
-(define-syntax disji+
-  (syntax-rules ()
-    [(_) fail]
-    [(_ g ...) (Zzz (disji g ...))]))
-
-(define-syntax conji+
-  (syntax-rules ()
-    [(_) succeed]
-    [(_ g ...) (Zzz (conji g ...))]))
+(define-syntax-rule (disji+ g ...) (disji (Zzz g) ...))
+(define-syntax-rule (conji+ g ...) (conji (Zzz g) ...))
 
 (define-syntax-rule (alli g ...) (all-aux conji+ g ...))
 

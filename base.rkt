@@ -20,33 +20,32 @@
           [conj+ ∧]))
 
 
-(define-syntax-rule (Zzz g)
-  (ann (λ (s/c) (g s/c)) Goal))
+(define-syntax-rule (Zzz g) (ann (λ (s/c) (g s/c)) Goal))
 
-(define-syntax disj+
-  (syntax-rules ()
-    [(_) fail]
-    [(_ g ...) (Zzz (disj g ...))]))
-
-(define-syntax conj+
-  (syntax-rules ()
-    [(_) succeed]
-    [(_ g ...) (Zzz (conj g ...))]))
+(define-syntax-rule (disj+ g ...) (disj (Zzz g) ...))
+(define-syntax-rule (conj+ g ...) (conj (Zzz g) ...))
 
 (define-syntax fresh
   (syntax-rules ()
-    [(_ () g ...) (conj g ...)]
-    [(_ (x x* ...) g ...) (call/fresh (λ (x) (fresh (x* ...) g ...)))]))
+    [(_ () g ...) (all g ...)]
+    [(_ (x0 x ...) g ...)
+     (call/fresh
+      (λ (x0)
+        (fresh (x ...) g ...)))]))
 
-(define-syntax-rule (all-aux conj+ g ...) (conj+ g ...))
+(define-syntax all-aux
+  (syntax-rules ()
+    [(_ conj+) fail]
+    [(_ conj+ g) (Zzz g)]
+    [(_ conj+ g ...) (conj+ g ...)]))
 (define-syntax-rule (all g ...) (all-aux conj+ g ...))
 
 (define-syntax cond-aux
   (syntax-rules (else)
-    [(_ disj+) (disj+)]
-    [(_ disj+ [else g ...]) (conj+ g ...)]
-    [(_ disj+ [g ...]) (conj+ g ...)]
+    [(_ disj+) fail]
+    [(_ disj+ [else g ...]) (all g ...)]
+    [(_ disj+ [g ...]) (all g ...)]
     [(_ disj+ [g ...] c ...)
-     (disj+ (conj+ g ...) (cond-aux disj+ c ...))]))
+     (disj+ (all g ...) (cond-aux disj+ c ...))]))
 (define-syntax-rule (conde c ...) (cond-aux disj+ c ...))
 (define-syntax-rule (ife g0 g1 g2) (conde [g0 g1] [else g2]))

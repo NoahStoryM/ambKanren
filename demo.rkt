@@ -6,14 +6,6 @@
 (provide (all-defined-out))
 
 
-(: list->amb (∀ (a) (→ (Listof a) a)))
-(define list->amb
-  (match-λ
-    ['() (amb)]
-    [`(,a) a]
-    [`(,a . ,a*) (amb a (list->amb a*))]))
-
-
 (define-type Term
   (∪ Boolean Number Char Bytes String Keyword Null Symbol
      Var (Pair Term Term)))
@@ -31,9 +23,6 @@
   #:type-name State
   #:transparent)
 
-
-(: apply-goal (→ Goal State State))
-(define (apply-goal g s/c) (g s/c))
 
 (: var=? (→ Var Var Boolean))
 (define (var=? x1 x2) (equal? x1 x2))
@@ -86,13 +75,15 @@
   (match-define (state s c) s/c)
   (state (unify u v s) c))
 
-(: disj (→ Goal * Goal))
-(: conj (→ Goal * Goal))
-(define ((disj . g*) s/c) ((list->amb g*) s/c))
-(define ((conj . g*) s/c) (foldl apply-goal s/c g*))
+(: disj (→ Goal Goal Goal))
+(: conj (→ Goal Goal Goal))
+(define ((disj g1 g2) s/c) ((amb g1 g2) s/c))
+(define ((conj g1 g2) s/c) (g2 (g1 s/c)))
 
-(define fail (disj))
-(define succeed (conj))
+(: fail Goal)
+(: succeed Goal)
+(define (fail s/c) (amb))
+(define (succeed s/c) s/c)
 
 
 (: walk* (→ Term Substitution Term))
@@ -119,33 +110,32 @@
 (define (reify v) (walk* v (reify-s v empty-s)))
 
 
-(define-syntax-rule (Zzz g)
-  (ann (λ (s/c) (g s/c)) Goal))
+(define-syntax-rule (Zzz g) (ann (λ (s/c) (g s/c)) Goal))
 
-(define-syntax disj+
+(define-syntax-rule (disj+ g1 g2) (disj (Zzz g1) (Zzz g2)))
+(define-syntax-rule (conj+ g1 g2) (conj (Zzz g1) (Zzz g2)))
+
+(define-syntax all
   (syntax-rules ()
     [(_) fail]
-    [(_ g ...) (Zzz (disj g ...))]))
-
-(define-syntax conj+
-  (syntax-rules ()
-    [(_) succeed]
-    [(_ g ...) (Zzz (conj g ...))]))
+    [(_ g) (Zzz g)]
+    [(_ g0 g ...) (conj (Zzz g0) (all g ...))]))
 
 (define-syntax fresh
   (syntax-rules ()
-    [(_ () g ...)
-     (conj+ g ...)]
-    [(_ (x x* ...) g ...)
-     (call/fresh (λ (x) (fresh (x* ...) g ...)))]))
+    [(_ () g ...) (all g ...)]
+    [(_ (x0 x ...) g ...)
+     (call/fresh
+      (λ (x0)
+        (fresh (x ...) g ...)))]))
 
 (define-syntax conde
   (syntax-rules (else)
     [(_) fail]
-    [(_ [else g ...]) (conj+ g ...)]
-    [(_ [g ...]) (conj+ g ...)]
+    [(_ [else g ...]) (all g ...)]
+    [(_ [g ...]) (all g ...)]
     [(_ [g ...] c ...)
-     (disj+ (conj+ g ...) (conde c ...))]))
+     (disj+ (all g ...) (conde c ...))]))
 
 (define-syntax-rule (run n^ (x) g* ...)
   (let ([n : Real (or n^ +inf.0)]
