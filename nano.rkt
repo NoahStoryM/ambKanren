@@ -2,8 +2,7 @@
 
 (require "types.rkt"
          typed/racket/unsafe
-         typed/amb
-         typed/goto)
+         typed/amb)
 
 (provide (all-from-out "types.rkt")
          (all-defined-out))
