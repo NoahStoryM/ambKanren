@@ -117,7 +117,7 @@
 
 (define-syntax all
   (syntax-rules ()
-    [(_) fail]
+    [(_) succeed]
     [(_ g) (Zzz g)]
     [(_ g0 g ...) (conj (Zzz g0) (all g ...))]))
 

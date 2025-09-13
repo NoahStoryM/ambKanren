@@ -35,7 +35,7 @@
 
 (define-syntax all-aux
   (syntax-rules ()
-    [(_ conj+) fail]
+    [(_ conj+) succeed]
     [(_ conj+ g) (Zzz g)]
     [(_ conj+ g ...) (conj+ g ...)]))
 (define-syntax-rule (all g ...) (all-aux conj+ g ...))
