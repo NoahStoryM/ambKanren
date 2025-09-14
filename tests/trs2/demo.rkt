@@ -12,4 +12,6 @@
   (load "ch2.rktl")
   (load "ch3.rktl")
   (load "ch4.rktl")
-  (load "ch5.rktl"))
+  (load "ch5.rktl")
+  #;(load "ch6.rktl")
+  #;(load "ch7.rktl"))
