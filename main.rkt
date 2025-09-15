@@ -38,6 +38,9 @@
 (define-syntax-rule (disji+ g ...) (disji (Zzz g) ...))
 (define-syntax-rule (conji+ g ...) (conji (Zzz g) ...))
 
+(define-syntax-rule (project (x ...) g ...)
+  (Zzz (let ([x (walk* x s)] ...) (all g ...))))
+
 (define-syntax-rule (alli g ...) (all-aux conji+ g ...))
 
 (define-syntax-rule (condi c ...) (cond-aux disji+ c ...))
