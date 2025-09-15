@@ -7,6 +7,7 @@
 
 (provide (all-from-out "base.rkt")
          run run* (rename-out [run* run∞])
+         project
          disji+ conji+
          alli
          condi ifi
