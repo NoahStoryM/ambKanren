@@ -1,0 +1,18 @@
+#lang typed/racket/base
+
+(define-namespace-anchor book)
+(define book-namespace (namespace-anchor->empty-namespace book))
+(parameterize ([current-namespace book-namespace])
+  (namespace-require 'typed/racket/base/no-check)
+  (namespace-require 'racket/match)
+  (namespace-require 'amb)
+  (namespace-require "../../book.rkt")
+  (namespace-require '(all-except typed/rackunit fail))
+  (load "ch1.rktl")
+  (load "ch2.rktl")
+  (load "ch3.rktl")
+  (load "ch4.rktl")
+  (load "ch5.rktl")
+  (load "ch6.rktl")
+  (load "ch7.rktl")
+  (load "ch8.rktl"))
