@@ -5,18 +5,9 @@
 (define-type Term
   (∪ Boolean Number Char Bytes String Keyword Null Symbol
      Var (Pair Term Term)))
+(define-type Substitution (Immutable-HashTable Var Term))
+(define-type Goal (→ Substitution Substitution))
 
-(struct var
-  ([tag : Any])
+(struct var ([name : Symbol])
   #:type-name Var
   #:transparent)
-
-(define-type Substitution (Immutable-HashTable Var Term))
-
-(struct state
-  ([substitution : Substitution]
-   [counter : Natural])
-  #:type-name State
-  #:transparent)
-
-(define-type Goal (→ State State))

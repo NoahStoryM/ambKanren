@@ -163,16 +163,13 @@
    ((_.0 _.1 _.2 _.3 _.4 _.5) _.6 (_.0 _.1 _.2 _.3 _.4 _.5 . _.6))))
 
 (: ll (→ Index Var Goal Goal))
-(define ((ll n x g) s/c)
-  (match-define (state s c) s/c)
-  (define v
-    (match (walk x s)
-      [(? var?) 1]
-      [(? index? v) #:when (< v n) (add1 v)]
-      [_ (amb)]))
-  (g (state (ext-s x v s) c)))
+(define ((ll n x g) s)
+  (match (walk x s)
+    [(? var?) (g (ext-s x 1 s))]
+    [(? index? v) #:when (< v n) (g (ext-s x (add1 v) s))]
+    [_ (fail s)]))
 (define-syntax-rule (λ-limited n formals g)
-  (let ([x (var (gensym 'x))])
+  (let ([x (var 'x)])
     (λ formals (ll n x g))))
 
 (: swappendo (→ Term Term Term Goal))

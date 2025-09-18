@@ -1,5 +1,3 @@
-;; Jason Hemann and Dan Friedman
-;; microKanren, final implementation from paper
 #lang typed/racket/base
 
 (require racket/match typed/amb)
@@ -10,22 +8,15 @@
   (∪ Boolean Number Char Bytes String Keyword Null Symbol
      Var (Pair Term Term)))
 (define-type Substitution (Listof (Pair Var Term)))
-(define-type Goal (→ State State))
+(define-type Goal (→ Substitution Substitution))
 
-(struct var
-  ([tag : Any])
+(struct var ([name : Symbol])
   #:type-name Var
-  #:transparent)
-
-(struct state
-  ([substitution : Substitution]
-   [counter : Natural])
-  #:type-name State
   #:transparent)
 
 
 (: var=? (→ Var Var Boolean))
-(define (var=? x1 x2) (equal? x1 x2))
+(define (var=? x1 x2) (eq? x1 x2))
 
 (: empty-s Substitution)
 (: size-s (→ Substitution Index))
@@ -61,29 +52,22 @@
       [(var? v) (ext-s v u s)]
       [(and (pair? u) (pair? v))
        (unify (cdr u) (cdr v) (unify (car u) (car v) s))]
-      [(eqv? u v) s]
+      [(equal? u v) s]
       [else (amb)])))
 
-(: call/fresh (→ (→ Var Goal) Goal))
-(define ((call/fresh f) s/c)
-  (match-define (state s c) s/c)
-  (define g (f (var c)))
-  (g (state s (add1 c))))
-
 (: == (→ Term Term Goal))
-(define ((== u v) s/c)
-  (match-define (state s c) s/c)
-  (state (unify u v s) c))
+(define ((== u v) s) (unify u v s))
+
 
 (: disj (→ Goal Goal Goal))
 (: conj (→ Goal Goal Goal))
-(define ((disj g1 g2) s/c) ((amb g1 g2) s/c))
-(define ((conj g1 g2) s/c) (g2 (g1 s/c)))
+(define ((disj g1 g2) s) ((amb g1 g2) s))
+(define ((conj g1 g2) s) (g2 (g1 s)))
 
 (: fail Goal)
 (: succeed Goal)
-(define (fail s/c) (amb))
-(define (succeed s/c) s/c)
+(define (fail s) (amb))
+(define (succeed s) s)
 
 
 (: walk* (→ Term Substitution Term))
@@ -110,7 +94,7 @@
 (define (reify v) (walk* v (reify-s v empty-s)))
 
 
-(define-syntax-rule (Zzz g) (ann (λ (s/c) (g s/c)) Goal))
+(define-syntax-rule (Zzz g) (ann (λ (s) (g s)) Goal))
 
 (define-syntax-rule (disj+ g1 g2) (disj (Zzz g1) (Zzz g2)))
 (define-syntax-rule (conj+ g1 g2) (conj (Zzz g1) (Zzz g2)))
@@ -124,10 +108,8 @@
 (define-syntax fresh
   (syntax-rules ()
     [(_ () g ...) (all g ...)]
-    [(_ (x0 x ...) g ...)
-     (call/fresh
-      (λ (x0)
-        (fresh (x ...) g ...)))]))
+    [(_ (x ...) g ...)
+     (Zzz (let ([x (var 'x)] ...) (all g ...)))]))
 
 (define-syntax conde
   (syntax-rules (else)
@@ -139,12 +121,10 @@
 
 (define-syntax-rule (run n^ (x) g* ...)
   (let ([n : Real (or n^ +inf.0)]
-        [x (var 0)]
-        [g (fresh (x) g* ...)]
-        [s/c (state empty-s 0)])
+        [x (var 'x)])
+    (define g (all g* ...))
     (for/list : (Listof Term)
-              ([s/c (in-amb (g s/c))]
+              ([s (in-amb (g empty-s))]
                [_ (in-range n)])
-      (match-define (state s c) s/c)
       (reify (walk* x s)))))
 (define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
