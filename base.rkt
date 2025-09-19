@@ -19,11 +19,13 @@
 (define (var=? x1 x2) (eq? x1 x2))
 
 (: empty-s Substitution)
+(: s-empty? (→ Substitution Boolean))
 (: s-has-key? (→ Var Substitution Boolean))
 (: apply-s (→ Substitution Var Term))
 (: size-s (→ Substitution Index))
 (: ext-s (→ Var Term Substitution Substitution))
 (define empty-s #hasheq())
+(define (s-empty? s) (hash-empty? s))
 (define (s-has-key? v s) (hash-has-key? s v))
 (define (apply-s s v) (hash-ref s v))
 (define (size-s s) (hash-count s))
@@ -122,25 +124,41 @@
         [`(,g1 ,g2) (λ (s) (g2 (g1 s)))]
         [g* (λ (s) (foldl apply-goal s g*))])))
 
+(: mplusi (→ (Sequenceof Substitution) * (Sequenceof Substitution)))
+(define (mplusi . s**)
+  (: q (Queue (Sequenceof Substitution) (Sequenceof Substitution)))
+  (define q (make-queue))
+  (for ([s* (in-list s**)])
+    (enqueue! q s*))
+  (define fail-s : Substitution #hash())
+  (: producer (→ Substitution))
+  (define (producer)
+    (if (queue-empty? q)
+        fail-s
+        (let* ([s* (dequeue! q)]
+               [s (for/or : (Option Substitution) ([s : Substitution s*]) s)])
+          (cond
+            [s (enqueue! q s*) s]
+            [else (producer)]))))
+  (in-producer producer (λ (s) (eq? s fail-s))))
+
 (: disji (→ Goal * Goal))
 (define (disji . g*)
   (match (remq* (list fail) g*)
     ['() fail]
     [`(,g) g]
+    [`(,g1 ,g2)
+     (λ (s)
+       (sequence->amb
+        (mplusi (in-amb/do (g1 s))
+                (in-amb/do (g2 s)))))]
     [g*
      (λ (s)
-       (: q (Queue (Sequenceof Substitution) (Sequenceof Substitution)))
-       (define q (make-queue))
-       (for ([g (in-list g*)])
-         (enqueue! q (in-amb/do (g s))))
-       (for*/amb : Substitution
-                 ([_ (in-naturals)]
-                  #:break (queue-empty? q)
-                  [s* (in-value (dequeue! q))]
-                  [s (in-value (for/or : (Option Substitution) ([s : Substitution s*]) s))]
-                  #:when s)
-         (enqueue! q s*)
-         s))]))
+       (define s**
+         (for/list : (Listof (Sequenceof Substitution))
+                   ([g (in-list g*)])
+           (in-amb/do (g s))))
+       (sequence->amb (apply mplusi s**)))]))
 
 (: conji (→ Goal * Goal))
 (define (conji . g*)
