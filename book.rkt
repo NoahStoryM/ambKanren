@@ -10,7 +10,17 @@
          var var?)
 
 (define empty-s '())
-(define (ext-s x v s) (cons (cons x v) s))
+(define (ext-s x v s)
+  (and (not (occurs? x v s))
+       (cons (cons x v) s)))
+
+(define (occurs? x v s)
+  (let ([v (walk v s)])
+    (or (and (var? v)
+             (eq? x v))
+        (and (pair? v)
+             (or (occurs? x (car v) s)
+                 (occurs? x (cdr v) s))))))
 
 (define (walk v s)
   (cond
