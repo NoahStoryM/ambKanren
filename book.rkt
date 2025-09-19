@@ -133,8 +133,7 @@
      (let ([g^ g0])
        (λG (s)
          (bnd (g^ s)
-              (λG (s)
-                ((all-aux bnd g ...) s)))))]))
+              (all-aux bnd g ...))))]))
 (define-syntax-rule (all  g ...) (all-aux bind  g ...))
 (define-syntax-rule (alli g ...) (all-aux bindi g ...))
 
