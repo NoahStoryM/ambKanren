@@ -126,19 +126,20 @@
 
 (: mplusi (→ (Sequenceof Substitution) * (Sequenceof Substitution)))
 (define (mplusi . s**)
-  (: q (Queue (Sequenceof Substitution) (Sequenceof Substitution)))
+  (: q (Queue (Pair (→ Boolean) (→ Substitution))
+              (Pair (→ Boolean) (→ Substitution))))
   (define q (make-queue))
   (for ([s* (in-list s**)])
-    (enqueue! q s*))
+    (enqueue! q (call-with-values (λ () (sequence-generate s*)) cons)))
   (define fail-s : Substitution #hash())
   (: producer (→ Substitution))
   (define (producer)
     (if (queue-empty? q)
         fail-s
-        (let* ([s* (dequeue! q)]
-               [s (for/or : (Option Substitution) ([s : Substitution s*]) s)])
+        (let* ([p (dequeue! q)])
+          (match-define (cons more? get) p)
           (cond
-            [s (enqueue! q s*) s]
+            [(more?) (enqueue! q p) (get)]
             [else (producer)]))))
   (in-producer producer (λ (s) (eq? s fail-s))))
 
