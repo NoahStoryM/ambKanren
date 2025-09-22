@@ -5,7 +5,6 @@
 (parameterize ([current-namespace book-namespace])
   (namespace-require 'typed/racket/base/no-check)
   (namespace-require 'racket/match)
-  (namespace-require 'amb)
   (namespace-require "../../book.rkt")
   (namespace-require '(all-except typed/rackunit fail))
   (load "ch1.rktl")
