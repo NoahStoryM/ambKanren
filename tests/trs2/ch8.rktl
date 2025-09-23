@@ -341,3 +341,125 @@
    ((_.0 _.1 1) (_.2 _.3 _.4 _.5 . _.6) () (_.0 _.1 1))
    ((_.0 _.1 1) (_.0 _.1 1) (1) ())
    ((1 0 1) (0 1 1) () (1 0 1))))
+(check-equal?
+ (run* (m)
+   (fresh (r)
+     (÷o '(1 0 1) m '(1 1 1) r)))
+ '())
+(check-equal?
+ (run 3 (t)
+   (fresh (y z)
+     (÷o `(1 0 . ,y) '(0 1) z '())
+     (== `(,y ,z) t)))
+ '())
+
+(: exp2o (→ Term Term Term Goal))
+(define (exp2o n b q)
+  (condi
+    [(== '(1) n) (== '() q)]
+    [(>1o n) (== '(1) q)
+     (fresh (s)
+       (splito n b s '(1)))]
+    [(fresh (q1 b2)
+       (alli
+         (== `(0 . ,q1) q)
+         (poso q1)
+         (<lo b n)
+         (appendo b `(1 . ,b) b2)
+         (exp2o n b2 q1)))]
+    [(fresh (q1 nh b2 s)
+       (alli
+         (== `(1 . ,q1) q)
+         (poso q1)
+         (poso nh)
+         (splito n b s nh)
+         (appendo b `(1 . ,b) b2)
+         (exp2o nh b2 q1)))]
+    [else fail]))
+(: repeated-mulo (→ Term Term Term Goal))
+(define (repeated-mulo n q nq)
+  (conde
+    [(poso n) (== '() q) (== '(1) nq)]
+    [(== '(1) q) (== n nq)]
+    [(>1o q)
+     (fresh (q1 nq1)
+       (+o q1 '(1) q)
+       (repeated-mulo n q1 nq1)
+       (*o nq1 n nq))]
+    [else fail]))
+(: logo (→ Term Term Term Term Goal))
+(define (logo n b q r)
+  (condi
+    [(== '(1) n) (poso b) (== '() q) (== '() r)]
+    [(== '() q) (<o n b) (+o r '(1) n)]
+    [(== '(1) q) (>1o b) (=lo n b) (+o r b n)]
+    [(== '(1) b) (poso q) (+o r '(1) n)]
+    [(== '() b) (poso q) (== r n)]
+    [(== '(0 1) b)
+     (fresh (a ad dd)
+       (poso dd)
+       (== `(,a ,ad . ,dd) n)
+       (exp2o n '() q)
+       (fresh (s)
+         (splito n dd r s)))]
+    [(fresh (a ad add ddd)
+       (conde
+         [(== '(1 1) b)]
+         [else (== `(,a ,ad ,add . ,ddd) b)]))
+     (<lo b n)
+     (fresh (bw1 bw nw nw1 ql1 ql s)
+       (exp2o b '() bw1)
+       (+o bw1 '(1) bw)
+       (<lo q n)
+       (fresh (q1 bwq1)
+         (+o q '(1) q1)
+         (*o bw q1 bwq1)
+         (<o nw1 bwq1)
+         (exp2o n '() nw1)
+         (+o nw1 '(1) nw)
+         (÷o nw bw ql1 s)
+         (+o ql '(1) ql1)
+         (conde
+           [(== q ql)]
+           [else (<lo ql q)])
+         (fresh (bql qh s qdh qd)
+           (repeated-mulo b ql bql)
+           (÷o nw bw1 qh s)
+           (+o ql qdh qh)
+           (+o ql qd q)
+           (conde
+             [(== qd qdh)]
+             [else (<o qd qdh)])
+           (fresh (bqd bq1 bq)
+             (repeated-mulo b qd bqd)
+             (*o bql bqd bq)
+             (*o b bq bq1)
+             (+o bq r n)
+             (<o n bq1)))))]
+    [else fail]))
+(check-equal?
+ (run* (r)
+   (logo '(0 1 1 1) '(0 1) '(1 1) r))
+ '((0 1 1)))
+(check-equal?
+ (run 8 (s)
+   (fresh (b q r)
+     (logo '(0 0 1 0 0 0 1) b q r)
+     (>1o q)
+     (== `(,b ,q ,r) s)))
+ '(((1) (_.0 _.1 . _.2) (1 1 0 0 0 0 1))
+   (() (_.0 _.1 . _.2) (0 0 1 0 0 0 1))
+   ((0 1) (0 1 1) (0 0 1))
+   ((0 0 1) (1 1) (0 0 1))
+   ((1 0 1) (0 1) (1 1 0 1 0 1))
+   ((0 1 1) (0 1) (0 0 0 0 0 1))
+   ((1 1 1) (0 1) (1 1 0 0 1))
+   ((0 0 0 1) (0 1) (0 0 1))))
+
+(: expo (→ Term Term Term Goal))
+(define (expo b q n)
+  (logo n b q '()))
+(check-equal?
+ (run* (t)
+   (expo '(1 1) '(1 0 1) t))
+ '((1 1 0 0 1 1 1 1)))
