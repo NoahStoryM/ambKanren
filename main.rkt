@@ -66,6 +66,23 @@
 (define-syntax-rule (if-aux disj+ g0 g1 g2) (disj+ (all g0 g1) g2))
 (define-syntax-rule (ife g0 g1 g2) (if-aux disj+  g0 g1 g2))
 (define-syntax-rule (ifi g0 g1 g2) (if-aux disji+ g0 g1 g2))
+(define-syntax-rule (ifa g0 g1 g2)
+  (λG (s)
+    (define-values (more? get)
+      (sequence-generate (in-amb/do (g0 s))))
+    (if (more?)
+        (for/amb : Substitution
+                 ([_ (in-naturals)]
+                  #:break (not (more?)))
+          (g1 (get)))
+        (g2 s))))
+(define-syntax-rule (ifu g0 g1 g2)
+  (λG (s)
+    (define-values (more? get)
+      (sequence-generate (in-amb/do (g0 s))))
+    (if (more?)
+        (g1 (get))
+        (g2 s))))
 
 (define-syntax cond-aux
   (syntax-rules (else)
@@ -76,3 +93,5 @@
      (ifer g0 (all g ...) (cond-aux ifer c ...))]))
 (define-syntax-rule (conde c ...) (cond-aux ife c ...))
 (define-syntax-rule (condi c ...) (cond-aux ifi c ...))
+(define-syntax-rule (conda c ...) (cond-aux ifa c ...))
+(define-syntax-rule (condu c ...) (cond-aux ifu c ...))
