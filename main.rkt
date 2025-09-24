@@ -36,7 +36,8 @@
       (reify (walk* x s)))))
 (define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
 
-(define-syntax-rule (Zzz g) (ann (λ (s) (g s)) Goal))
+(define-syntax-rule (λG (x) body ...) (ann (λ (x) body ...) Goal))
+(define-syntax-rule (Zzz g) (λG (s) (g s)))
 
 (define-syntax fresh
   (syntax-rules ()
@@ -47,7 +48,7 @@
   (syntax-rules ()
     [(_ () g ...) (all g ...)]
     [(_ (x ...) g ...)
-     (ann (λ (s) (let ([x (walk* x s)] ...) ((all g ...) s))) Goal)]))
+     (λG (s) (let ([x (walk* x s)] ...) ((all g ...) s)))]))
 
 (define-syntax-rule (disj+ g ...) (disj (Zzz g) ...))
 (define-syntax-rule (disji+ g ...) (disji (Zzz g) ...))
