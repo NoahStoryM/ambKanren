@@ -50,9 +50,9 @@
     [(_ (x ...) g ...)
      (λG (s) (let ([x (walk* x s)] ...) ((all g ...) s)))]))
 
-(define-syntax-rule (disj+ g ...) (disj (Zzz g) ...))
+(define-syntax-rule (disj+  g ...) (disj  (Zzz g) ...))
 (define-syntax-rule (disji+ g ...) (disji (Zzz g) ...))
-(define-syntax-rule (conj+ g ...) (conj (Zzz g) ...))
+(define-syntax-rule (conj+  g ...) (conj  (Zzz g) ...))
 (define-syntax-rule (conji+ g ...) (conji (Zzz g) ...))
 
 (define-syntax all-aux
@@ -60,7 +60,7 @@
     [(_ conj+) succeed]
     [(_ conj+ g) (Zzz g)]
     [(_ conj+ g ...) (conj+ g ...)]))
-(define-syntax-rule (all g ...) (all-aux conj+ g ...))
+(define-syntax-rule (all  g ...) (all-aux conj+  g ...))
 (define-syntax-rule (alli g ...) (all-aux conji+ g ...))
 
 (define-syntax-rule (if-aux disj+ g0 g1 g2) (disj+ (all g0 g1) g2))
