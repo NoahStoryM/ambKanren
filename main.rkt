@@ -47,7 +47,7 @@
   (syntax-rules ()
     [(_ () g ...) (all g ...)]
     [(_ (x ...) g ...)
-     (ann (λ (s) (let ([x (walk* x s)] ...) (all g ...))) Goal)]))
+     (ann (λ (s) (let ([x (walk* x s)] ...) ((all g ...) s))) Goal)]))
 
 (define-syntax-rule (disj+ g ...) (disj (Zzz g) ...))
 (define-syntax-rule (disji+ g ...) (disji (Zzz g) ...))
