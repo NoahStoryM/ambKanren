@@ -63,14 +63,16 @@
 (define-syntax-rule (all g ...) (all-aux conj+ g ...))
 (define-syntax-rule (alli g ...) (all-aux conji+ g ...))
 
+(define-syntax-rule (if-aux disj+ g0 g1 g2) (disj+ (all g0 g1) g2))
+(define-syntax-rule (ife g0 g1 g2) (if-aux disj+  g0 g1 g2))
+(define-syntax-rule (ifi g0 g1 g2) (if-aux disji+ g0 g1 g2))
+
 (define-syntax cond-aux
   (syntax-rules (else)
-    [(_ disj+) fail]
-    [(_ disj+ [else g ...]) (all g ...)]
-    [(_ disj+ [g ...]) (all g ...)]
-    [(_ disj+ [g ...] c ...)
-     (disj+ (all g ...) (cond-aux disj+ c ...))]))
-(define-syntax-rule (conde c ...) (cond-aux disj+ c ...))
-(define-syntax-rule (condi c ...) (cond-aux disji+ c ...))
-(define-syntax-rule (ife g0 g1 g2) (conde [g0 g1] [else g2]))
-(define-syntax-rule (ifi g0 g1 g2) (condi [g0 g1] [else g2]))
+    [(_ ifer) fail]
+    [(_ ifer [else g ...]) (all g ...)]
+    [(_ ifer [g ...]) (all g ...)]
+    [(_ ifer [g0 g ...] c ...)
+     (ifer g0 (all g ...) (cond-aux ifer c ...))]))
+(define-syntax-rule (conde c ...) (cond-aux ife c ...))
+(define-syntax-rule (condi c ...) (cond-aux ifi c ...))
