@@ -94,7 +94,8 @@
 (define (reify v) (walk* v (reify-s v empty-s)))
 
 
-(define-syntax-rule (Zzz g) (ann (λ (s) (g s)) Goal))
+(define-syntax-rule (λG (x) body ...) (ann (λ (x) body ...) Goal))
+(define-syntax-rule (Zzz g) (λG (s) (g s)))
 
 (define-syntax-rule (disj+ g1 g2) (disj (Zzz g1) (Zzz g2)))
 (define-syntax-rule (conj+ g1 g2) (conj (Zzz g1) (Zzz g2)))
