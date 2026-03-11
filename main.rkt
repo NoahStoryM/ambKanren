@@ -31,8 +31,8 @@
                      [current-amb-popper tasks-del!])
         (in-amb/do (g empty-s))))
     (for/list : (Listof Term)
-              ([s : Substitution s*]
-               [_ (in-range n)])
+              ([_ (in-range n)]         ; Limit MUST be checked first
+               [s : Substitution s*])   ; Eager sequence generator
       (reify (walk* x s)))))
 (define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
 

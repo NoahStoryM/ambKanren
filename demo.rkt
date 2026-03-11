@@ -125,7 +125,7 @@
         [x (var 'x)])
     (define g (all g* ...))
     (for/list : (Listof Term)
-              ([s (in-amb (g empty-s))]
-               [_ (in-range n)])
+              ([_ (in-range n)]          ; Limit MUST be checked first
+               [s (in-amb (g empty-s))]) ; Eager sequence generator
       (reify (walk* x s)))))
 (define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
