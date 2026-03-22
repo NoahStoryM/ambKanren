@@ -15,4 +15,3 @@
 #;(include (lib "typed/miniKanren/tests/trs2/ch8.rktl"))
 (include (lib "typed/miniKanren/tests/trs2/ch9.rktl"))
 #;(include (lib "typed/miniKanren/tests/trs2/ch10.rktl"))
-
