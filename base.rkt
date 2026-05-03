@@ -2,7 +2,7 @@
 
 (require "private/types.rkt"
          (except-in racket/match ==)
-         typed/racket/unsafe
+         racket/promise
          typed/data/queue
          typed/amb)
 
@@ -35,15 +35,6 @@
 
 (: apply-goal (→ Goal Substitution Substitution))
 (define (apply-goal g s) (g s))
-
-
-(unsafe-require/typed "private/utils.rkt"
-  [rotate-queue! (→ SequenceTop Void)])
-(define rotate-tasks! rotate-queue!)
-(define make-tasks (current-amb-maker))
-(define tasks-length (current-amb-length))
-(define tasks-add! (current-amb-pusher))
-(define tasks-del! (current-amb-popper))
 
 
 (: walk (→ Term Substitution Term))
@@ -143,6 +134,28 @@
             [else (producer)]))))
   (in-producer producer (λ (s) (eq? s fail-s))))
 
+
+(: bindi (→ (Sequenceof Substitution) Goal (Sequenceof Substitution)))
+(define (bindi s* g)
+  (define-values (more? get) (sequence-generate s*))
+  (cond
+    [(more?)
+     (define gen
+       (delay
+         (call-with-values
+          (λ ()
+            (sequence-generate (bindi s* g)))
+          cons)))
+     (mplusi
+      (in-amb/do (g (get)))
+      (make-do-sequence
+       (λ ()
+         (match-define (cons more? get) (force gen))
+         (define (pos->element _) (get))
+         (define (continue-with-pos? _) (more?))
+         (values pos->element void (void) continue-with-pos? #f #f))))]
+    [else s*]))
+
 (: disji (→ Goal * Goal))
 (define (disji . g*)
   (match (remq* (list fail) g*)
@@ -168,6 +181,12 @@
       (match (remq* (list succeed) g*)
         ['() succeed]
         [`(,g) g]
+        #;
+        [`(,g . ,g*)
+         (λ (s)
+           (sequence->amb
+            (bindi (in-amb/do (g s))
+                   (apply conji g*))))]
         [g*
          (λ (s)
            (define s*
@@ -177,6 +196,6 @@
                (in-amb/do
                 (let* ([s (sequence->amb s*)]
                        [s* (in-amb/do (g s))])
-                  (parameterize ([current-amb-rotator rotate-tasks!])
+                  (parameterize ([current-amb-fair? #t])
                     (sequence->amb s*))))))
            (sequence->amb s*))])))

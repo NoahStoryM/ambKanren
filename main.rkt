@@ -22,14 +22,7 @@
   (let ([n : Real (or n^ +inf.0)]
         [x (var 'x)])
     (define g (all g* ...))
-    (define s*
-      (parameterize ([current-amb-rotator void]
-                     [current-amb-shuffler void]
-                     [current-amb-maker make-tasks]
-                     [current-amb-length tasks-length]
-                     [current-amb-pusher tasks-add!]
-                     [current-amb-popper tasks-del!])
-        (in-amb/do (g empty-s))))
+    (define s* (in-amb/do (g empty-s)))
     (for/list : (Listof Term)
               ([_ (in-range n)]         ; Limit MUST be checked first
                [s : Substitution s*])   ; Eager sequence generator
