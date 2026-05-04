@@ -95,7 +95,7 @@
 (: fail Goal)
 (: succeed Goal)
 (define (fail _) (amb))
-(define (succeed s) (amb s))
+(define (succeed s) s)
 
 (: disj (→ Goal * Goal))
 (define (disj . g*)
