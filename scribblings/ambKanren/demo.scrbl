@@ -2,13 +2,13 @@
 
 @(require (for-label typed/racket/base
                      (only-in amb amb in-amb/do)
-                     ambKanren/trs1)
+                     typed/miniKanren/amb/trs1)
           scribble/example
           "minikanren.rkt")
 
 @(define demo-eval
    (make-base-eval #:lang 'typed/racket/base
-                   '(require ambKanren/demo)))
+                   '(require typed/miniKanren/amb/demo)))
 
 @title[#:tag "demo"]{From Streams to amb}
 
@@ -44,7 +44,7 @@ what turns that control effect back into a sequence of answers.
 
 @section[#:tag "demo-module"]{A Minimal Version}
 
-@defmodule[ambKanren/demo #:packages ("ambKanren")]
+@defmodule[typed/miniKanren/amb/demo #:packages ("ambKanren")]
 
 This module is a self-contained, minimal miniKanren based on
 @racket[amb], close in size and structure to microKanren.  It is

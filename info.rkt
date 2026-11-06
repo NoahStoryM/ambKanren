@@ -1,8 +1,8 @@
 #lang info
 
 (define license 'MIT)
-(define collection "ambKanren")
-(define version "1.0")
+(define collection "typed")
+(define version "2.0")
 
 (define pkg-desc "miniKanren based on amb")
 
@@ -20,7 +20,14 @@
     "typed-racket-doc"
     "amb"))
 
-(define scribblings '(("scribblings/ambKanren.scrbl" (multi-page))))
+(define scribblings
+  '(("scribblings/ambKanren/ambKanren.scrbl" (multi-page) (library) "ambKanren")))
 
-(define clean '("compiled" "trs1/compiled" "trs1/private/compiled" "trs2/compiled" "demo/compiled"))
+(define clean
+  '("compiled"
+    "miniKanren/amb/compiled"
+    "miniKanren/amb/trs1/compiled"
+    "miniKanren/amb/trs1/private/compiled"
+    "miniKanren/amb/trs2/compiled"
+    "miniKanren/amb/demo/compiled"))
 (define test-omit-paths '(#px"^((?!/tests/).)*$"))
