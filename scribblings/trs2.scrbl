@@ -4,7 +4,8 @@
                      (only-in amb amb in-amb/do current-amb-depth-first?)
                      ambKanren/trs2)
           scribble/example
-          "utils.rkt")
+          "utils.rkt"
+          "minikanren.rkt")
 
 @(define ak-eval
    (make-base-eval #:lang 'typed/racket/base
@@ -31,14 +32,14 @@ edition.  What changes is the representation of goals:
          #:sep @hspace[2]
          #:row-properties '(bottom-border ())
 (list (list @bold{} @bold{second edition} @bold{ambKanren/trs2})
-      (list "goal" "substitution → stream" @racket[(→ Substitution Substitution)])
-      (list @racket[disj2] @tt{append-inf} @elem{a choice made by @racket[amb]})
-      (list @racket[conj2] @tt{append-map-inf} "function composition")
-      (list "suspension" @elem{an immature stream @tt{(λ () ...)}} @elem{@racket[suspend]: a choice point sent to the back of the frontier}))]
+      (list "goal" @mk2[(→ Substitution (Streamof Substitution))] @racket[(→ Substitution Substitution)])
+      (list @racket[disj2] @mk2[append-inf] @elem{a choice made by @racket[amb]})
+      (list @racket[conj2] @mk2[append-map-inf] "function composition")
+      (list "suspension" @elem{an immature stream, @mk2[(λ () ...)]} @elem{@racket[suspend]: a choice point sent to the back of the frontier}))]
 
 The second edition can switch away from a branch that never produces
 an answer, because @racket[defrel] suspends every call to a relation
-and @tt{append-inf} swaps its two streams at each suspension.  Here,
+and @mk2[append-inf] swaps its two streams at each suspension.  Here,
 @racket[defrel] calls @racket[suspend], which lets the computations
 already waiting in @racket[amb]'s frontier run first:
 
@@ -50,7 +51,7 @@ already waiting in @racket[amb]'s frontier run first:
 @subsection[#:tag "trs2-order"]{Order of Answers}
 
 The two implementations produce the same answers but schedule
-suspended computations differently.  @tt{append-inf} swaps a suspended
+suspended computations differently.  @mk2[append-inf] swaps a suspended
 stream only with the other side of the disjunction it belongs to, so
 the search is a tree of binary interleavings in which deeper
 disjunctions receive exponentially smaller shares.  @racket[suspend]

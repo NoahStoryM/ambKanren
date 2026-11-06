@@ -4,7 +4,8 @@
                      (only-in amb amb in-amb/do)
                      ambKanren/trs1)
           scribble/example
-          "utils.rkt")
+          "utils.rkt"
+          "minikanren.rkt")
 
 @(define ak-eval
    (make-base-eval #:lang 'typed/racket/base
@@ -42,8 +43,8 @@ check, signalling failure with @racket[(amb)].}
 @item{@racket[conde] is depth-first, as in the first edition: it
 corresponds to unfair @racket[amb].  The interleaving forms
 @racket[condi] and @racket[alli] are implemented separately (see
-@secref["trs1-interleaving"]) after the first edition's @tt{mplusi}
-and @tt{bindi}, and produce answers in the same order as the book.}
+@secref["trs1-interleaving"]) after the first edition's @mk1[mplusi]
+and @mk1[bindi], and produce answers in the same order as the book.}
 
 ]
 
@@ -267,7 +268,7 @@ yet the answers with @racket['R] are reached:
               @defproc[(bindi [s* (Sequenceof Substitution)] [g Goal])
                        (Sequenceof Substitution)])]{
 Sequence-level helpers corresponding to the first edition's
-@tt{mplusi} and @tt{bindi}.  @racket[mplusi] merges sequences of
+@mk1[mplusi] and @mk1[bindi].  @racket[mplusi] merges sequences of
 substitutions round-robin.  @racket[bindi] merges the answers of
 @racket[g] on the first element of @racket[s*] with those of
 @racket[bindi] on the rest of @racket[s*], which is computed only when

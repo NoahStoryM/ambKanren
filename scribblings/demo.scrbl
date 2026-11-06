@@ -3,7 +3,8 @@
 @(require (for-label typed/racket/base
                      (only-in amb amb in-amb/do)
                      ambKanren/trs1)
-          scribble/example)
+          scribble/example
+          "minikanren.rkt")
 
 @(define demo-eval
    (make-base-eval #:lang 'typed/racket/base
@@ -27,13 +28,13 @@ rather than a value, so it disappears from the type of goals:
          #:row-properties '(bottom-border ())
 (list (list @bold{} @bold{stream monad} @bold{ambKanren})
       (list "goal"
-            @racket[(→ Substitution (Streamof Substitution))]
+            @mk1[(→ Substitution (Streamof Substitution))]
             @racket[(→ Substitution Substitution)])
-      (list @racket[succeed] @racket[(λ (s) (unit s))] @racket[(λ (s) s)])
-      (list @racket[fail] @racket[(λ (s) (mzero))] @racket[(λ (s) (amb))])
-      (list @racket[conj] @racket[(λ (s) (bind (g1 s) g2))] @racket[(λ (s) (g2 (g1 s)))])
-      (list @racket[disj] @racket[(λ (s) (mplus (g1 s) (g2 s)))] @racket[(λ (s) ((amb g1 g2) s))])
-      (list @racket[run] @elem{take answers from the stream @racket[(g empty-s)]} @elem{take answers from @racket[(in-amb/do (g empty-s))]}))]
+      (list @racket[succeed] @mk1[(λ (s) (unit s))] @racket[(λ (s) s)])
+      (list @racket[fail] @mk1[(λ (s) (mzero))] @racket[(λ (s) (amb))])
+      (list @racket[conj] @mk1[(λ (s) (bind (g1 s) g2))] @racket[(λ (s) (g2 (g1 s)))])
+      (list @racket[disj] @mk1[(λ (s) (mplus (g1 s) (g2 s)))] @racket[(λ (s) ((amb g1 g2) s))])
+      (list @racket[run] @elem{take answers from the stream @mk1[(g empty-s)]} @elem{take answers from @racket[(in-amb/do (g empty-s))]}))]
 
 So @racket[succeed] is the identity function, conjunction is plain
 function composition, and disjunction is a choice made by
