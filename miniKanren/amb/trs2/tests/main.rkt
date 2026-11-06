@@ -1,7 +1,7 @@
 #lang typed/racket/base
 
 ;; The examples of The Reasoned Schemer, second edition, from
-;; miniKanren-typed.  ambKanren/trs2 schedules suspended computations
+;; miniKanren-typed.  typed/miniKanren/amb/trs2 schedules suspended computations
 ;; with amb's global frontier instead of append-inf, so some examples
 ;; produce their answers in a different order from the book (see
 ;; "Order of Answers" in the documentation).  Those examples are listed

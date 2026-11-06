@@ -16,20 +16,21 @@ See the [[https://docs.racket-lang.org/ambKanren/index.html][online documentatio
 ~raco docs ambKanren~ after installing the package.
 
 * Usage
-Each language has its own module: ~ambKanren/trs1~ and ~ambKanren/trs2~
-for the languages of the first (2005) and second (2018) editions of
-/The Reasoned Schemer/, and ~ambKanren/demo~ for a minimal version in
-the style of microKanren.
+Each language has its own module: ~typed/miniKanren/amb/trs1~ and
+~typed/miniKanren/amb/trs2~ for the languages of the first (2005) and
+second (2018) editions of /The Reasoned Schemer/, and
+~typed/miniKanren/amb/demo~ for a minimal version in the style of
+microKanren.
 
 #+begin_src racket
 #lang typed/racket/base
-(require ambKanren/trs1)
+(require typed/miniKanren/amb/trs1)
 (run* (q) (conde [(== q 'red)] [(== q 'green)]))
 #+end_src
 
 #+begin_src racket
 #lang typed/racket/base
-(require ambKanren/trs2)
+(require typed/miniKanren/amb/trs2)
 (defrel (coloro c) (conde [(== c 'red)] [(== c 'green)]))
 (run* q (coloro q))
 #+end_src

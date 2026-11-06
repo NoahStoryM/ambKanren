@@ -2,7 +2,7 @@
 
 @(require (for-label typed/racket/base
                      (only-in amb amb in-amb/do)
-                     ambKanren/trs1))
+                     typed/miniKanren/amb/trs1))
 
 @title{ambKanren: miniKanren Based on amb}
 @author[@author+email["Noah Ma" "noahstorym@gmail.com"]]
@@ -19,14 +19,14 @@ The package provides one module for each language it implements:
 
 @itemlist[
 
-@item{@racketmodname[ambKanren/demo]: a minimal version in the style
+@item{@racketmodname[typed/miniKanren/amb/demo]: a minimal version in the style
 of microKanren, intended for reading.}
 
-@item{@racketmodname[ambKanren/trs1]: the language of the first
+@item{@racketmodname[typed/miniKanren/amb/trs1]: the language of the first
 edition of @italic{The Reasoned Schemer} (Friedman, Byrd, and
 Kiselyov, MIT Press, 2005).}
 
-@item{@racketmodname[ambKanren/trs2]: the language of the second
+@item{@racketmodname[typed/miniKanren/amb/trs2]: the language of the second
 edition (Friedman, Byrd, Kiselyov, and Hemann, MIT Press, 2018).}
 
 ]

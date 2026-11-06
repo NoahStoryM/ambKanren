@@ -2,19 +2,19 @@
 
 @(require (for-label typed/racket/base
                      (only-in amb amb in-amb/do current-amb-depth-first?)
-                     ambKanren/trs2)
+                     typed/miniKanren/amb/trs2)
           scribble/example
           "utils.rkt"
           "minikanren.rkt")
 
 @(define ak-eval
    (make-base-eval #:lang 'typed/racket/base
-                   '(require ambKanren/trs2)))
+                   '(require typed/miniKanren/amb/trs2)))
 @(define-syntax-rule (ak-examples body ...)
    (examples #:eval ak-eval body ...))
 
 @title[#:tag "trs2"]{Second Edition}
-@defmodule[ambKanren/trs2 #:packages ("ambKanren")]
+@defmodule[typed/miniKanren/amb/trs2 #:packages ("ambKanren")]
 
 This module implements the language of the second edition of
 @italic{The Reasoned Schemer} (Friedman, Byrd, Kiselyov, and Hemann,
@@ -31,7 +31,7 @@ edition.  What changes is the representation of goals:
 @tabular[#:style 'boxed
          #:sep @hspace[2]
          #:row-properties '(bottom-border ())
-(list (list @bold{} @bold{second edition} @bold{ambKanren/trs2})
+(list (list @bold{} @bold{second edition} @bold{typed/miniKanren/amb/trs2})
       (list "goal" @mk2[(→ Substitution (Streamof Substitution))] @racket[(→ Substitution Substitution)])
       (list @racket[disj2] @mk2[append-inf] @elem{a choice made by @racket[amb]})
       (list @racket[conj2] @mk2[append-map-inf] "function composition")

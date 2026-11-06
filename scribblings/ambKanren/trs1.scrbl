@@ -2,19 +2,19 @@
 
 @(require (for-label typed/racket/base
                      (only-in amb amb in-amb/do)
-                     ambKanren/trs1)
+                     typed/miniKanren/amb/trs1)
           scribble/example
           "utils.rkt"
           "minikanren.rkt")
 
 @(define ak-eval
    (make-base-eval #:lang 'typed/racket/base
-                   '(require ambKanren/trs1 typed/amb)))
+                   '(require typed/miniKanren/amb/trs1 typed/amb)))
 @(define-syntax-rule (ak-examples body ...)
    (examples #:eval ak-eval body ...))
 
 @title[#:tag "trs1"]{First Edition}
-@defmodule[ambKanren/trs1 #:packages ("ambKanren")]
+@defmodule[typed/miniKanren/amb/trs1 #:packages ("ambKanren")]
 
 This module implements the language of the first edition of
 @italic{The Reasoned Schemer} on top of @racket[amb].
@@ -25,7 +25,7 @@ The core is the one of @secref["demo-module"], generalized: @racket[disj]
 and @racket[conj] take any number of goals, and substitutions are
 immutable hash tables instead of association lists.
 
-The user-level language provided by @racketmodname[ambKanren/trs1] is that
+The user-level language provided by @racketmodname[typed/miniKanren/amb/trs1] is that
 of the @emph{first} edition of @italic{The Reasoned Schemer}
 (Friedman, Byrd, and Kiselyov, MIT Press, 2005): @racket[run] with a
 single query variable, @racket[conde] with @racket[else], the

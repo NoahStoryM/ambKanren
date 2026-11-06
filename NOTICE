@@ -9,7 +9,7 @@ copyright holders.
 
 1. microKanren
 
-   Files:   trs1/base.rkt, demo/main.rkt
+   Files:   miniKanren/amb/trs1/base.rkt, miniKanren/amb/demo/main.rkt
 
    Source:  Jason Hemann and Daniel P. Friedman, "μKanren: A Minimal
             Functional Core for Relational Programming" (Scheme
@@ -46,7 +46,7 @@ copyright holders.
 
 2. The Reasoned Schemer, first edition
 
-   Files:   trs1/main.rkt
+   Files:   miniKanren/amb/trs1/main.rkt
 
    Source:  Daniel P. Friedman, William E. Byrd, and Oleg Kiselyov,
             The Reasoned Schemer, MIT Press, 2005, appendix A
@@ -62,7 +62,7 @@ copyright holders.
 
 3. The Reasoned Schemer, second edition
 
-   Files:   trs2/main.rkt
+   Files:   miniKanren/amb/trs2/main.rkt
 
    Source:  https://github.com/TheReasonedSchemer2ndEd/CodeFromTheReasonedSchemer2ndEd
             (trs2-impl.scm), the code of chapter 10 and appendix A of
@@ -106,7 +106,7 @@ copyright holders.
 
 4. Tests
 
-   The tests in trs1/tests/, trs2/tests/, and demo/tests/ load the
+   The tests in miniKanren/amb/{trs1,trs2,demo}/tests/ load the
    examples from The Reasoned Schemer (first and second editions) from
    the miniKanren-typed package (typed/miniKanren/trs1/tests/ and
    typed/miniKanren/trs2/tests/); they are not copied into this
