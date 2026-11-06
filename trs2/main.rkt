@@ -106,7 +106,7 @@
     (sequence-generate (in-amb/do (g1 s))))
   (if (more?)
       (g2 (let loop : Substitution ()
-            (define s1 (cast (get) Substitution))
+            (define s1 (get))
             (if (and (more?) (not (amb #t #f))) (loop) s1)))
       (g3 s)))
 
@@ -114,7 +114,7 @@
 (define ((once g) s)
   (define-values (more? get)
     (sequence-generate (in-amb/do (g s))))
-  (if (more?) (cast (get) Substitution) (amb)))
+  (if (more?) (get) (amb)))
 
 
 ;;; Reification
