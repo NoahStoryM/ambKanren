@@ -16,14 +16,22 @@ See the [[https://docs.racket-lang.org/ambKanren/index.html][online documentatio
 ~raco docs ambKanren~ after installing the package.
 
 * Usage
-Each language has its own module: ~ambKanren/trs1~ for the language of
-the first edition of /The Reasoned Schemer/ (2005), and ~ambKanren/demo~
-for a minimal version in the style of microKanren.
+Each language has its own module: ~ambKanren/trs1~ and ~ambKanren/trs2~
+for the languages of the first (2005) and second (2018) editions of
+/The Reasoned Schemer/, and ~ambKanren/demo~ for a minimal version in
+the style of microKanren.
 
 #+begin_src racket
 #lang typed/racket/base
 (require ambKanren/trs1)
 (run* (q) (conde [(== q 'red)] [(== q 'green)]))
+#+end_src
+
+#+begin_src racket
+#lang typed/racket/base
+(require ambKanren/trs2)
+(defrel (coloro c) (conde [(== c 'red)] [(== c 'green)]))
+(run* q (coloro q))
 #+end_src
 
 * License
@@ -32,7 +40,10 @@ see [[file:LICENSE]].
 
 Parts of the code are adapted from
 [[https://github.com/jasonhemann/microKanren][microKanren]] (MIT License,
-Copyright (C) 2013 Jason Hemann and Daniel P. Friedman) and from the
-implementation in /The Reasoned Schemer/, first edition (MIT Press, 2005).
+Copyright (C) 2013 Jason Hemann and Daniel P. Friedman), from the
+implementation in /The Reasoned Schemer/, first edition (MIT Press, 2005),
+and from the [[https://github.com/TheReasonedSchemer2ndEd/CodeFromTheReasonedSchemer2ndEd][official code]]
+of the second edition (MIT License, Copyright (c) 2018 Daniel P. Friedman,
+William E. Byrd, Oleg Kiselyov, and Jason Hemann).
 See [[file:NOTICE]] for the sources, the copyright holders, and the
 microKanren license text.

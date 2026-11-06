@@ -60,9 +60,54 @@ copyright holders.
    definitions are rewritten on top of amb.
 
 
-3. Tests
+3. The Reasoned Schemer, second edition
 
-   The tests in tests/ load the examples from The Reasoned Schemer,
-   first edition, from the miniKanren-typed package
-   (typed/miniKanren/trs1/tests/); they are not copied into this
+   Files:   trs2/main.rkt
+
+   Source:  https://github.com/TheReasonedSchemer2ndEd/CodeFromTheReasonedSchemer2ndEd
+            (trs2-impl.scm), the code of chapter 10 and appendix A of
+            Daniel P. Friedman, William E. Byrd, Oleg Kiselyov, and
+            Jason Hemann, The Reasoned Schemer, second edition, MIT
+            Press, 2018.
+
+   The user-level language (run, run*, defrel, fresh, conde, conda,
+   condu, project, disj, conj) and the definitions of walk, unify,
+   ifte, once, and reification follow that code.  Goals are rewritten
+   on top of amb, without streams: disj2 is a choice made by amb,
+   conj2 is function composition, and the suspension that defrel
+   inserts is a choice point sent to the back of amb's frontier.  The
+   code is distributed under the following license:
+
+   MIT License
+
+   Copyright (c) 2018 Daniel P. Friedman, William E. Byrd, Oleg Kiselyov,
+   and Jason Hemann
+
+   Permission is hereby granted, free of charge, to any person obtaining
+   a copy of this software and associated documentation files (the
+   "Software"), to deal in the Software without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sublicense, and/or sell copies of the Software, and to
+   permit persons to whom the Software is furnished to do so, subject to
+   the following conditions:
+
+   The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+
+4. Tests
+
+   The tests in trs1/tests/, trs2/tests/, and demo/tests/ load the
+   examples from The Reasoned Schemer (first and second editions) from
+   the miniKanren-typed package (typed/miniKanren/trs1/tests/ and
+   typed/miniKanren/trs2/tests/); they are not copied into this
    package.  See the NOTICE file of miniKanren-typed.

@@ -2,7 +2,7 @@
 
 (define license 'MIT)
 (define collection "ambKanren")
-(define version "0.0")
+(define version "1.0")
 
 (define pkg-desc "miniKanren based on amb")
 
@@ -22,5 +22,5 @@
 
 (define scribblings '(("scribblings/ambKanren.scrbl" (multi-page))))
 
-(define clean '("compiled" "trs1/compiled" "trs1/private/compiled" "demo/compiled"))
+(define clean '("compiled" "trs1/compiled" "trs1/private/compiled" "trs2/compiled" "demo/compiled"))
 (define test-omit-paths '(#px"^((?!/tests/).)*$"))
