@@ -64,5 +64,5 @@ copyright holders.
 
    The tests in tests/ load the examples from The Reasoned Schemer,
    first edition, from the miniKanren-typed package
-   (typed/miniKanren/tests/trs1/); they are not copied into this
+   (typed/miniKanren/trs1/tests/); they are not copied into this
    package.  See the NOTICE file of miniKanren-typed.
