@@ -21,9 +21,12 @@ This module implements the language of the first edition of
 
 @section[#:tag "trs1-basis"]{Implementation Basis}
 
-The core is the one of @secref["demo-module"], generalized: @racket[disj]
-and @racket[conj] take any number of goals, and substitutions are
-immutable hash tables instead of association lists.
+The core follows @secref["microKanren"]: a goal returns one substitution and
+chooses among its answers with @racket[amb].  There is no state and no
+variable counter (variables are created directly by @racket[fresh]),
+@racket[disj] and @racket[conj] take any number of goals, and
+substitutions are immutable hash tables instead of association
+lists.
 
 The user-level language provided by @racketmodname[typed/miniKanren/amb/trs1] is that
 of the @emph{first} edition of @italic{The Reasoned Schemer}
@@ -163,8 +166,9 @@ is built.  For recursive relations, use @racket[disj+] and
 @racket[(Zzz goal)] is the η-expansion @racket[(λG (s) (goal s))]: it
 delays the evaluation of the expression @racket[goal] until the goal is
 applied, which keeps recursive relations from looping while they are
-being built.  Unlike microKanren's @tt{Zzz}, it does not suspend a
-stream, since there is none.  @racket[λG] is @racket[λ] annotated with
+being built.  Unlike @tt{Zzz} in @secref["microKanren"], it does not
+suspend the computation: interleaving is provided by @racket[condi] and
+@racket[alli] instead.  @racket[λG] is @racket[λ] annotated with
 the type @racket[Goal].
 }
 

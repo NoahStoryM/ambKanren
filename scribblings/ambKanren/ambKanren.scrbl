@@ -10,7 +10,8 @@
 ambKanren is a miniKanren in which backtracking is not implemented by a
 stream of answers but delegated to the ambiguous operator @racket[amb]
 of the @racketmodname[typed/amb] library.  A goal is an ordinary
-function from substitutions to substitutions; when a goal fails it
+function from substitutions to substitutions (from states to states, in
+microKanren); when a goal fails it
 calls @racket[(amb)], and when it has several answers it chooses one of
 them with @racket[amb].  The search over all choices is performed by
 @racket[in-amb/do], which @racket[run] uses to collect answers.
@@ -19,8 +20,8 @@ The package provides one module for each language it implements:
 
 @itemlist[
 
-@item{@racketmodname[typed/miniKanren/amb/demo]: a minimal version in the style
-of microKanren, intended for reading.}
+@item{@racketmodname[typed/microKanren/amb]: microKanren (Hemann and
+Friedman, 2013), the minimal functional core.}
 
 @item{@racketmodname[typed/miniKanren/amb/trs1]: the language of the first
 edition of @italic{The Reasoned Schemer} (Friedman, Byrd, and
@@ -33,6 +34,6 @@ edition (Friedman, Byrd, Kiselyov, and Hemann, MIT Press, 2018).}
 
 @table-of-contents[]
 
-@include-section["demo.scrbl"]
+@include-section["microKanren.scrbl"]
 @include-section["trs1.scrbl"]
 @include-section["trs2.scrbl"]
