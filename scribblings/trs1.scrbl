@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do current-amb-fair?)
+                     (only-in amb amb in-amb/do)
                      ambKanren/trs1)
           scribble/example
           "utils.rkt")
@@ -54,8 +54,8 @@ rather than by microKanren's @tt{call/fresh} on a state.}
 @item{@racket[conde] is depth-first, as in the first edition: it
 corresponds to unfair @racket[amb].  The interleaving forms
 @racket[condi] and @racket[alli] are implemented separately (see
-@secref["trs1-interleaving"]); the order in which they produce answers is
-not always the order given in the book.}
+@secref["trs1-interleaving"]) after the first edition's @tt{mplusi}
+and @tt{bindi}, and produce answers in the same order as the book.}
 
 ]
 
@@ -251,25 +251,39 @@ Interleaving disjunction and conjunction, used by @racket[condi] and
 @racket[alli].  @racket[disji] collects the answers of each goal as a
 sequence with @racket[in-amb/do], merges the sequences round-robin
 with @racket[mplusi], and chooses from the merged sequence with
-@racket[amb].  @racket[conji] threads the answers through the goals,
-choosing among the answers of each goal with
-@racket[current-amb-fair?] enabled.
+@racket[amb].  @racket[conji] collects the answers of its first goal
+as a sequence and passes it to @racket[bindi] with the conjunction of
+the remaining goals, so that the answers obtained from different
+answers of the first goal are interleaved.  An answer of a later goal
+is therefore reached even when an earlier goal has infinitely many
+answers.
 
-@bold{Known limitation:} @racket[conji] is not fair when an earlier
-goal has infinitely many answers: in
-@racket[(alli (counto n) (conde [(== side 'L)] [(== side 'R)]))], where
-@racket[counto] has an answer for every length, no answer with
-@racket['R] is ever produced.  The first-edition @racket[alli] does
-produce them.
+In the example below, @racket[counto] has an answer for every length,
+yet the answers with @racket['R] are reached:
+
+@ak-examples[
+(: counto (→ Term Goal))
+(define (counto n)
+  (conde
+    [(== n '())]
+    [(fresh (m) (== n (cons 'I m)) (counto m))]))
+(run 6 (q)
+  (fresh (n side)
+    (alli (counto n) (conde [(== side 'L)] [(== side 'R)]))
+    (== q (cons side n))))
+]
 }
 
 @deftogether[(@defproc[(mplusi [s* (Sequenceof Substitution)] ...)
                        (Sequenceof Substitution)]
               @defproc[(bindi [s* (Sequenceof Substitution)] [g Goal])
                        (Sequenceof Substitution)])]{
-Sequence-level helpers.  @racket[mplusi] merges sequences of
-substitutions round-robin; @racket[bindi] applies @racket[g] to each
-element of @racket[s*] and merges the results.
+Sequence-level helpers corresponding to the first edition's
+@tt{mplusi} and @tt{bindi}.  @racket[mplusi] merges sequences of
+substitutions round-robin.  @racket[bindi] merges the answers of
+@racket[g] on the first element of @racket[s*] with those of
+@racket[bindi] on the rest of @racket[s*], which is computed only when
+it is needed.
 }
 
 @section[#:tag "trs1-substitutions"]{Substitutions and Unification}

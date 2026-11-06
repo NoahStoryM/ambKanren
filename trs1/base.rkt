@@ -156,13 +156,14 @@
           cons)))
      (mplusi
       (in-amb/do (g (get)))
+      ;; The rest is forced only when it is asked for an element, so
+      ;; that building the sequence does not recur into `bindi`.
       (make-do-sequence
        (λ ()
-         (match-define (cons more? get) (force gen))
-         (define (pos->element _) (get))
-         (define (continue-with-pos? _) (more?))
+         (define (pos->element _) ((cdr (force gen))))
+         (define (continue-with-pos? _) ((car (force gen))))
          (values pos->element void (void) continue-with-pos? #f #f))))]
-    [else s*]))
+    [else '()]))
 
 (: disji (→ Goal * Goal))
 (define (disji . g*)
@@ -189,21 +190,8 @@
       (match (remq* (list succeed) g*)
         ['() succeed]
         [`(,g) g]
-        #;
         [`(,g . ,g*)
          (λ (s)
            (sequence->amb
             (bindi (in-amb/do (g s))
-                   (apply conji g*))))]
-        [g*
-         (λ (s)
-           (define s*
-             (for/fold : (Sequenceof Substitution)
-                       ([s* (in-value s)])
-                       ([g (in-list g*)])
-               (in-amb/do
-                (let* ([s (sequence->amb s*)]
-                       [s* (in-amb/do (g s))])
-                  (parameterize ([current-amb-fair? #t])
-                    (sequence->amb s*))))))
-           (sequence->amb s*))])))
+                   (apply conji g*))))])))
