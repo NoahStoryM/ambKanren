@@ -3,7 +3,8 @@
 @(require (for-label typed/racket/base
                      (only-in amb amb in-amb/do current-amb-fair?)
                      ambKanren)
-          scribble/example)
+          scribble/example
+          "utils.rkt")
 
 @(define ak-eval
    (make-base-eval #:lang 'typed/racket/base
@@ -102,13 +103,13 @@ what turns that control effect back into a sequence of answers.
 
 @section[#:tag "types"]{Types}
 
-@defidform[Term]{
+@deftype[Term]{
 The type of terms: booleans, numbers, characters, byte strings,
 strings, keywords, symbols, @racket['()], logic variables
 (@racket[Var]), and pairs of terms.
 }
 
-@deftogether[(@defidform[Var]
+@deftogether[(@deftype[Var]
               @defproc[(var [name Symbol]) Var]
               @defproc[(var? [v Any]) Boolean]
               @defproc[(var-name [x Var]) Symbol]
@@ -117,14 +118,14 @@ Logic variables.  Variables are compared by identity
 (@racket[var=?] is @racket[eq?]); the name is only for printing.
 }
 
-@defidform[Substitution]{
+@deftype[Substitution]{
 Defined as @racket[(Immutable-HashTable Var Term)], with
 @racket[eq?]-based keys.  As in other miniKanren implementations, the
 substitution is triangular: a variable may be associated with a term
 containing other associated variables.
 }
 
-@defidform[Goal]{
+@deftype[Goal]{
 Defined as @racket[(→ Substitution Substitution)].  Applying a goal to
 a substitution returns one extension of it under which the goal holds,
 chosen with @racket[amb]; the other extensions are explored when the
