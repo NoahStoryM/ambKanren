@@ -110,9 +110,7 @@ strings, keywords, symbols, @racket['()], logic variables
 }
 
 @deftogether[(@deftype[Var]
-              @defproc[(var [name Symbol]) Var]
-              @defproc[(var? [v Any]) Boolean]
-              @defproc[(var-name [x Var]) Symbol]
+              @defstruct*[var ([name Symbol]) #:transparent]
               @defproc[(var=? [x Var] [y Var]) Boolean])]{
 Logic variables.  Variables are compared by identity
 (@racket[var=?] is @racket[eq?]); the name is only for printing.
