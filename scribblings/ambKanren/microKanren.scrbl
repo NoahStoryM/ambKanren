@@ -43,7 +43,7 @@ goals: a goal returns a single state, chooses among its answers with
             @racket[(→ State State)])
       (list "success" @mk0[(unit s/c)] @racket[s/c])
       (list "failure" @mk0[mzero] @racket[(amb)])
-      (list @racket[disj] @mk0[(mplus (g1 s/c) (g2 s/c))] @racket[(amb (g1 s/c) (g2 s/c))])
+      (list @racket[disj] @mk0[(mplus (g1 s/c) (g2 s/c))] @racket[((amb g1 g2) s/c)])
       (list @racket[conj] @mk0[(bind (g1 s/c) g2)] @racket[(g2 (g1 s/c))])
       (list @racket[Zzz] @mk0[(λ (s/c) (λ () (g s/c)))] @racket[(λ (s/c) (suspend) (g s/c))])
       (list @racket[take] @elem{force and collect the stream @mk0[(g empty-state)]} @elem{collect @racket[(in-amb/do (g empty-state))]}))]

@@ -73,7 +73,7 @@
     ((f (var c)) (cons (car s/c) (+ c 1)))))
 
 (: disj (→ Goal Goal Goal))
-(define ((disj g1 g2) s/c) (amb (g1 s/c) (g2 s/c)))
+(define ((disj g1 g2) s/c) ((amb g1 g2) s/c))
 
 (: conj (→ Goal Goal Goal))
 (define ((conj g1 g2) s/c) (g2 (g1 s/c)))
