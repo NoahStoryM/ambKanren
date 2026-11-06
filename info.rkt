@@ -20,7 +20,7 @@
     "typed-racket-doc"
     "amb"))
 
-(define scribblings '(("scribblings/ambKanren.scrbl")))
+(define scribblings '(("scribblings/ambKanren.scrbl" (multi-page))))
 
-(define clean '("compiled" "private/compiled"))
+(define clean '("compiled" "trs1/compiled" "trs1/private/compiled" "demo/compiled"))
 (define test-omit-paths '(#px"^((?!/tests/).)*$"))

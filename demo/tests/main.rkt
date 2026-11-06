@@ -3,7 +3,7 @@
 (require racket/include
          (except-in racket/match ==)
          (except-in typed/rackunit fail)
-         "../demo.rkt")
+         "../main.rkt")
 
 (include (lib "typed/miniKanren/trs1/tests/ch1.rktl"))
 (include (lib "typed/miniKanren/trs1/tests/ch2.rktl"))
