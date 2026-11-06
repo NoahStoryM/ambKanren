@@ -19,15 +19,15 @@ The package provides one module for each language it implements:
 
 @itemlist[
 
+@item{@racketmodname[ambKanren/demo]: a minimal version in the style
+of microKanren, intended for reading.}
+
 @item{@racketmodname[ambKanren/trs1]: the language of the first
 edition of @italic{The Reasoned Schemer} (Friedman, Byrd, and
 Kiselyov, MIT Press, 2005).}
 
 @item{@racketmodname[ambKanren/trs2]: the language of the second
 edition (Friedman, Byrd, Kiselyov, and Hemann, MIT Press, 2018).}
-
-@item{@racketmodname[ambKanren/demo]: a minimal version in the style
-of microKanren, intended for reading.}
 
 ]
 
@@ -65,6 +65,6 @@ what turns that control effect back into a sequence of answers.
 
 @table-of-contents[]
 
+@include-section["demo.scrbl"]
 @include-section["trs1.scrbl"]
 @include-section["trs2.scrbl"]
-@include-section["demo.scrbl"]
