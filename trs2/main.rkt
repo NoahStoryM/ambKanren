@@ -105,9 +105,7 @@
   (define-values (more? get)
     (sequence-generate (in-amb/do (g1 s))))
   (if (more?)
-      (g2 (let loop : Substitution ()
-            (define s1 (get))
-            (if (and (more?) (not (amb #t #f))) (loop) s1)))
+      (g2 (make-amb more? get))
       (g3 s)))
 
 (: once (→ Goal Goal))
