@@ -1,5 +1,12 @@
 #lang typed/racket/base
 
+;; The user-level language of ambKanren.
+;;
+;; The interface follows The Reasoned Schemer, first edition (Friedman,
+;; Byrd, and Kiselyov, MIT Press, 2005).  The cond-aux and all-aux macros
+;; keep the structure of the book's appendix A; run, project, and the
+;; if-forms are rewritten on top of amb.  See NOTICE.
+
 (require "base.rkt"
          (except-in racket/match ==)
          typed/amb)

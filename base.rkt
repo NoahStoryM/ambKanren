@@ -1,5 +1,13 @@
 #lang typed/racket/base
 
+;; The core of ambKanren: substitutions, unification, and goal
+;; combinators built on amb.
+;;
+;; walk, unify, disj/conj, Zzz-style delay, and reification are adapted
+;; from microKanren, Copyright (C) 2013 Jason Hemann and Daniel P.
+;; Friedman, MIT License (https://github.com/jasonhemann/microKanren);
+;; streams are replaced by amb.  See NOTICE.
+
 (require "private/types.rkt"
          (except-in racket/match ==)
          racket/promise

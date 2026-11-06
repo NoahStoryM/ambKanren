@@ -15,5 +15,12 @@ See the [[https://docs.racket-lang.org/ambKanren/index.html][online documentatio
 ~raco docs ambKanren~ after installing the package.
 
 * License
-This project is distributed under the MIT License; see [[file:LICENSE]] for
-more information.
+The original work in this package is distributed under the MIT License;
+see [[file:LICENSE]].
+
+Parts of the code are adapted from
+[[https://github.com/jasonhemann/microKanren][microKanren]] (MIT License,
+Copyright (C) 2013 Jason Hemann and Daniel P. Friedman) and from the
+implementation in /The Reasoned Schemer/, first edition (MIT Press, 2005).
+See [[file:NOTICE]] for the sources, the copyright holders, and the
+microKanren license text.
