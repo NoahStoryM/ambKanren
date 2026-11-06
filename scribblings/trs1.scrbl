@@ -20,13 +20,9 @@ This module implements the language of the first edition of
 
 @section[#:tag "trs1-basis"]{Implementation Basis}
 
-The core (@racket[walk], @racket[unify], binary @racket[disj] and
-@racket[conj], @racket[Zzz], @racket[conj+] and @racket[disj+], and
-reification) follows microKanren (Hemann and Friedman, @italic{μKanren:
-A Minimal Functional Core for Relational Programming}, 2013), with the
-stream operations replaced by @racket[amb].  The module
-@racketmodname[ambKanren/demo] is a minimal version of this core; see
-@secref["demo"].
+The core is the one of @secref["demo-module"], generalized: @racket[disj]
+and @racket[conj] take any number of goals, and substitutions are
+immutable hash tables instead of association lists.
 
 The user-level language provided by @racketmodname[ambKanren/trs1] is that
 of the @emph{first} edition of @italic{The Reasoned Schemer}
@@ -36,20 +32,12 @@ interleaving forms @racket[condi] and @racket[alli], and the
 committed-choice forms @racket[conda] and @racket[condu].  ``Chapter
 @italic{n}'' below refers to that edition.
 
-The differences from these sources are:
+The differences from the book are:
 
 @itemlist[
 
-@item{There is no stream type and no fresh-variable counter.
-Variables are created directly by @racket[fresh], as in the book,
-rather than by microKanren's @tt{call/fresh} on a state.}
-
-@item{@racket[ext-s] performs the occurs check; failure is signalled by
-@racket[(amb)] rather than by returning @racket[#f].}
-
-@item{Substitutions are immutable hash tables in
-@racketmodname[ambKanren/trs1] and association lists in
-@racketmodname[ambKanren/demo].}
+@item{There is no stream type, and @racket[ext-s] performs the occurs
+check, signalling failure with @racket[(amb)].}
 
 @item{@racket[conde] is depth-first, as in the first edition: it
 corresponds to unfair @racket[amb].  The interleaving forms
