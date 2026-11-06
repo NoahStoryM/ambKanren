@@ -12,7 +12,8 @@
     "typed-data-queue"
     ["typed-amb" #:version "2.0"]))
 (define build-deps
-  '("rackunit-typed"
+  '("at-exp-lib"
+    "rackunit-typed"
     "miniKanren-typed"
     "scribble-lib"
     "racket-doc"
