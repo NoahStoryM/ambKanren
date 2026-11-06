@@ -9,17 +9,36 @@ copyright holders.
 
 1. microKanren
 
-   Files:   miniKanren/amb/trs1/base.rkt, miniKanren/amb/demo/main.rkt
+   Files:   microKanren/amb/main.rkt
+            microKanren/amb/tests/programs.rktl, core.rktl
+            miniKanren/amb/trs1/base.rkt, miniKanren/amb/demo/main.rkt
 
-   Source:  Jason Hemann and Daniel P. Friedman, "μKanren: A Minimal
-            Functional Core for Relational Programming" (Scheme
-            Workshop 2013), and https://github.com/jasonhemann/microKanren
+   Source:  https://github.com/jasonhemann/microKanren
+            (microKanren.scm, miniKanren-wrappers.scm,
+            microKanren-test.scm, microKanren-test-programs.scm), from
+            Jason Hemann and Daniel P. Friedman, "μKanren: A Minimal
+            Functional Core for Relational Programming", Scheme
+            Workshop 2013.
 
-   The definitions of walk, unify, the binary disj and conj, the
+   microKanren/amb/main.rkt is a Typed Racket rewrite of
+   microKanren.scm and miniKanren-wrappers.scm in which streams are
+   replaced by amb: a goal returns one state and chooses among its
+   answers with amb, unit and mzero become returning the state and
+   (amb), mplus becomes a choice made by amb, bind becomes function
+   composition, the inverse-η-delay Zzz suspends the computation in
+   amb's frontier, and take and take-all collect the answers with
+   in-amb/do.  The other changes are type definitions and annotations
+   throughout, variables that are structs holding their counter instead
+   of vectors, and literals compared with equal? instead of eqv?.  The
+   tests in microKanren/amb/tests/ are adapted from the test files.
+
+   In miniKanren/amb/trs1/base.rkt and miniKanren/amb/demo/main.rkt,
+   the definitions of walk, unify, the binary disj and conj, the
    Zzz-style delay, conj+ and disj+, and reification are adapted from
    microKanren, with streams replaced by amb, named variables instead of
-   a counter, and an occurs check added.  microKanren is distributed
-   under the following license:
+   a counter, and an occurs check added.
+
+   microKanren is distributed under the following license:
 
    Copyright (C) 2013 Jason Hemann and Daniel P. Friedman
 
@@ -109,5 +128,7 @@ copyright holders.
    The tests in miniKanren/amb/{trs1,trs2,demo}/tests/ load the
    examples from The Reasoned Schemer (first and second editions) from
    the miniKanren-typed package (typed/miniKanren/trs1/tests/ and
-   typed/miniKanren/trs2/tests/); they are not copied into this
-   package.  See the NOTICE file of miniKanren-typed.
+   typed/miniKanren/trs2/tests/), and microKanren/amb/tests/ loads the
+   test programs of miniKanren-wrappers.scm from the same package
+   (typed/microKanren/tests/wrappers.rktl); they are not copied into
+   this package.  See the NOTICE file of miniKanren-typed.

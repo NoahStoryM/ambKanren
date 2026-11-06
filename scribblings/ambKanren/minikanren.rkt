@@ -6,8 +6,9 @@
 ;; for-label require cannot link both.  Each submodule below has the
 ;; for-label bindings of one module of miniKanren-typed, and its macro
 ;; gives the code it typesets the lexical context of that submodule:
-;; identifiers in (mk1 ...) link to typed/miniKanren/trs1, and those in
-;; (mk2 ...) to typed/miniKanren/trs2.
+;; identifiers in (mk0 ...) link to typed/microKanren, those in
+;; (mk1 ...) to typed/miniKanren/trs1, and those in (mk2 ...) to
+;; typed/miniKanren/trs2.
 
 (module recontext racket/base
   (provide recontext)
@@ -42,8 +43,9 @@
         [(_ e) (with-syntax ([e* (recontext #'here #'e)])
                  #'(racket e*))]))))
 
+(define-typesetter mk0 typed/microKanren)
 (define-typesetter mk1 typed/miniKanren/trs1)
 (define-typesetter mk2 typed/miniKanren/trs2)
 
-(require 'mk1 'mk2)
-(provide mk1 mk2)
+(require 'mk0 'mk1 'mk2)
+(provide mk0 mk1 mk2)
