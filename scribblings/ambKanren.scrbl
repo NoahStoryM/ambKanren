@@ -31,38 +31,6 @@ edition (Friedman, Byrd, Kiselyov, and Hemann, MIT Press, 2018).}
 
 ]
 
-@section[#:tag "correspondence"]{Correspondence with Stream-Based miniKanren}
-
-In a stream-based miniKanren, a goal has type
-@racket[(→ Substitution (Streamof Substitution))]: it returns every
-answer at once, lazily.  The stream type is a monad, and the
-connectives are its operations: @racket[succeed] is @emph{unit},
-@racket[fail] is @emph{mzero}, disjunction is @emph{mplus}, and
-conjunction is @emph{bind}, that is, composition in the Kleisli
-category of the stream monad.
-
-With @racket[amb], the nondeterminism is an effect of evaluation
-rather than a value, so it disappears from the type of goals:
-
-@tabular[#:style 'boxed
-         #:sep @hspace[2]
-         #:row-properties '(bottom-border ())
-(list (list @bold{} @bold{stream monad} @bold{ambKanren})
-      (list "goal"
-            @racket[(→ Substitution (Streamof Substitution))]
-            @racket[(→ Substitution Substitution)])
-      (list @racket[succeed] @racket[(λ (s) (unit s))] @racket[(λ (s) s)])
-      (list @racket[fail] @racket[(λ (s) (mzero))] @racket[(λ (s) (amb))])
-      (list @racket[conj] @racket[(λ (s) (bind (g1 s) g2))] @racket[(λ (s) (g2 (g1 s)))])
-      (list @racket[disj] @racket[(λ (s) (mplus (g1 s) (g2 s)))] @racket[(λ (s) ((amb g1 g2) s))])
-      (list @racket[run] @elem{take answers from the stream @racket[(g empty-s)]} @elem{take answers from @racket[(in-amb/do (g empty-s))]}))]
-
-So @racket[succeed] is the identity function, conjunction is plain
-function composition, and disjunction is a choice made by
-@racket[amb].  The monadic structure has not gone away: it now lives in
-the continuation captured by @racket[amb], and @racket[in-amb/do] is
-what turns that control effect back into a sequence of answers.
-
 @table-of-contents[]
 
 @include-section["demo.scrbl"]
