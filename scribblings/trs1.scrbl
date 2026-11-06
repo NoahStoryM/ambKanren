@@ -20,7 +20,7 @@ This module implements the language of the first edition of
 
 @section[#:tag "trs1-basis"]{Implementation Basis}
 
-The core is the one of @secref["demo"], generalized: @racket[disj]
+The core is the one of @secref["demo-module"], generalized: @racket[disj]
 and @racket[conj] take any number of goals, and substitutions are
 immutable hash tables instead of association lists.
 
