@@ -9,7 +9,7 @@ copyright holders.
 
 1. microKanren
 
-   Files:   base.rkt, demo.rkt
+   Files:   trs1/base.rkt, demo/main.rkt
 
    Source:  Jason Hemann and Daniel P. Friedman, "μKanren: A Minimal
             Functional Core for Relational Programming" (Scheme
@@ -46,7 +46,7 @@ copyright holders.
 
 2. The Reasoned Schemer, first edition
 
-   Files:   main.rkt
+   Files:   trs1/main.rkt
 
    Source:  Daniel P. Friedman, William E. Byrd, and Oleg Kiselyov,
             The Reasoned Schemer, MIT Press, 2005, appendix A

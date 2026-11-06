@@ -5,6 +5,7 @@
 * Table of Contents                                       :TOC_5_gh:noexport:
 - [[#installation][Installation]]
 - [[#documentation][Documentation]]
+- [[#usage][Usage]]
 - [[#license][License]]
 
 * Installation
@@ -13,6 +14,17 @@ Install the package with ~raco pkg install --auto ambKanren~.
 * Documentation
 See the [[https://docs.racket-lang.org/ambKanren/index.html][online documentation]], or run
 ~raco docs ambKanren~ after installing the package.
+
+* Usage
+Each language has its own module: ~ambKanren/trs1~ for the language of
+the first edition of /The Reasoned Schemer/ (2005), and ~ambKanren/demo~
+for a minimal version in the style of microKanren.
+
+#+begin_src racket
+#lang typed/racket/base
+(require ambKanren/trs1)
+(run* (q) (conde [(== q 'red)] [(== q 'green)]))
+#+end_src
 
 * License
 The original work in this package is distributed under the MIT License;
