@@ -11,8 +11,14 @@
     "typed-racket-lib"
     "typed-data-queue"
     ["typed-amb" #:version "2.0"]))
-(define build-deps '("rackunit-typed" "miniKanren-typed"))
-#;
+(define build-deps
+  '("rackunit-typed"
+    "miniKanren-typed"
+    "scribble-lib"
+    "racket-doc"
+    "typed-racket-doc"
+    "amb"))
+
 (define scribblings '(("scribblings/ambKanren.scrbl")))
 
 (define clean '("compiled" "private/compiled"))
