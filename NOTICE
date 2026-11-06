@@ -1,0 +1,68 @@
+ambKanren
+Copyright (c) 2025 Noah Ma
+
+The MIT License in LICENSE applies to the original work of the author
+of this package.  The package also contains code adapted from the
+sources listed below, which remain under the terms of their own
+copyright holders.
+
+
+1. microKanren
+
+   Files:   base.rkt, demo.rkt
+
+   Source:  Jason Hemann and Daniel P. Friedman, "μKanren: A Minimal
+            Functional Core for Relational Programming" (Scheme
+            Workshop 2013), and https://github.com/jasonhemann/microKanren
+
+   The definitions of walk, unify, the binary disj and conj, the
+   Zzz-style delay, conj+ and disj+, and reification are adapted from
+   microKanren, with streams replaced by amb, named variables instead of
+   a counter, and an occurs check added.  microKanren is distributed
+   under the following license:
+
+   Copyright (C) 2013 Jason Hemann and Daniel P. Friedman
+
+   Permission is hereby granted, free of charge, to any person obtaining
+   a copy of this software and associated documentation files (the
+   "Software"), to deal in the Software without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sublicense, and/or sell copies of the Software, and to
+   permit persons to whom the Software is furnished to do so, subject to
+   the following conditions:
+
+   The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+
+2. The Reasoned Schemer, first edition
+
+   Files:   main.rkt
+
+   Source:  Daniel P. Friedman, William E. Byrd, and Oleg Kiselyov,
+            The Reasoned Schemer, MIT Press, 2005, appendix A
+            ("Connecting the Wires").
+
+   Copyright (C) 2005 Massachusetts Institute of Technology.
+
+   The user-level language (run, fresh, all/alli, conde/condi/conda/
+   condu, project) follows the book, and the cond-aux and all-aux macros
+   keep the structure of the book's implementation.  The remaining
+   definitions are rewritten on top of amb.
+
+
+3. Tests
+
+   The tests in tests/ load the examples from The Reasoned Schemer,
+   first edition, from the miniKanren-typed package
+   (typed/miniKanren/tests/trs1/); they are not copied into this
+   package.  See the NOTICE file of miniKanren-typed.

@@ -1,5 +1,12 @@
 #lang typed/racket/base
 
+;; A minimal miniKanren in which backtracking is done by amb.
+;;
+;; The core (walk, unify, disj/conj, Zzz, conj+/disj+, reification)
+;; is adapted from microKanren, Copyright (C) 2013 Jason Hemann and
+;; Daniel P. Friedman, MIT License (https://github.com/jasonhemann/microKanren);
+;; streams are replaced by amb.  See NOTICE.
+
 (require racket/match typed/amb)
 (provide (all-defined-out))
 
