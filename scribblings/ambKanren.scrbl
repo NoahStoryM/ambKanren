@@ -55,7 +55,7 @@ rather than a value, so it disappears from the type of goals:
       (list @racket[fail] @racket[(λ (s) (mzero))] @racket[(λ (s) (amb))])
       (list @racket[conj] @racket[(λ (s) (bind (g1 s) g2))] @racket[(λ (s) (g2 (g1 s)))])
       (list @racket[disj] @racket[(λ (s) (mplus (g1 s) (g2 s)))] @racket[(λ (s) ((amb g1 g2) s))])
-      (list @racket[run] "take answers from the stream (g empty-s)" @elem{take answers from @racket[(in-amb/do (g empty-s))]}))]
+      (list @racket[run] @elem{take answers from the stream @racket[(g empty-s)]} @elem{take answers from @racket[(in-amb/do (g empty-s))]}))]
 
 So @racket[succeed] is the identity function, conjunction is plain
 function composition, and disjunction is a choice made by
