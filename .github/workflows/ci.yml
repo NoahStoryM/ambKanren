@@ -10,10 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          path: ambKanren
       - uses: bogdanp/setup-racket@v1.16
         with:
           version: "stable"
+      # Temporary pin while the hierarchical API is being reviewed in amb #7.
+      - name: Check out candidate amb
+        uses: actions/checkout@v7
+        with:
+          repository: NoahStoryM/amb
+          ref: 6b3fc258e6664cef2ed90747b0800879c815e1d4
+          path: amb
       - name: Install dependencies
-        run: raco pkg install --auto --batch
+        run: |
+          raco pkg install --auto --batch ./amb/pkgs/amb ./amb/pkgs/typed-amb ./ambKanren
       - name: Run tests
         run: raco test -p ambKanren
