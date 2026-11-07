@@ -8,10 +8,9 @@
 ;; trs2-impl.scm), Copyright (c) 2018 Daniel P. Friedman, William E.
 ;; Byrd, Oleg Kiselyov, and Jason Hemann, MIT License; see NOTICE.
 ;;
-;; Goals are Substitution -> Substitution, and backtracking is done by
-;; amb instead of streams.  The suspension that the second edition
-;; inserts in every relation (an immature stream) is a choice point
-;; whose continuation is sent to the back of amb's frontier.
+;; Goals are Substitution -> Substitution. Local continuation boundaries
+;; preserve bind grouping; relation suspensions propagate through binary
+;; merges in amb's experimental hierarchical driver.
 
 (require (for-syntax racket/base syntax/parse)
          typed/amb)
@@ -81,38 +80,26 @@
 (: disj2 (→ Goal Goal Goal))
 (define ((disj2 g1 g2) s) ((amb g1 g2) s))
 
-;; bind: function composition.
+;; Bind delimits the source search before resuming the next goal.
 (: conj2 (→ Goal Goal Goal))
-(define ((conj2 g1 g2) s) (g2 (g1 s)))
+(define ((conj2 g1 g2) s)
+  (g2 (amb-local (g1 s))))
 
-;; The suspension of an immature stream: give up control and continue
-;; after the computations already waiting in amb's frontier.  amb
-;; places a new choice point according to the previous choice point's
-;; `current-amb-depth-first?`, so the first, non-depth-first choice
-;; point sends the second one, which is the rest of this computation,
-;; to the back of the frontier.
+;; Propagate one explicit suspension through the enclosing local merges.
 (: suspend (→ Void))
-(define (suspend)
-  (parameterize ([current-amb-depth-first? #f])
-    (amb (void)))
-  (amb (void)))
+(define (suspend) (amb-suspend))
 
 (: call/fresh (→ Symbol (→ Var Goal) Goal))
 (define (call/fresh name f) (f (var name)))
 
 (: ifte (→ Goal Goal Goal Goal))
 (define ((ifte g1 g2 g3) s)
-  (define-values (more? get)
-    (sequence-generate (in-amb/do (g1 s))))
-  (if (more?)
-      (g2 (make-amb more? get))
-      (g3 s)))
+  (define answer (amb-local #:default #f (g1 s)))
+  (if answer (g2 answer) (g3 s)))
 
 (: once (→ Goal Goal))
 (define ((once g) s)
-  (define-values (more? get)
-    (sequence-generate (in-amb/do (g s))))
-  (if (more?) (get) (amb)))
+  (amb-local #:limit 1 (g s)))
 
 
 ;;; Reification
@@ -145,10 +132,11 @@
 
 (: run-goal (→ (Option Natural) Goal (Listof Substitution)))
 (define (run-goal n g)
-  (for/list : (Listof Substitution)
-            ([_ (in-range (or n +inf.0))]
-             [s : Substitution (in-amb/do (g empty-s))])
-    s))
+  (parameterize ([current-amb-search-strategy 'hierarchical])
+    (for/list : (Listof Substitution)
+              ([_ (in-range (or n +inf.0))]
+               [s : Substitution (in-amb/do (g empty-s))])
+      s)))
 
 
 ;;; Syntax

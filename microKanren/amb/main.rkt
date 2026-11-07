@@ -76,24 +76,19 @@
 (define ((disj g1 g2) s/c) ((amb g1 g2) s/c))
 
 (: conj (→ Goal Goal Goal))
-(define ((conj g1 g2) s/c) (g2 (g1 s/c)))
+;; Delimit g1 before its answers enter g2, preserving bind grouping.
+(define ((conj g1 g2) s/c)
+  (g2 (amb-local (g1 s/c))))
 
 
 ;;; User-level forms (miniKanren-wrappers.scm)
 
-;; Moves the rest of the computation to the back of the search
-;; frontier, as returning an immature stream does in microKanren: the
-;; first choice point is explored breadth-first, so the second one,
-;; whose only alternative is the rest of the computation, is reached
-;; only after the choices already waiting.
+;; One explicit suspension is propagated through the enclosing local
+;; merges. It does not send the continuation to a global FIFO frontier.
 (: suspend (→ Void))
-(define (suspend)
-  (parameterize ([current-amb-depth-first? #f])
-    (amb (void)))
-  (amb (void)))
+(define (suspend) (amb-suspend))
 
-;; Inverse-η-delay: suspends before running the goal, so that a
-;; recursive relation gives the other choices a turn instead of looping.
+;; Inverse-η-delay: each recursive goal produces one local suspension.
 (define-syntax-rule (Zzz g)
   (λ ([s/c : State]) (suspend) (g s/c)))
 
@@ -133,14 +128,16 @@
 ;; Collects the results of a nondeterministic computation.
 (: take-all (∀ (a) (→ (→ a) (Listof a))))
 (define (take-all th)
-  (for/list : (Listof a) ([x : a (in-amb/do (th))]) x))
+  (parameterize ([current-amb-search-strategy 'hierarchical])
+    (for/list : (Listof a) ([x : a (in-amb/do (th))]) x)))
 
 (: take (∀ (a) (→ Natural (→ a) (Listof a))))
 (define (take n th)
-  (for/list : (Listof a)
-            ([_ (in-range n)]          ; checked first, so that no
-             [x : a (in-amb/do (th))]) ; further answer is searched for
-    x))
+  (parameterize ([current-amb-search-strategy 'hierarchical])
+    (for/list : (Listof a)
+              ([_ (in-range n)]
+               [x : a (in-amb/do (th))])
+      x)))
 
 ;; The value of the first variable, with its fresh variables reified.
 (: reify-1st (→ State Term))
