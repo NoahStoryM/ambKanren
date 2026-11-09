@@ -10,6 +10,7 @@
 miniKanren/amb/trs2/main.rkt          基线：全局前沿
   └─ gen-trs2-local.rkt → trs2-local.rkt          局部组合子，单独的 prompt tag，未融合
        ├─ gen-exn.rkt   → trs2-exn.rkt            同上，暂停改用 raise / with-handlers
+       │    └─ gen-shift.rkt → trs2-shift.rkt     不用 amb：shift/reset 直接 reify 成流，conj2 为函数复合
        └─ gen-fused.rkt → trs2-local-fused.rkt    加融合律 reify (lift f) = f
             ├─ gen-amb-plain.rkt    → trs2-amb-plain.rkt     不让 amb 看到暂停（reflect 强制）
             ├─ gen-amb-pause.rkt    → trs2-amb-pause.rkt     amb 的 pause / in-amb/pause
@@ -33,6 +34,7 @@ diff trs2-local-fused.rkt trs2-amb-empty.rkt             # 改用 amb-empty
 cp ../../miniKanren/amb/trs2/main.rkt trs2-local.rkt && racket gen-trs2-local.rkt trs2-local.rkt
 racket gen-fused.rkt trs2-local.rkt trs2-local-fused.rkt
 racket gen-exn.rkt   trs2-local.rkt trs2-exn.rkt
+racket gen-shift.rkt trs2-exn.rkt trs2-shift.rkt
 for v in amb-plain amb-pause empty-values amb-output amb-empty; do
   racket gen-$v.rkt trs2-local-fused.rkt trs2-$v.rkt
 done
@@ -45,6 +47,7 @@ done
 | 基线 | `(parameterize ([current-amb-depth-first? #f]) (amb (void)))` 再 `(amb (void))`：把剩余计算放到全局前沿后面 | 无 | master |
 | `trs2-local` | `(when (amb #t #f) (abort-current-continuation pause-tag))` | `in-amb/do` 里装 `pause-tag` 的 prompt | master |
 | `trs2-exn` | `(when (amb #t #f) (raise PAUSE))` | `in-amb/do` 里装 `with-handlers` | master |
+| `trs2-shift` | `(shift k (λ () (k s)))` | `(reset (list (g s)))`，没有序列 | 不需要 |
 | `trs2-local-fused` | 同 `trs2-local` | 同上；lifted goal 直接取流函数 | master |
 | `trs2-amb-plain` | 无：`reflect` 遇到暂停就强制 | 普通 `in-amb/do`；`==` 等给成熟流，手写 goal 惰性 | master |
 | `trs2-amb-pause` | `(pause)` | `in-amb/pause` | `research/observable-pause-20261109` |
@@ -61,6 +64,7 @@ Racket 9.3 CS，Linux x86_64。书中例子为 TRS2 第 1 至 9 章与 arith。
 | 基线 | 285 passed，其中 15 项放宽为只比较答案集合 | 464 s | 64.3 s | 不适用 |
 | `trs2-local` | 284 passed，严格；跳过 ch6 第 25 帧 | 574 s | 超线性 | `()` / `(2)`，丢答案 |
 | `trs2-exn` | 284 passed，严格；跳过 ch6 第 25 帧 | 794 s | 超线性 | `()` / `(2)`，丢答案 |
+| `trs2-shift` | 283/284，严格；跳过 ch6 第 25 帧；ch8:205 两个答案换位（conj2 为复合所致，改回提升版则 284 全过，25 s） | 15 s | 超线性 | 不适用（不用 amb） |
 | `trs2-local-fused` | 285 passed，严格 | 41 s | 5.2 s | `()` / `(2)`，丢答案 |
 | `trs2-amb-plain` | 285 passed，严格 | 55 s | 3.0 s | `(1)` / `(1 2)` |
 | `trs2-amb-pause` | 285 passed，严格 | 55 s | 4.8 s | `(1)` / `(1 2)` |
