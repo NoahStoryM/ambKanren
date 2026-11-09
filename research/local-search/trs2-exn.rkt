@@ -117,7 +117,7 @@
 (: suspend (→ Void))
 (define (suspend)
   (when (amb #t #f)
-    (raise PAUSE #t)))
+    (raise PAUSE)))
 
 ;; reify: run (g s) as a local search and present it as a TRS2 stream.
 ;; The mature prefix is computed eagerly and a PAUSE becomes a thunk,

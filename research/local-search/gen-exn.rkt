@@ -24,7 +24,7 @@
    (cons ";; The suspension of an immature stream, made observable: keep the rest\n;; of the computation as the second alternative of a choice point, and\n;; report PAUSE as a leaf of the nearest local search."
          ";; The suspension of an immature stream, made observable: keep the rest\n;; of the computation as the second alternative of a choice point, and\n;; RAISE in the first; the handler of the nearest local search turns it\n;; into a PAUSE leaf.")
    (cons "  (when (amb #t #f)\n    (abort-current-continuation pause-tag)))"
-         "  (when (amb #t #f)\n    (raise PAUSE #t)))")
+         "  (when (amb #t #f)\n    (raise PAUSE)))")
    (cons "      (call-with-continuation-prompt\n       (λ () : (U Substitution Symbol) (g s))\n       pause-tag\n       (λ () PAUSE)))))"
          "      (with-handlers ([pause? (λ (_) PAUSE)])\n        (ann (g s) (U Substitution Symbol))))))"))])
     (rep s (car p) (cdr p))))

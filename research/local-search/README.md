@@ -2,6 +2,8 @@
 
 研究分支，不改动正式代码。结论与数据见 issue #14 的对应评论；本文件只说明文件和复现方式。
 
+几个 TRS2 实现的对照（生成链、`diff` 方法、结果表）见 [VERSIONS.md](VERSIONS.md)。
+
 ## 环境
 
 - Racket v9.3 [cs]（`NoahStoryM/racket-dist` release v9.3，`racket-9.3-x86_64-linux-buster-cs.sh`），Linux x86_64
@@ -26,7 +28,7 @@
 | `trs2-local-fused.rkt` + `-tests.rkt` | 同上，加融合律 `reify ∘ lift = id`、`defrel` 提升为 TRS2 自身的悬挂 |
 | `trs2-amb-pause.rkt` + `-tests.rkt` | 同上，但悬挂用 amb 分支新增的 `pause` / `in-amb/pause`，无额外 prompt tag |
 | `trs2-empty-values.rkt` + `-tests.rkt` | 同上，悬挂为 `current-amb-empty-values` 下的空 `(amb)`，局部搜索用普通 `in-amb/do` 识别 `paused` 叶子；需要 amb `research/amb-empty-values-20261109` |
-| `trs2-exn.rkt` + `-tests.rkt` / `compare-typed.rkt` / `pause-escape-exn.rkt` | **amb + raise/with-handlers**（amb master）：未融合版，暂停是 `(when (amb #t #f) (raise PAUSE #t))`，handler 装在每个局部搜索之内；书中 284 项严格通过（跳过 ch6 第 25 帧），13 个对照程序全同；未配对的普通 `in-amb/do` 仍会丢答案 |
+| `trs2-exn.rkt` + `-tests.rkt` / `compare-typed.rkt` / `pause-escape-exn.rkt` | **amb + raise/with-handlers**（amb master）：未融合版，暂停是 `(when (amb #t #f) (raise PAUSE))`，handler 装在每个局部搜索之内；书中 284 项严格通过（跳过 ch6 第 25 帧），13 个对照程序全同；未配对的普通 `in-amb/do` 仍会丢答案 |
 | `trs2-amb-plain.rkt` + `-tests.rkt` / `-limits.rkt` | **只需 amb master**：组合子为融合后的 TRS2 流，amb 只运行直接风格的 Goal；`==`/`succeed`/`fail` 产生成熟流，手写 Goal 惰性 reify；`reflect` 强制悬挂（手写 Goal 内部为答案级调度，`-limits.rkt` 记录边界） |
 | `trs2-amb-empty.rkt` + `-tests.rkt` | 悬挂为 `(when (amb #t #f) (amb-empty))`，局部搜索为 `(in-amb/do (g s) #:empty-values (list PAUSED))`，无需 `ann`；需要 amb `research/amb-empty-20261109` |
 | `trs2-amb-output.rkt` + `-tests.rkt` | 早期方案：悬挂为 `(when (amb #t #f) (amb-output PAUSED))`，局部搜索用普通 `in-amb/do` 识别 `paused` 叶子；需要 amb `research/amb-output-20261109` |
