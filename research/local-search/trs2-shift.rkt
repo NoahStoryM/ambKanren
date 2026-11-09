@@ -136,11 +136,6 @@
 (define (reflect s-inf)
   (shift (λ (k) (append-map-inf k s-inf))))
 
-;; The book's immature stream: the rest of the computation, behind a thunk.
-(: suspend (→ Substitution Substitution))
-(define (suspend s)
-  (shift (λ (k) (λ () (k s)))))
-
 (: lift (→ (→ Substitution Inf) Goal))
 (define ((lift f) s) (reflect (f s)))
 
@@ -259,7 +254,7 @@
          [[x:id : t] arg]))
      #'(define (name param ...) : Goal
          (λ (s)
-           ((conj g ...) (suspend s))))]))
+           (reflect (λ () (reify-goal (conj g ...) s)))))]))
 
 (define-syntax run
   (syntax-rules ()
@@ -275,11 +270,20 @@
 
 (define-syntax fresh
   (syntax-rules ()
+;; fresh delimits its body: conj2 is composition, so without this
+;; (conj (fresh (x) p q) r) would flatten to r (q (p s)) and lose the
+;; book's grouping (ch8.rktl:205 then swaps two answers).
+    [(_ () g ...) (conj g ...)]
+    [(_ (x0 x ...) g ...)
+     (lift (λ (s) (reify-goal (fresh* (x0 x ...) g ...) s)))]))
+
+(define-syntax fresh*
+  (syntax-rules ()
     [(_ () g ...) (conj g ...)]
     [(_ (x0 x ...) g ...)
      (call/fresh 'x0
                  (λ ([x0 : Var])
-                   (fresh (x ...) g ...)))]))
+                   (fresh* (x ...) g ...)))]))
 
 (define-syntax-rule (conde [g ...] ...)
   (disj (conj g ...) ...))

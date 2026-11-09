@@ -5,9 +5,12 @@
 ;; itself, so a local search yields the book's Inf directly.
 ;;   reify   = reset            (g s) runs under a prompt, result (list s)
 ;;   reflect = shift k (append-map-inf k s-inf)
-;;   suspend = shift k (λ () (k s))
+;;   defrel  = reflect (λ () (reify body s))   the book's delay, D(m) = τ::m
 ;; conj2 is plain composition: the continuation captured by reflect is
 ;; "the rest of the conjunction", so append-map-inf k is conj2 itself.
+;; Composition forgets how conjunctions are grouped.  The book's syntax
+;; nests a conj on the left in two places, a fresh body and a relation
+;; body, so both reify their bodies; within one flat conj nothing does.
 ;; amb is not used at all.
 ;; Usage: racket gen-shift.rkt trs2-exn.rkt trs2-shift.rkt
 (require racket/file racket/string)
@@ -59,11 +62,6 @@
 (: reflect (→ Inf Substitution))
 (define (reflect s-inf)
   (shift (λ (k) (append-map-inf k s-inf))))
-
-;; The book's immature stream: the rest of the computation, behind a thunk.
-(: suspend (→ Substitution Substitution))
-(define (suspend s)
-  (shift (λ (k) (λ () (k s)))))
 
 (: lift (→ (→ Substitution Inf) Goal))
 (define ((lift f) s) (reflect (f s)))
@@ -142,7 +140,9 @@ END
    (cons "      [else (amb)])))" "      [else (reflect '())])))")
    (cons "  (parameterize ([current-amb-depth-first? #t] [current-amb-fair? #f])\n    (take-inf n (reify-goal g empty-s))))"
          "  (take-inf n (reify-goal g empty-s)))")
+   (cons "    [(_ () g ...) (conj g ...)]\n    [(_ (x0 x ...) g ...)\n     (call/fresh 'x0\n                 (λ ([x0 : Var])\n                   (fresh (x ...) g ...)))]))"
+         ";; fresh delimits its body: conj2 is composition, so without this\n;; (conj (fresh (x) p q) r) would flatten to r (q (p s)) and lose the\n;; book's grouping (ch8.rktl:205 then swaps two answers).\n    [(_ () g ...) (conj g ...)]\n    [(_ (x0 x ...) g ...)\n     (lift (λ (s) (reify-goal (fresh* (x0 x ...) g ...) s)))]))\n\n(define-syntax fresh*\n  (syntax-rules ()\n    [(_ () g ...) (conj g ...)]\n    [(_ (x0 x ...) g ...)\n     (call/fresh 'x0\n                 (λ ([x0 : Var])\n                   (fresh* (x ...) g ...)))]))")
    (cons "         (λ (s)\n           (suspend)\n           ((conj g ...) s)))]))"
-         "         (λ (s)\n           ((conj g ...) (suspend s))))]))"))])
+         "         (λ (s)\n           (reflect (λ () (reify-goal (conj g ...) s)))))]))"))])
     (rep s (car p) (cdr p))))
 (display-to-file out dst #:exists 'replace)

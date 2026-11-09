@@ -10,7 +10,7 @@
 miniKanren/amb/trs2/main.rkt          基线：全局前沿
   └─ gen-trs2-local.rkt → trs2-local.rkt          局部组合子，单独的 prompt tag，未融合
        ├─ gen-exn.rkt   → trs2-exn.rkt            同上，暂停改用 raise / with-handlers
-       │    └─ gen-shift.rkt → trs2-shift.rkt     不用 amb：shift/reset 直接 reify 成流，conj2 为函数复合
+       │    └─ gen-shift.rkt → trs2-shift.rkt     不用 amb：shift/reset 直接 reify 成流；conj2 为函数复合，fresh/defrel 体划界
        └─ gen-fused.rkt → trs2-local-fused.rkt    加融合律 reify (lift f) = f
             ├─ gen-amb-plain.rkt    → trs2-amb-plain.rkt     不让 amb 看到暂停（reflect 强制）
             ├─ gen-amb-pause.rkt    → trs2-amb-pause.rkt     amb 的 pause / in-amb/pause
@@ -47,7 +47,7 @@ done
 | 基线 | `(parameterize ([current-amb-depth-first? #f]) (amb (void)))` 再 `(amb (void))`：把剩余计算放到全局前沿后面 | 无 | master |
 | `trs2-local` | `(when (amb #t #f) (abort-current-continuation pause-tag))` | `in-amb/do` 里装 `pause-tag` 的 prompt | master |
 | `trs2-exn` | `(when (amb #t #f) (raise PAUSE))` | `in-amb/do` 里装 `with-handlers` | master |
-| `trs2-shift` | `(shift k (λ () (k s)))` | `(reset (list (g s)))`，没有序列 | 不需要 |
+| `trs2-shift` | `defrel` = `(reflect (λ () (reify-goal body s)))` | `(reset (list (g s)))`，没有序列 | 不需要 |
 | `trs2-local-fused` | 同 `trs2-local` | 同上；lifted goal 直接取流函数 | master |
 | `trs2-amb-plain` | 无：`reflect` 遇到暂停就强制 | 普通 `in-amb/do`；`==` 等给成熟流，手写 goal 惰性 | master |
 | `trs2-amb-pause` | `(pause)` | `in-amb/pause` | `research/observable-pause-20261109` |
@@ -64,7 +64,7 @@ Racket 9.3 CS，Linux x86_64。书中例子为 TRS2 第 1 至 9 章与 arith。
 | 基线 | 285 passed，其中 15 项放宽为只比较答案集合 | 464 s | 64.3 s | 不适用 |
 | `trs2-local` | 284 passed，严格；跳过 ch6 第 25 帧 | 574 s | 超线性 | `()` / `(2)`，丢答案 |
 | `trs2-exn` | 284 passed，严格；跳过 ch6 第 25 帧 | 794 s | 超线性 | `()` / `(2)`，丢答案 |
-| `trs2-shift` | 283/284，严格；跳过 ch6 第 25 帧；ch8:205 两个答案换位（conj2 为复合所致，改回提升版则 284 全过，25 s） | 15 s | 超线性 | 不适用（不用 amb） |
+| `trs2-shift` | 284 passed，严格；跳过 ch6 第 25 帧 | 20 s | 超线性 | 不适用（不用 amb） |
 | `trs2-local-fused` | 285 passed，严格 | 41 s | 5.2 s | `()` / `(2)`，丢答案 |
 | `trs2-amb-plain` | 285 passed，严格 | 55 s | 3.0 s | `(1)` / `(1 2)` |
 | `trs2-amb-pause` | 285 passed，严格 | 55 s | 4.8 s | `(1)` / `(1 2)` |
@@ -73,6 +73,8 @@ Racket 9.3 CS，Linux x86_64。书中例子为 TRS2 第 1 至 9 章与 arith。
 | `trs2-amb-empty` | 285 passed，严格 | 57 s | 5.4 s | `(1)` / `(1 2)` |
 
 耗时都是单次运行，仅供参考。
+
+`trs2-shift` 的 `conj2` 是函数复合，会抹掉合取的括号（[#68](https://github.com/NoahStoryM/algebraic-control-flow-math/issues/68)）。书中语法只在 `fresh` 体与关系体两处把 conj 嵌在左边；两处都 reify 后严格全过。只划 `defrel` 不划 `fresh` 时 ch8:205 换位，只划 `fresh` 时书中例子也全过。
 
 **读表时要注意（E5）。** 融合后，`disj2` / `conj2` / `ifte` / `once` / `defrel` 都直接在 TRS2 流上运行，书中例子从不调用 `suspend`（计数为 0）。所以五个融合版的 285 项只验证了融合后的流组合子，**没有**验证各自的暂停机制。暂停机制由下面几项检验：
 

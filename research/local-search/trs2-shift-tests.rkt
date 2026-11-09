@@ -7,11 +7,6 @@
 ;;
 ;; ONE example is skipped: ch6 frame 25 (a million answers of
 ;; very-recursiveo): unfused, superlinear (over 300 s), as trs2-exn.
-;; EXPECTED: 1/284 failure, ch8.rktl:205 (two answers swap places).
-;; conj2 here is plain composition, so the continuation captured at a
-;; disj2 runs past it: append-map-inf k (append-inf a b) instead of the
-;; book's append-inf (append-map-inf k a) (append-map-inf k b).  With
-;; conj2 lifted as in trs2-exn.rkt all 284 pass (25 s).
 ;; Run: raco test research/local-search/trs2-shift-tests.rkt
 
 (require racket/include
