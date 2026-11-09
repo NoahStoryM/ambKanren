@@ -1,0 +1,84 @@
+finite-nested-disj
+  reference (TRS2 streams): (a b c)
+  global     : = same order   [pauses 0, relays 0, local searches 0]
+  answers    : = same order   [pauses 0, relays 0, local searches 4]
+  pause/disj : = same order   [pauses 0, relays 0, local searches 5]
+  pause/full : = same order   [pauses 0, relays 0, local searches 5]
+finite-disj-under-conj
+  reference (TRS2 streams): ((1 a) (1 b) (2 a) (2 b))
+  global     : = same order   [pauses 0, relays 0, local searches 0]
+  answers    : = same order   [pauses 0, relays 0, local searches 6]
+  pause/disj : = same order   [pauses 0, relays 0, local searches 7]
+  pause/full : = same order   [pauses 0, relays 0, local searches 12]
+C1-left-infinite-answers
+  reference (TRS2 streams): (R L L L)
+  global     : = same order   [pauses 3, relays 0, local searches 0]
+  answers    : ~ same answers, other order: (L R L L)   [pauses 3, relays 0, local searches 7]
+  pause/disj : = same order   [pauses 4, relays 10, local searches 9]
+  pause/full : = same order   [pauses 4, relays 14, local searches 13]
+C2-left-infinite-pause
+  reference (TRS2 streams): (R)
+  global     : = same order   [pauses 1, relays 0, local searches 0]
+  answers    : (STARVED 20001)   [pauses 20001, relays 0, local searches 1]
+  pause/disj : = same order   [pauses 2, relays 2, local searches 3]
+  pause/full : = same order   [pauses 2, relays 2, local searches 3]
+C2b-left-infinite-pause-right-later
+  reference (TRS2 streams): (R)
+  global     : = same order   [pauses 9, relays 0, local searches 0]
+  answers    : (STARVED 20001)   [pauses 20001, relays 0, local searches 1]
+  pause/disj : = same order   [pauses 10, relays 16, local searches 11]
+  pause/full : = same order   [pauses 10, relays 26, local searches 20]
+C3-nested-suspensions
+  reference (TRS2 streams): (now deep1 deep3)
+  global     : = same order   [pauses 6, relays 0, local searches 0]
+  answers    : ~ same answers, other order: (deep3 deep1 now)   [pauses 6, relays 0, local searches 16]
+  pause/disj : = same order   [pauses 6, relays 15, local searches 17]
+  pause/full : = same order   [pauses 6, relays 28, local searches 31]
+C4-conj-of-disj-with-nevero
+  reference (TRS2 streams): (1 2)
+  global     : = same order   [pauses 1, relays 0, local searches 0]
+  answers    : (STARVED 20001)   [pauses 20001, relays 0, local searches 1]
+  pause/disj : = same order   [pauses 2, relays 2, local searches 5]
+  pause/full : = same order   [pauses 2, relays 4, local searches 7]
+C5-disj-of-conj-with-nevero
+  reference (TRS2 streams): (2)
+  global     : = same order   [pauses 1, relays 0, local searches 0]
+  answers    : (STARVED 20001)   [pauses 20001, relays 0, local searches 1]
+  pause/disj : = same order   [pauses 2, relays 2, local searches 3]
+  pause/full : = same order   [pauses 2, relays 4, local searches 4]
+C6-conj-infinite-left-then-nevero
+  reference (TRS2 streams): ((s (s zero)))
+  global     : = same order   [pauses 6, relays 0, local searches 0]
+  answers    : (STARVED 20001)   [pauses 20001, relays 0, local searches 2]
+  pause/disj : (STARVED 20001)   [pauses 20001, relays 19998, local searches 5]
+  pause/full : = same order   [pauses 8, relays 27, local searches 27]
+C7-recursive-generate-and-test
+  reference (TRS2 streams): ((s (s (s zero))))
+  global     : = same order   [pauses 4, relays 0, local searches 0]
+  answers    : = same order   [pauses 4, relays 0, local searches 7]
+  pause/disj : = same order   [pauses 5, relays 10, local searches 9]
+  pause/full : = same order   [pauses 5, relays 25, local searches 22]
+R1-appendo-split
+  reference (TRS2 streams): ((() (1 2 3)) ((1) (2 3)) ((1 2) (3)) ((1 2 3) ()))
+  global     : = same order   [pauses 4, relays 0, local searches 0]
+  answers    : = same order   [pauses 4, relays 0, local searches 8]
+  pause/disj : = same order   [pauses 4, relays 6, local searches 9]
+  pause/full : = same order   [pauses 4, relays 22, local searches 34]
+R2-appendo-open
+  reference (TRS2 streams): ((() _0 _0) ((_0) _1 (_0 . _1)) ((_0 _1) _2 (_0 _1 . _2)) ((_0 _1 _2) _3 (_0 _1 _2 . _3)) ((_0 _1 _2 _3) _4 (_0 _1 _2 _3 . _4)))
+  global     : = same order   [pauses 5, relays 0, local searches 0]
+  answers    : = same order   [pauses 5, relays 0, local searches 9]
+  pause/disj : = same order   [pauses 6, relays 15, local searches 11]
+  pause/full : = same order   [pauses 6, relays 51, local searches 43]
+R3-anyo-disj
+  reference (TRS2 streams): (1 2 1 2 1)
+  global     : = same order   [pauses 3, relays 0, local searches 0]
+  answers    : ~ same answers, other order: (1 1 2 1 2)   [pauses 3, relays 0, local searches 10]
+  pause/disj : = same order   [pauses 4, relays 6, local searches 13]
+  pause/full : = same order   [pauses 4, relays 6, local searches 13]
+
+summary (= same order, ~ same answers/other order, ≠ different, ( starved/timeout):
+  global      ((= . 13) (~ . 0) (≠ . 0) (( . 0))
+  answers     ((= . 5) (~ . 3) (≠ . 0) (( . 5))
+  pause/disj  ((= . 12) (~ . 0) (≠ . 0) (( . 1))
+  pause/full  ((= . 13) (~ . 0) (≠ . 0) (( . 0))
