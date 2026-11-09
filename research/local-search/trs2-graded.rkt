@@ -108,25 +108,34 @@
 (: current-cut (Parameterof (Boxof Boolean)))
 (define current-cut (make-parameter ((inst box Boolean) #f)))
 
+;; The highest cost any path of the current local search has reached;
+;; once that search is exhausted, this is what finding out cost.
+(: current-reach (Parameterof (Boxof Natural)))
+(define current-reach (make-parameter ((inst box Natural) 0)))
+
 ;; A relation call.  This replaces the book's immature stream.
 (: tick (→ Substitution Substitution))
 (define (tick s)
   (let ([c (add1 (cost s))])
     (cond
       [(> c (current-budget)) (set-box! (current-cut) #t) (amb)]
-      [else (hash-set s cost-var c)])))
+      [else
+       (let ([r (current-reach)]) (when (> c (unbox r)) (set-box! r c)))
+       (hash-set s cost-var c)])))
 
-;; All answers of (g s) within the budget, depth-first, and whether some
-;; path was pruned.
-(: search (→ Goal Substitution (Values (Listof Substitution) Boolean)))
+;; All answers of (g s) within the budget, depth-first, whether some
+;; path was pruned, and the highest cost reached.
+(: search (→ Goal Substitution (Values (Listof Substitution) Boolean Natural)))
 (define (search g s)
   (define cut : (Boxof Boolean) (box #f))
+  (define reach : (Boxof Natural) (box (cost s)))
   (define answers
     (parameterize ([current-cut cut]
+                   [current-reach reach]
                    [current-amb-depth-first? #t]
                    [current-amb-fair? #f])
       (for/list : (Listof Substitution) ([s : Substitution (in-amb/do (g s))]) s)))
-  (values answers (unbox cut)))
+  (values answers (unbox cut) (unbox reach)))
 
 (: choose (→ (Listof Substitution) Substitution))
 (define (choose l)
@@ -138,17 +147,23 @@
 (define (call/fresh name f) (f (var name)))
 
 (: ifte (→ Goal Goal Goal Goal))
+;; g3 starts from the cost at which g1 was found to be exhausted (the
+;; highest cost its search reached), not from the cost of s: that cost
+;; does not depend on the budget, so the answer of g3 is reported at one
+;; level only.  (Pointed out on algebraic-control-flow-math #68.)
 (define ((ifte g1 g2 g3) s)
-  (define-values (answers cut?) (search g1 s))
+  (define-values (answers cut? reach) (search g1 s))
   (when cut? (set-box! (current-cut) #t))
+  (let ([r (current-reach)]) (when (> reach (unbox r)) (set-box! r reach)))
   (cond
     [(pair? answers) (g2 (choose answers))]
     [cut? (amb)]                        ; undecided at this level
-    [else (g3 s)]))
+    [else (g3 (hash-set s cost-var reach))]))
 
 (: once (→ Goal Goal))
 (define ((once g) s)
-  (define-values (answers cut?) (search g s))
+  (define-values (answers cut? reach) (search g s))
+  (let ([r (current-reach)]) (when (> reach (unbox r)) (set-box! r reach)))
   (cond
     [(null? answers) (when cut? (set-box! (current-cut) #t)) (amb)]
     [else
@@ -187,7 +202,7 @@
 (: run-goal (→ (Option Natural) Goal (Listof Substitution)))
 (define (run-goal n g)
   (let loop ([k : Natural 0] [acc : (Listof Substitution) '()])
-    (define-values (answers cut?)
+    (define-values (answers cut? reach)
       (parameterize ([current-budget k]) (search g empty-s)))
     (define all
       (append acc (filter (λ ([s : Substitution]) (= (cost s) k)) answers)))

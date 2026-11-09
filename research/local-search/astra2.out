@@ -1,0 +1,9 @@
+== book
+  once:  (B A)
+  ifte:  (ok)
+== graded
+  once:  (B A)
+  ifte:  (ok)
+== base
+  once:  (A B)
+  ifte:  (ok)

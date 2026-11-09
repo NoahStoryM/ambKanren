@@ -18,7 +18,7 @@ miniKanren/amb/trs2/main.rkt          基线：全局前沿
             ├─ gen-amb-output.rkt   → trs2-amb-output.rkt    amb 的 amb-output
             └─ gen-amb-empty.rkt    → trs2-amb-empty.rkt     amb 的 amb-fail / amb-empty
 miniKanren/amb/trs2/main.rkt
-  └─ gen-graded.rkt → trs2-graded.rkt     满足定律的分层语义：直接风格 + 迭代加深（规格）
+  └─ gen-graded.rkt → trs2-graded.rkt     按代价排序：直接风格 + 迭代加深
 ```
 
 ```sh
@@ -60,14 +60,16 @@ done
 | `trs2-amb-output` | `(when (amb #t #f) (amb-output PAUSED))` | 同上 | `research/amb-output-20261109` |
 | `trs2-amb-empty` | `(when (amb #t #f) (amb-empty))` | `(in-amb/do (g s) #:empty-values (list PAUSED))` | `research/amb-empty-20261109` |
 
-## 满足定律的版本（分层语义）
+## 按代价排序的直接风格版本
 
-`trs2-graded.rkt` 按 Spivey 的分层语义实现：答案按路径上的关系调用次数（代价）分层，层内深度优先。`disj2 = amb`，`conj2` 为函数复合，`==` / `fail` 为 `(amb)`，关系调用把代价加一（存在状态里），`run-goal` 逐层迭代加深。没有流、没有暂停值、没有 raise；只有 `ifte` / `once` 仍需局部搜索（取「有无答案」与「代价最小的答案」）。
+`trs2-graded.rkt`：`disj2 = amb`，`conj2` 为函数复合，`==` / `fail` 为 `(amb)`，关系调用把状态里的代价加一，`run-goal` 迭代加深（预算 k 下深度优先，剪掉超预算的路径，取代价恰为 k 的答案）。没有流、没有暂停值、没有 raise；只有 `ifte` / `once` 仍需局部搜索。
 
-- `laws-*.rkt` → `laws.out`：Astra 在 #68 给出的反例写成目标。原书与 `trs2-shift` 的分配律、合取结合律两侧顺序不同；`trs2-graded` 与基线两侧相同。
-- `rec-*.rkt` → `rec-*.out`：逐项记录书中例子的实际结果。`trs2-graded` 在 1500 s 内跑完前 269 项（停在 ch8:205，迭代加深重复计算太多），**与基线逐项、逐个答案完全相同**；基线与原书有 15 项顺序不同（即基线测试里放宽的 15 项）。
+观察到的顺序是「总代价优先，同价按原树 DFS」。按 Astra 在 [#68](https://github.com/NoahStoryM/algebraic-control-flow-math/issues/68) 的分析，这**不是**层内为 List 的 Spivey 分层单子（那里卷积 bind 不结合、不分配；层内为 Bag 时才严格成立），而更接近 Spivey §3.3 的「预算 → DFS 顺序的（答案，剩余预算）」模型：后续接在原路径上，到整个查询的观察端才按总代价筛选。直接风格下 `conj` 是复合、`disj` 是 `amb`，所以 `laws.out` 中两侧同序。
 
-也就是说，现有的全局前沿基线（暂停 = 把剩余计算排到 amb 前沿末尾）在这些例子上正好实现了分层语义；`trs2-graded` 是它的规格，基线是不重复计算的实现（代价是广度优先的内存）。
+- `laws-*.rkt` → `laws.out`：Astra 的反例写成目标。原书与 `trs2-shift` 两侧顺序不同；`trs2-graded` 与基线两侧相同。
+- `rec-*.rkt` → `rec-*.out`：逐项记录书中例子的结果。`trs2-graded` 在 1500 s 内跑完前 269 项（迭代加深重复计算太多），与基线逐项、逐个答案相同；基线与原书有 15 项顺序不同。
+- 纯核心（失败、答案、有序选择、延迟）上，「FIFO 处理暂停、暂停之间 DFS」与逐层重跑 DFS 同序，Astra 给了归纳证明的思路。基线的 `once` / `ifte` 用私有 `in-amb/do`，内层的暂停不计入外层，所以不在此列：`astra2-*.rkt` 中 `(run* q (disj (once (oneo q)) (== q 'B)))` 基线为 `(A B)`，`trs2-graded` 与原书为 `(B A)`。
+- `ifte` 的 else 分支从「测试被确证穷尽时达到的最高代价」开始，而不是从原状态的代价开始；否则 `(ifte (late-failo) succeed (== q 'ok))` 的 `ok` 代价为 0，却要到预算 1 才出现，被过滤掉（Astra 的反例，修正前为 `()`，修正后为 `(ok)`）。
 
 ## 结果
 
