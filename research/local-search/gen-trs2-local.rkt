@@ -70,14 +70,13 @@ EOF
           (if (symbol? v) (λ () (loop)) (cons v (loop))))
         '())))
 
-;; Two-way choice point; its `info` names the combinator.
+;; Two-way choice point.
 (: choose2 (→ Substitution (→ Substitution) Substitution))
 (define (choose2 a thk)
   (define n 0)
   ((inst make-amb Substitution)
    (λ () (< n 2))
-   (λ () (set! n (add1 n)) (if (= n 1) a (thk)))
-   'reflect))
+   (λ () (set! n (add1 n)) (if (= n 1) a (thk)))))
 
 ;; reflect: back to direct style.
 (: reflect (→ Inf Substitution))

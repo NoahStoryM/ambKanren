@@ -6,7 +6,7 @@
 ;;                 conj2 = composition, suspension = amb frontier trick.
 ;;   answers       Experiment B: disj2 is a LOCAL generator that drives
 ;;                 (g1 s) and (g2 s) in two nested in-amb/do searches and
-;;                 alternates their ANSWERS, reflected with make-amb+info.
+;;                 alternates their ANSWERS, reflected with make-amb.
 ;;                 Suspension as in `global` (invisible to disj2).
 ;;   pause/disj    Experiment D: a suspension is an observable PAUSE leaf
 ;;                 of the nearest local search (extra prompt tag); disj2
@@ -86,7 +86,7 @@
       (set! ready #f)
       (set! turn (- 1 i))
       ((cdr (gen i))))
-    (make-amb more? get (list 'answers-disj2 'mplusi-at-answers))))
+    (make-amb more? get)))
 
 (define answers
   (scheme 'answers answers-disj2 compose-conj2 amb-suspend amb-run-goal))
@@ -147,31 +147,22 @@
         [(pair? s-inf) (cons (car s-inf) (take-inf (and n (sub1 n)) (cdr s-inf)))]
         [else (take-inf n (s-inf))]))
 
-;; Two-way choice point carrying `info`.
-(define (choose2 a thk info)
-  (define n 0)
-  (make-amb (λ () (< n 2))
-            (λ () (set! n (add1 n)) (if (= n 1) a (thk)))
-            info))
-
 ;; Back to direct style: answers become choice points, suspensions are
 ;; re-emitted as pauses of the enclosing local search.
-(define (reflect inf [info 'reflect])
+(define (reflect inf)
   (cond [(null? inf) (amb)]
-        [(pair? inf) (choose2 (car inf) (λ () (reflect (cdr inf) info)) info)]
-        [else (bump! 'relay) (protocol-pause) (reflect (inf) info)]))
+        [(pair? inf) (amb (car inf) (reflect (cdr inf)))]
+        [else (bump! 'relay) (protocol-pause) (reflect (inf))]))
 
 (define (pause-disj2 g1 g2)
   (λ (s)
     (reflect (append-inf (gen->inf (reify g1 s 'disj-left))
-                         (gen->inf (reify g2 s 'disj-right)))
-             'append-inf)))
+                         (gen->inf (reify g2 s 'disj-right))))))
 
 (define (pause-conj2 g1 g2)
   (λ (s)
     (reflect (append-map-inf (λ (s1) (gen->inf (reify g2 s1 'conj-right)))
-                             (gen->inf (reify g1 s 'conj-left)))
-             'append-map-inf)))
+                             (gen->inf (reify g1 s 'conj-left))))))
 
 (define (pause-run-goal n g)
   (parameterize ([current-amb-depth-first? #t] [current-amb-fair? #f])

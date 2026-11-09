@@ -5,7 +5,7 @@
 ## 环境
 
 - Racket v9.3 [cs]（`NoahStoryM/racket-dist` release v9.3，`racket-9.3-x86_64-linux-buster-cs.sh`），Linux x86_64
-- amb：`research/amb-tree-info-20261108` @ `cadc52f`（实验 A–C）；`research/observable-pause-20261109` @ `faf2296`（只有 `trs2-amb-pause*.rkt`、`pause-escape-amb.rkt` 需要）
+- amb：`research/observable-pause-20261109`（基于 master `186bd1f`，只新增 `pause` / `amb-paused` / `in-amb/pause`；不含 `amb-tree.info`）。除 `trs2-amb-pause*.rkt`、`pause-escape-amb.rkt` 外，其余文件在 amb master 上也能运行
 - ambKanren：本分支，基于 master `ad2586d`
 - miniKanren-typed：master `86c28eb`（参照实现与书中测试）
 - typed-data-queue：master `07e8cbd`（ambKanren TRS1 的依赖）
@@ -16,7 +16,6 @@
 
 | 文件 | 内容 |
 |---|---|
-| `info-propagation.rkt` / `-typed.rkt` | 实验 A：`current-amb-info` 传播（13 + 3 项） |
 | `kernel.rkt` | 无类型 TRS2 风格 miniKanren 内核，`Goal : S → S`，组合器可替换 |
 | `schemes.rkt` | 四种调度：`global`（现状）、`answers`（实验 B）、`pause/disj`、`pause/full`（实验 D） |
 | `programs.rktl` | 13 个对照程序（有限、C1–C7 反例、递归关系），同一份文本供有类型/无类型使用 |
@@ -35,8 +34,6 @@
 
 ```sh
 cd research/local-search
-racket info-propagation.rkt
-racket info-propagation-typed.rkt
 racket reference-trs2.rkt > reference-trs2.out
 racket compare.rkt
 racket traces.rkt
@@ -48,3 +45,5 @@ racket pause-escape-amb.rkt
 ```
 
 目录内 `info.rkt` 把整个目录排除在 `raco setup` 与包测试之外。
+
+实验 A（`amb-tree.info` 传播）的文件已删除：后续实验表明 `info` 不是必要条件，amb 分支也已去掉该扩展。结果仍记录在 issue #14 的评论中。
