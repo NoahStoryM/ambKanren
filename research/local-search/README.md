@@ -26,7 +26,8 @@
 | `trs2-local-fused.rkt` + `-tests.rkt` | 同上，加融合律 `reify ∘ lift = id`、`defrel` 提升为 TRS2 自身的悬挂 |
 | `trs2-amb-pause.rkt` + `-tests.rkt` | 同上，但悬挂用 amb 分支新增的 `pause` / `in-amb/pause`，无额外 prompt tag |
 | `trs2-empty-values.rkt` + `-tests.rkt` | 同上，悬挂为 `current-amb-empty-values` 下的空 `(amb)`，局部搜索用普通 `in-amb/do` 识别 `paused` 叶子；需要 amb `research/amb-empty-values-20261109` |
-| `trs2-amb-empty.rkt` + `-tests.rkt` | **当前建议**：悬挂为 `(when (amb #t #f) (amb-empty))`，局部搜索为 `(in-amb/do (g s) #:empty-values (list PAUSED))`，无需 `ann`；需要 amb `research/amb-empty-20261109` |
+| `trs2-amb-plain.rkt` + `-tests.rkt` / `-limits.rkt` | **只需 amb master**：组合子为融合后的 TRS2 流，amb 只运行直接风格的 Goal；`==`/`succeed`/`fail` 产生成熟流，手写 Goal 惰性 reify；`reflect` 强制悬挂（手写 Goal 内部为答案级调度，`-limits.rkt` 记录边界） |
+| `trs2-amb-empty.rkt` + `-tests.rkt` | 悬挂为 `(when (amb #t #f) (amb-empty))`，局部搜索为 `(in-amb/do (g s) #:empty-values (list PAUSED))`，无需 `ann`；需要 amb `research/amb-empty-20261109` |
 | `trs2-amb-output.rkt` + `-tests.rkt` | 早期方案：悬挂为 `(when (amb #t #f) (amb-output PAUSED))`，局部搜索用普通 `in-amb/do` 识别 `paused` 叶子；需要 amb `research/amb-output-20261109` |
 | `pause-escape*.rkt` | 额外 prompt tag 方案的反例，以及在 amb `pause` 下的复测 |
 | `trs1-no-pause.rkt` | TRS1 中 `condi` 左支 `nevero` 发散（TRS1 没有可观察的暂停边界） |
@@ -45,7 +46,9 @@ raco test trs2-local-fused-tests.rkt    # 约 41 秒
 raco test trs2-amb-pause-tests.rkt      # 约 55 秒，需要 amb research/observable-pause-20261109
 raco test trs2-empty-values-tests.rkt   # 约 51 秒，需要 amb research/amb-empty-values-20261109
 raco test trs2-amb-output-tests.rkt     # 约 54 秒，需要 amb research/amb-output-20261109
-raco test trs2-amb-empty-tests.rkt      # 约 57 秒，需要 amb research/amb-empty-20261109（当前建议）
+raco test trs2-amb-empty-tests.rkt      # 约 57 秒，需要 amb research/amb-empty-20261109
+raco test trs2-amb-plain-tests.rkt      # 约 55 秒，amb master
+racket trs2-amb-plain-limits.rkt
 racket pause-escape.rkt
 racket pause-escape-amb.rkt            # observable-pause 分支
 racket pause-escape-empty-values.rkt   # amb-empty-values 分支
