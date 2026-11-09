@@ -26,7 +26,8 @@
 | `trs2-local-fused.rkt` + `-tests.rkt` | 同上，加融合律 `reify ∘ lift = id`、`defrel` 提升为 TRS2 自身的悬挂 |
 | `trs2-amb-pause.rkt` + `-tests.rkt` | 同上，但悬挂用 amb 分支新增的 `pause` / `in-amb/pause`，无额外 prompt tag |
 | `trs2-empty-values.rkt` + `-tests.rkt` | 同上，悬挂为 `current-amb-empty-values` 下的空 `(amb)`，局部搜索用普通 `in-amb/do` 识别 `paused` 叶子；需要 amb `research/amb-empty-values-20261109` |
-| `pause-escape.rkt` / `pause-escape-amb.rkt` / `pause-escape-empty-values.rkt` | 额外 prompt tag 方案的反例，以及在 amb `pause` 下的复测 |
+| `trs2-amb-output.rkt` + `-tests.rkt` | **当前建议**：悬挂为 `(when (amb #t #f) (amb-output PAUSED))`，局部搜索用普通 `in-amb/do` 识别 `paused` 叶子；需要 amb `research/amb-output-20261109` |
+| `pause-escape.rkt` / `pause-escape-amb.rkt` / `pause-escape-empty-values.rkt` / `pause-escape-amb-output.rkt` | 额外 prompt tag 方案的反例，以及在 amb `pause` 下的复测 |
 | `trs1-no-pause.rkt` | TRS1 中 `condi` 左支 `nevero` 发散（TRS1 没有可观察的暂停边界） |
 | `trs1-condi-order.rkt` | 三分支 `condi` 顺序：原书 TRS1 与 ambKanren TRS1 一致 |
 | `gen-*.rkt` | 由 `trs2/main.rkt` 生成上述三个有类型变体的脚本 |
@@ -42,9 +43,11 @@ raco test trs2-local-tests.rkt          # 约 9.5 分钟，跳过 ch6 第 25 帧
 raco test trs2-local-fused-tests.rkt    # 约 41 秒
 raco test trs2-amb-pause-tests.rkt      # 约 55 秒，需要 amb research/observable-pause-20261109
 raco test trs2-empty-values-tests.rkt   # 约 51 秒，需要 amb research/amb-empty-values-20261109
+raco test trs2-amb-output-tests.rkt     # 约 54 秒，需要 amb research/amb-output-20261109
 racket pause-escape.rkt
 racket pause-escape-amb.rkt            # observable-pause 分支
 racket pause-escape-empty-values.rkt   # amb-empty-values 分支
+racket pause-escape-amb-output.rkt     # amb-output 分支
 ```
 
 目录内 `info.rkt` 把整个目录排除在 `raco setup` 与包测试之外。
