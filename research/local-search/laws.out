@@ -1,0 +1,20 @@
+== book
+  distributivity: (x ⊞ y) >>= k  (A B C)
+  distributivity: (x >>= k) ⊞ (y >>= k)  (C B A)
+  associativity: (p >>= f) >>= k  (A B C)
+  associativity: p >>= (λi. f i >>= k)  (C B A)
+== shift
+  distributivity: (x ⊞ y) >>= k  (A B C)
+  distributivity: (x >>= k) ⊞ (y >>= k)  (C B A)
+  associativity: (p >>= f) >>= k  (A B C)
+  associativity: p >>= (λi. f i >>= k)  (C B A)
+== graded
+  distributivity: (x ⊞ y) >>= k  (B C A)
+  distributivity: (x >>= k) ⊞ (y >>= k)  (B C A)
+  associativity: (p >>= f) >>= k  (B C A)
+  associativity: p >>= (λi. f i >>= k)  (B C A)
+== base
+  distributivity: (x ⊞ y) >>= k  (B C A)
+  distributivity: (x >>= k) ⊞ (y >>= k)  (B C A)
+  associativity: (p >>= f) >>= k  (B C A)
+  associativity: p >>= (λi. f i >>= k)  (B C A)

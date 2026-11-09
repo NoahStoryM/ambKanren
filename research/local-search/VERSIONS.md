@@ -10,17 +10,20 @@
 miniKanren/amb/trs2/main.rkt          基线：全局前沿
   └─ gen-trs2-local.rkt → trs2-local.rkt          局部组合子，单独的 prompt tag，未融合
        ├─ gen-exn.rkt   → trs2-exn.rkt            同上，暂停改用 raise / with-handlers
-       │    └─ gen-shift.rkt → trs2-shift.rkt     不用 amb：shift/reset 直接 reify 成流；conj2 为函数复合，fresh/defrel 体划界
+       │    └─ gen-shift.rkt → trs2-shift.rkt     不用 amb：shift/reset 直接 reify 成流；conj2 为函数复合，每个 conj 宏与关系体划界
        └─ gen-fused.rkt → trs2-local-fused.rkt    加融合律 reify (lift f) = f
             ├─ gen-amb-plain.rkt    → trs2-amb-plain.rkt     不让 amb 看到暂停（reflect 强制）
             ├─ gen-amb-pause.rkt    → trs2-amb-pause.rkt     amb 的 pause / in-amb/pause
             ├─ gen-empty-values.rkt → trs2-empty-values.rkt  amb 的 current-amb-empty-values
             ├─ gen-amb-output.rkt   → trs2-amb-output.rkt    amb 的 amb-output
             └─ gen-amb-empty.rkt    → trs2-amb-empty.rkt     amb 的 amb-fail / amb-empty
+miniKanren/amb/trs2/main.rkt
+  └─ gen-graded.rkt → trs2-graded.rkt     满足定律的分层语义：直接风格 + 迭代加深（规格）
 ```
 
 ```sh
 cd research/local-search
+diff ../../miniKanren/amb/trs2/main.rkt trs2-graded.rkt  # 分层语义从哪里来
 diff ../../miniKanren/amb/trs2/main.rkt trs2-local.rkt   # 局部组合子从哪里来
 diff trs2-local.rkt trs2-exn.rkt                         # prompt tag 换成异常
 diff trs2-local.rkt trs2-local-fused.rkt                 # 融合
@@ -35,6 +38,7 @@ cp ../../miniKanren/amb/trs2/main.rkt trs2-local.rkt && racket gen-trs2-local.rk
 racket gen-fused.rkt trs2-local.rkt trs2-local-fused.rkt
 racket gen-exn.rkt   trs2-local.rkt trs2-exn.rkt
 racket gen-shift.rkt trs2-exn.rkt trs2-shift.rkt
+racket gen-graded.rkt ../../miniKanren/amb/trs2/main.rkt trs2-graded.rkt
 for v in amb-plain amb-pause empty-values amb-output amb-empty; do
   racket gen-$v.rkt trs2-local-fused.rkt trs2-$v.rkt
 done
@@ -48,12 +52,22 @@ done
 | `trs2-local` | `(when (amb #t #f) (abort-current-continuation pause-tag))` | `in-amb/do` 里装 `pause-tag` 的 prompt | master |
 | `trs2-exn` | `(when (amb #t #f) (raise PAUSE))` | `in-amb/do` 里装 `with-handlers` | master |
 | `trs2-shift` | `defrel` = `(reflect (λ () (reify-goal body s)))` | `(reset (list (g s)))`，没有序列 | 不需要 |
+| `trs2-graded` | 代价加一，超出本层预算则剪枝 | 无（`ifte` / `once` 除外）；`run-goal` 迭代加深 | master |
 | `trs2-local-fused` | 同 `trs2-local` | 同上；lifted goal 直接取流函数 | master |
 | `trs2-amb-plain` | 无：`reflect` 遇到暂停就强制 | 普通 `in-amb/do`；`==` 等给成熟流，手写 goal 惰性 | master |
 | `trs2-amb-pause` | `(pause)` | `in-amb/pause` | `research/observable-pause-20261109` |
 | `trs2-empty-values` | `(parameterize ([current-amb-empty-values (list PAUSED)]) (amb))` | 普通 `in-amb/do`，识别 `paused?` | `research/amb-empty-values-20261109` |
 | `trs2-amb-output` | `(when (amb #t #f) (amb-output PAUSED))` | 同上 | `research/amb-output-20261109` |
 | `trs2-amb-empty` | `(when (amb #t #f) (amb-empty))` | `(in-amb/do (g s) #:empty-values (list PAUSED))` | `research/amb-empty-20261109` |
+
+## 满足定律的版本（分层语义）
+
+`trs2-graded.rkt` 按 Spivey 的分层语义实现：答案按路径上的关系调用次数（代价）分层，层内深度优先。`disj2 = amb`，`conj2` 为函数复合，`==` / `fail` 为 `(amb)`，关系调用把代价加一（存在状态里），`run-goal` 逐层迭代加深。没有流、没有暂停值、没有 raise；只有 `ifte` / `once` 仍需局部搜索（取「有无答案」与「代价最小的答案」）。
+
+- `laws-*.rkt` → `laws.out`：Astra 在 #68 给出的反例写成目标。原书与 `trs2-shift` 的分配律、合取结合律两侧顺序不同；`trs2-graded` 与基线两侧相同。
+- `rec-*.rkt` → `rec-*.out`：逐项记录书中例子的实际结果。`trs2-graded` 在 1500 s 内跑完前 269 项（停在 ch8:205，迭代加深重复计算太多），**与基线逐项、逐个答案完全相同**；基线与原书有 15 项顺序不同（即基线测试里放宽的 15 项）。
+
+也就是说，现有的全局前沿基线（暂停 = 把剩余计算排到 amb 前沿末尾）在这些例子上正好实现了分层语义；`trs2-graded` 是它的规格，基线是不重复计算的实现（代价是广度优先的内存）。
 
 ## 结果
 
@@ -74,7 +88,7 @@ Racket 9.3 CS，Linux x86_64。书中例子为 TRS2 第 1 至 9 章与 arith。
 
 耗时都是单次运行，仅供参考。
 
-`trs2-shift` 的 `conj2` 是函数复合，会抹掉合取的括号（[#68](https://github.com/NoahStoryM/algebraic-control-flow-math/issues/68)）。书中语法只在 `fresh` 体与关系体两处把 conj 嵌在左边；两处都 reify 后严格全过。只划 `defrel` 不划 `fresh` 时 ch8:205 换位，只划 `fresh` 时书中例子也全过。
+`trs2-shift` 的 `conj2` 是函数复合，会抹掉合取的括号（[#68](https://github.com/NoahStoryM/algebraic-control-flow-math/issues/68)），所以每个语法上的 `conj`（含 `fresh` 体、关系体）都 reify 自己的体。只划关系体时 ch8:205 换位；只划非空 `fresh` 时书中例子全过，但 `laws.out` 中 `(fresh () p f)` 的结合律例子与原书不同。
 
 **读表时要注意（E5）。** 融合后，`disj2` / `conj2` / `ifte` / `once` / `defrel` 都直接在 TRS2 流上运行，书中例子从不调用 `suspend`（计数为 0）。所以五个融合版的 285 项只验证了融合后的流组合子，**没有**验证各自的暂停机制。暂停机制由下面几项检验：
 

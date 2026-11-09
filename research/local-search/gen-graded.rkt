@@ -1,0 +1,131 @@
+#lang racket/base
+;; Derive trs2-graded.rkt from miniKanren/amb/trs2/main.rkt (the global-
+;; frontier baseline): the LAWFUL, fully direct-style variant.
+;;
+;; Semantics: answers graded by cost = number of relation calls (ticks)
+;; on their path, i.e. Stream (List A) by level, as in Spivey's
+;; "Algebras for combinatorial search".  At each level, disj is union
+;; (associative), conj is convolution (associative), and conj distributes
+;; over disj; order is only fixed within a level (depth-first).
+;;
+;; Direct style throughout: disj2 = amb, conj2 = composition, == / fail =
+;; (amb), and a relation call is a tick that increments the cost carried
+;; in the state.  run-goal is iterative deepening: level k runs the goal
+;; depth-first with budget k, prunes any path that would exceed it, and
+;; keeps the answers of cost exactly k.  No stream, no pause value, no
+;; raise: the "1" of Stream (1 + A) has become a cost.
+;; ifte / once still need a local search (they are not algebraic), here
+;; by the graded rule: ifte takes g3 only if g1 has no answer at any
+;; cost; once picks the cheapest answer.
+;; Usage: racket gen-graded.rkt ../../miniKanren/amb/trs2/main.rkt trs2-graded.rkt
+(require racket/file racket/string)
+(define-values (src dst) (values (vector-ref (current-command-line-arguments) 0)
+                                 (vector-ref (current-command-line-arguments) 1)))
+(define (rep s from to)
+  (define r (string-replace s from to #:all? #f))
+  (when (equal? r s) (error 'gen-graded "pattern not found: ~a" from))
+  r)
+(define (between s start end new)
+  (define i (car (regexp-match-positions (regexp-quote start) s)))
+  (define j (car (regexp-match-positions (regexp-quote end) s (cdr i))))
+  (string-append (substring s 0 (car i)) new (substring s (car j))))
+
+(define suspend-section #<<END
+;;; Cost (the grading)
+
+;; The cost of a path lives in the state, under a variable no term can
+;; mention, so Goal stays Substitution -> Substitution (microKanren's
+;; state carries a counter too).
+(define cost-var : Var (var (string->uninterned-symbol "cost")))
+
+(: cost (→ Substitution Natural))
+(define (cost s)
+  (let ([c (hash-ref s cost-var (λ () 0))])
+    (if (exact-nonnegative-integer? c) c 0)))
+
+(: current-budget (Parameterof Natural))
+(define current-budget (make-parameter 0))
+
+;; Set when a path was pruned: the current level is not the last one.
+(: current-cut (Parameterof (Boxof Boolean)))
+(define current-cut (make-parameter ((inst box Boolean) #f)))
+
+;; A relation call.  This replaces the book's immature stream.
+(: tick (→ Substitution Substitution))
+(define (tick s)
+  (let ([c (add1 (cost s))])
+    (cond
+      [(> c (current-budget)) (set-box! (current-cut) #t) (amb)]
+      [else (hash-set s cost-var c)])))
+
+;; All answers of (g s) within the budget, depth-first, and whether some
+;; path was pruned.
+(: search (→ Goal Substitution (Values (Listof Substitution) Boolean)))
+(define (search g s)
+  (define cut : (Boxof Boolean) (box #f))
+  (define answers
+    (parameterize ([current-cut cut]
+                   [current-amb-depth-first? #t]
+                   [current-amb-fair? #f])
+      (for/list : (Listof Substitution) ([s : Substitution (in-amb/do (g s))]) s)))
+  (values answers (unbox cut)))
+
+(: choose (→ (Listof Substitution) Substitution))
+(define (choose l)
+  ((inst make-amb Substitution)
+   (λ () (pair? l))
+   (λ () (begin0 (car l) (set! l (cdr l))))))
+
+(: call/fresh (→ Symbol (→ Var Goal) Goal))
+END
+  )
+
+(define ifte-once #<<END
+(: ifte (→ Goal Goal Goal Goal))
+(define ((ifte g1 g2 g3) s)
+  (define-values (answers cut?) (search g1 s))
+  (when cut? (set-box! (current-cut) #t))
+  (cond
+    [(pair? answers) (g2 (choose answers))]
+    [cut? (amb)]                        ; undecided at this level
+    [else (g3 s)]))
+
+(: once (→ Goal Goal))
+(define ((once g) s)
+  (define-values (answers cut?) (search g s))
+  (cond
+    [(null? answers) (when cut? (set-box! (current-cut) #t)) (amb)]
+    [else
+     (for/fold ([m : Substitution (car answers)]) ([a (in-list (cdr answers))])
+       (if (< (cost a) (cost m)) a m))]))
+END
+  )
+
+(define run-goal-new #<<END
+(: run-goal (→ (Option Natural) Goal (Listof Substitution)))
+(define (run-goal n g)
+  (let loop ([k : Natural 0] [acc : (Listof Substitution) '()])
+    (define-values (answers cut?)
+      (parameterize ([current-budget k]) (search g empty-s)))
+    (define all
+      (append acc (filter (λ ([s : Substitution]) (= (cost s) k)) answers)))
+    (cond
+      [(and n (>= (length all) n)) (take all n)]
+      [(not cut?) all]
+      [else (loop (add1 k) all)])))
+END
+  )
+
+(define out
+  (for/fold ([s (file->string src)])
+            ([p (list
+   (cons "(require (for-syntax racket/base syntax/parse)\n         typed/amb)"
+         "(require (for-syntax racket/base syntax/parse)\n         typed/amb\n         (only-in racket/list take))")
+   (cons ";; mplus: a choice between the two goals."
+         ";; GRADED VARIANT (generated by gen-graded.rkt from this file):\n;; lawful levels, direct style, iterative deepening.  See gen-graded.rkt.\n\n;; mplus: a choice between the two goals."))])
+    (rep s (car p) (cdr p))))
+(set! out (between out ";; The suspension of an immature stream" "(define (call/fresh" (string-append suspend-section "\n")))
+(set! out (between out "(: ifte (→ Goal Goal Goal Goal))" ";;; Reification" (string-append ifte-once "\n\n\n")))
+(set! out (between out "(: run-goal" ";;; Syntax" (string-append run-goal-new "\n\n\n")))
+(set! out (rep out "         (λ (s)\n           (suspend)\n           ((conj g ...) s)))]))" "         (λ (s)\n           ((conj g ...) (tick s))))]))"))
+(display-to-file out dst #:exists 'replace)

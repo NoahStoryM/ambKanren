@@ -8,9 +8,9 @@
 ;;   defrel  = reflect (λ () (reify body s))   the book's delay, D(m) = τ::m
 ;; conj2 is plain composition: the continuation captured by reflect is
 ;; "the rest of the conjunction", so append-map-inf k is conj2 itself.
-;; Composition forgets how conjunctions are grouped.  The book's syntax
-;; nests a conj on the left in two places, a fresh body and a relation
-;; body, so both reify their bodies; within one flat conj nothing does.
+;; Composition forgets how conjunctions are grouped, so every syntactic
+;; conj reifies its body (see the conj macro); a relation body is also the
+;; book's delay D.
 ;; amb is not used at all.
 ;; Usage: racket gen-shift.rkt trs2-exn.rkt trs2-shift.rkt
 (require racket/file racket/string)
@@ -140,8 +140,8 @@ END
    (cons "      [else (amb)])))" "      [else (reflect '())])))")
    (cons "  (parameterize ([current-amb-depth-first? #t] [current-amb-fair? #f])\n    (take-inf n (reify-goal g empty-s))))"
          "  (take-inf n (reify-goal g empty-s)))")
-   (cons "    [(_ () g ...) (conj g ...)]\n    [(_ (x0 x ...) g ...)\n     (call/fresh 'x0\n                 (λ ([x0 : Var])\n                   (fresh (x ...) g ...)))]))"
-         ";; fresh delimits its body: conj2 is composition, so without this\n;; (conj (fresh (x) p q) r) would flatten to r (q (p s)) and lose the\n;; book's grouping (ch8.rktl:205 then swaps two answers).\n    [(_ () g ...) (conj g ...)]\n    [(_ (x0 x ...) g ...)\n     (lift (λ (s) (reify-goal (fresh* (x0 x ...) g ...) s)))]))\n\n(define-syntax fresh*\n  (syntax-rules ()\n    [(_ () g ...) (conj g ...)]\n    [(_ (x0 x ...) g ...)\n     (call/fresh 'x0\n                 (λ ([x0 : Var])\n                   (fresh* (x ...) g ...)))]))")
+   (cons "(define-syntax conj\n  (syntax-rules ()\n    [(_) succeed]\n    [(_ g) g]\n    [(_ g0 g ...) (conj2 g0 (conj g ...))]))"
+         ";; Every syntactic conj delimits its body: inside one conj the goals are\n;; composed flat, which is the book's right nesting; a conj nested as the\n;; left argument of another (directly, or as a fresh body or a relation\n;; body) keeps its own group.  Calling conj2 by hand bypasses this.\n(define-syntax conj\n  (syntax-rules ()\n    [(_) succeed]\n    [(_ g) g]\n    [(_ g0 g ...) (lift (λ (s) (reify-goal (conj* g0 g ...) s)))]))\n\n(define-syntax conj*\n  (syntax-rules ()\n    [(_ g) g]\n    [(_ g0 g ...) (conj2 g0 (conj* g ...))]))")
    (cons "         (λ (s)\n           (suspend)\n           ((conj g ...) s)))]))"
          "         (λ (s)\n           (reflect (λ () (reify-goal (conj g ...) s)))))]))"))])
     (rep s (car p) (cdr p))))
