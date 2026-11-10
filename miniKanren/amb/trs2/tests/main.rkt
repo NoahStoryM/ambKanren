@@ -25,21 +25,8 @@
 
 (begin-for-syntax
   (define known-order-differences
-    #hash(["ch3.rktl:115" . same-answers]
-          ["ch3.rktl:119" . same-answers]
-          ["ch3.rktl:213" . same-count]
-          ["ch7.rktl:100" . same-count]
-          ["ch7.rktl:127" . same-answers]
-          ["ch7.rktl:136" . same-answers]
-          ["ch8.rktl:8"   . same-answers]
-          ["ch8.rktl:92"  . same-count]
-          ["ch8.rktl:108" . same-count]
-          ["ch8.rktl:122" . same-answers]
-          ["ch8.rktl:155" . same-answers]
-          ["ch8.rktl:160" . same-count]
-          ["ch8.rktl:205" . same-answers]
-          ["ch9.rktl:167" . same-answers]
-          ["ch9.rktl:186" . same-count]))
+    #hash(["ch8.rktl:205" . same-answers]
+          ["ch9.rktl:167" . same-answers]))
   (define (difference-kind stx)
     (define src (syntax-source stx))
     (and (path? src)

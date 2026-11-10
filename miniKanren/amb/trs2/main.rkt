@@ -78,29 +78,28 @@
 (define (fail s) (amb-fail))
 
 ;; mplus: a choice between the two goals.
+;; A choice point with a frontier of its own: the two branches, each
+;; with everything it leads to, take turns at each pause.
 (: disj2 (→ Goal Goal Goal))
-(define ((disj2 g1 g2) s) ((amb g1 g2) s))
+(define ((disj2 g1 g2) s)
+  ((parameterize ([current-amb-local? #t])
+     (amb g1 g2))
+   s))
 
 ;; bind: function composition.
 (: conj2 (→ Goal Goal Goal))
 (define ((conj2 g1 g2) s) (g2 (g1 s)))
 
-;; A pause: give up control and continue after the computations already
-;; waiting in amb's frontier.  amb places a new choice point according
-;; to the previous choice point's `current-amb-depth-first?`, so the
-;; first, non-depth-first choice point sends the second one, which is the
-;; rest of this computation, to the back of the frontier.
-;;
-;; The second choice point is also where the pause becomes visible to a
-;; search that asks for it: its first alternative is `(amb)`, which fails
-;; in a search without an empty handler (so it only reschedules), and in
-;; the test search of `ifte` and `once` is answered with `paused`.
+;; RESEARCH (amb research/local-frontier-20261110).
+;; A pause: a plain choice point whose first alternative is `(amb)`.
+;; `(amb)` is a yield: the disjunction this computation belongs to turns
+;; to its other branch, and so does every disjunction around it.  In the
+;; test search of `ifte` and `once` it is also answered with `paused`.
 ;; Failure is therefore always `(amb-fail)`, never `(amb)`.
 (: suspend (→ Void))
 (define (suspend)
-  (parameterize ([current-amb-depth-first? #f])
-    (amb (void)))
-  (when (amb #t #f) (amb)))
+  (parameterize ([current-amb-local? #f])
+    (when (amb #t #f) (amb))))
 
 ;; The test of `ifte` and `once` runs as a search of its own, which
 ;; decides whether there is an answer at all.  Its pauses are pauses of
