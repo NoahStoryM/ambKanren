@@ -86,10 +86,17 @@ first:
 ]
 
 The two schedules produce the same answers but not always in the same
-order.  @mk0[mplus] swaps a suspended stream only with the other side
-of the disjunction it belongs to, while @racket[suspend] sends the
-computation to the back of a single, global frontier, which is closer
-to breadth-first search.  All the tests of @tt{microKanren-test.scm}
+order, on purpose.  @mk0[mplus] swaps a suspended stream only with the
+other side of the disjunction it belongs to, and that swap does not
+commute with @mk0[bind], so the order depends on how disjunctions and
+conjunctions are grouped.  Here @racket[disj] is a choice of
+@racket[amb], @racket[conj] is function composition, and
+@racket[suspend] sends the computation to the back of a single, global
+frontier: answers come in order of the number of suspensions on the
+path that produced them, ties in depth-first order, and the laws of
+the search (conjunction is associative and distributes over
+disjunction) hold for the order as well.  See also
+@secref["trs2-order"].  All the tests of @tt{microKanren-test.scm}
 give the same results as microKanren; of the examples of
 @tt{miniKanren-wrappers.scm}, the two that use @tt{rember*o} return
 their answers in a different order.
