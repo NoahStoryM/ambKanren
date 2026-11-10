@@ -10,13 +10,15 @@
 miniKanren/amb/trs2/main.rkt          基线：全局前沿
   └─ gen-trs2-local.rkt → trs2-local.rkt          局部组合子，单独的 prompt tag，未融合
        ├─ gen-exn.rkt   → trs2-exn.rkt            同上，暂停改用 raise / with-handlers
+       ├─ gen-amb-handler.rkt → trs2-amb-handler-unfused.rkt  未融合，暂停为 (amb) + #:empty handler
        │    └─ gen-shift.rkt → trs2-shift.rkt     不用 amb：shift/reset 直接 reify 成流；conj2 为函数复合，每个 conj 宏与关系体划界
        └─ gen-fused.rkt → trs2-local-fused.rkt    加融合律 reify (lift f) = f
             ├─ gen-amb-plain.rkt    → trs2-amb-plain.rkt     不让 amb 看到暂停（reflect 强制）
             ├─ gen-amb-pause.rkt    → trs2-amb-pause.rkt     amb 的 pause / in-amb/pause
             ├─ gen-empty-values.rkt → trs2-empty-values.rkt  amb 的 current-amb-empty-values
             ├─ gen-amb-output.rkt   → trs2-amb-output.rkt    amb 的 amb-output
-            └─ gen-amb-empty.rkt    → trs2-amb-empty.rkt     amb 的 amb-fail / amb-empty
+            ├─ gen-amb-empty.rkt    → trs2-amb-empty.rkt     amb 的 amb-fail / amb-empty
+            └─ gen-amb-handler.rkt  → trs2-amb-handler.rkt   amb 的 (amb) + #:empty handler
 miniKanren/amb/trs2/main.rkt
   └─ gen-graded.rkt → trs2-graded.rkt     按代价排序：直接风格 + 迭代加深
 ```
@@ -29,6 +31,7 @@ diff trs2-local.rkt trs2-exn.rkt                         # prompt tag 换成异�
 diff trs2-local.rkt trs2-local-fused.rkt                 # 融合
 diff trs2-local-fused.rkt trs2-amb-plain.rkt             # 去掉暂停效应
 diff trs2-local-fused.rkt trs2-amb-empty.rkt             # 改用 amb-empty
+diff trs2-amb-empty.rkt trs2-amb-handler.rkt             # amb-empty 换成 (amb) + #:empty
 ```
 
 重新生成全部变体，结果与仓库中的文件逐字节相同（2026-11-09 核对）：
@@ -39,9 +42,10 @@ racket gen-fused.rkt trs2-local.rkt trs2-local-fused.rkt
 racket gen-exn.rkt   trs2-local.rkt trs2-exn.rkt
 racket gen-shift.rkt trs2-exn.rkt trs2-shift.rkt
 racket gen-graded.rkt ../../miniKanren/amb/trs2/main.rkt trs2-graded.rkt
-for v in amb-plain amb-pause empty-values amb-output amb-empty; do
+for v in amb-plain amb-pause empty-values amb-output amb-empty amb-handler; do
   racket gen-$v.rkt trs2-local-fused.rkt trs2-$v.rkt
 done
+racket gen-amb-handler.rkt trs2-local.rkt trs2-amb-handler-unfused.rkt
 ```
 
 ## 暂停在各版本中的形态
@@ -59,6 +63,7 @@ done
 | `trs2-empty-values` | `(parameterize ([current-amb-empty-values (list PAUSED)]) (amb))` | 普通 `in-amb/do`，识别 `paused?` | `research/amb-empty-values-20261109` |
 | `trs2-amb-output` | `(when (amb #t #f) (amb-output PAUSED))` | 同上 | `research/amb-output-20261109` |
 | `trs2-amb-empty` | `(when (amb #t #f) (amb-empty))` | `(in-amb/do (g s) #:empty-values (list PAUSED))` | `research/amb-empty-20261109` |
+| `trs2-amb-handler`（及 `-unfused`） | `(when (amb #t #f) (amb))`；失败一律 `(amb-fail)` | `(in-amb/do (g s) #:empty (λ () PAUSED))` | `research/amb-handler-20261110` |
 
 ## 按代价排序的直接风格版本
 
@@ -87,6 +92,8 @@ Racket 9.3 CS，Linux x86_64。书中例子为 TRS2 第 1 至 9 章与 arith。
 | `trs2-empty-values` | 285 passed，严格 | 51 s | 4.8 s | `()` / `(2)`，丢答案 |
 | `trs2-amb-output` | 285 passed，严格 | 54 s | 4.0 s | `()` / `(2)`，丢答案 |
 | `trs2-amb-empty` | 285 passed，严格 | 57 s | 5.4 s | `(1)` / `(1 2)` |
+| `trs2-amb-handler` | 285 passed，严格 | 39 s | 4.2 s | `(1)` / `(1 2)` |
+| `trs2-amb-handler-unfused` | 284 passed，严格；跳过 ch6 第 25 帧 | 501 s | 超线性 | `(1)` / `(1 2)` |
 
 耗时都是单次运行，仅供参考。
 
@@ -105,4 +112,5 @@ Racket 9.3 CS，Linux x86_64。书中例子为 TRS2 第 1 至 9 章与 arith。
   - **暂停作为效应**（`trs2-local` 用单独的 prompt tag，`trs2-exn` 用异常）：暂停级公平性完整保留，但每个 `in-amb` 都必须配对一个暂停 handler。这条纪律只能由 ambKanren 的 `reify-goal` 守住，Goal 内部一个未配对的 `in-amb/do` 就会丢答案。
   - **不让 amb 看到暂停**（`trs2-amb-plain`）：不会逃逸，但手写的直接风格目标内部会退化为答案级调度。
 - 扩展 amb 的四种接口中，只有把暂停 handler 并进 amb 自己的驱动器的两种（`pause` / `in-amb/pause`，`amb-empty` / `#:empty-values`）能由构造保证配对，不会逃逸。另外两种（`current-amb-empty-values`、`amb-output`）把暂停当作普通输出，未配对的消费者照样丢答案。
+- 第五种（11/10，`research/amb-handler-20261110`）：不新增 `amb-empty`，`(amb)` 本身由最近一次搜索的 `#:empty` handler 回答（默认 `amb-fail`，所以默认语义不变），handler 在 `(amb)` 处调用，挂在搜索根帧的 continuation mark 上而不是 parameter 上，因此同样由构造保证配对。未融合版 `trs2-amb-handler-unfused` 每次暂停都经过 handler：书中 284 项严格通过，13 个对照程序全同（`compare-typed-handler.rkt`），逃逸反例 `(1)` / `(1 2)`。代价：Kanren 内部的失败必须写 `(amb-fail)`；手写目标若用 `(amb)` 表示失败，会被回答成一次暂停后结束，答案不变（`pause-escape-amb-handler.rkt` 第三行）。
 - 数学上的讨论（`Stream (1 + A)`、tick、handler 的嵌套）见数学仓库 [#68](https://github.com/NoahStoryM/algebraic-control-flow-math/issues/68)。
