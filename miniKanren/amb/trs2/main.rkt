@@ -51,7 +51,7 @@
 ;; Fails (with amb) instead of returning #f.
 (: ext-s (→ Var Term Substitution Substitution))
 (define (ext-s x v s)
-  (if (occurs? x v s) (amb) (hash-set s x v)))
+  (if (occurs? x v s) (amb-fail) (hash-set s x v)))
 
 (: unify (→ Term Term Substitution Substitution))
 (define (unify u v s)
@@ -63,7 +63,7 @@
       [(and (pair? u) (pair? v))
        (unify (cdr u) (cdr v) (unify (car u) (car v) s))]
       [(equal? u v) s]
-      [else (amb)])))
+      [else (amb-fail)])))
 
 
 ;;; Goals
@@ -75,7 +75,7 @@
 (define (succeed s) s)
 
 (: fail Goal)
-(define (fail s) (amb))
+(define (fail s) (amb-fail))
 
 ;; mplus: a choice between the two goals.
 (: disj2 (→ Goal Goal Goal))
@@ -85,34 +85,76 @@
 (: conj2 (→ Goal Goal Goal))
 (define ((conj2 g1 g2) s) (g2 (g1 s)))
 
-;; The suspension of an immature stream: give up control and continue
-;; after the computations already waiting in amb's frontier.  amb
-;; places a new choice point according to the previous choice point's
-;; `current-amb-depth-first?`, so the first, non-depth-first choice
-;; point sends the second one, which is the rest of this computation,
-;; to the back of the frontier.
+;; A pause: give up control and continue after the computations already
+;; waiting in amb's frontier.  amb places a new choice point according
+;; to the previous choice point's `current-amb-depth-first?`, so the
+;; first, non-depth-first choice point sends the second one, which is the
+;; rest of this computation, to the back of the frontier.
+;;
+;; The second choice point is also where the pause becomes visible to a
+;; search that asks for it: its first alternative is `(amb)`, which fails
+;; in a search without an empty handler (so it only reschedules), and in
+;; the test search of `ifte` and `once` is answered with `paused`.
+;; Failure is therefore always `(amb-fail)`, never `(amb)`.
 (: suspend (→ Void))
 (define (suspend)
   (parameterize ([current-amb-depth-first? #f])
     (amb (void)))
-  (amb (void)))
+  (when (amb #t #f) (amb)))
+
+;; The test of `ifte` and `once` runs as a search of its own, which
+;; decides whether there is an answer at all.  Its pauses are pauses of
+;; the outer computation too, so a test that keeps pausing yields control
+;; like any other goal instead of blocking the outer search.
+(struct paused ())
+(define PAUSED (paused))
+
+(: test-search (→ Goal Substitution (→ (Option Substitution))))
+(define (test-search g s)
+  (define-values (more? get)
+    (sequence-generate
+     (in-amb/do (g s) #:empty-handler (λ () PAUSED))))
+  ;; the next answer of the test, pausing the outer computation for each
+  ;; pause of the test; #f when the test has no more answers
+  (λ ()
+    (let loop : (Option Substitution) ()
+      (cond
+        [(more?)
+         (define v (get))
+         (cond
+           [(paused? v) (suspend) (loop)]
+           [else v])]
+        [else #f]))))
+
+;; All answers of a test, the first one already found, as choices.
+(: test-answers (→ Substitution (→ (Option Substitution)) Substitution))
+(define (test-answers s next)
+  ;; two alternatives: s, then the rest of the answers
+  (define n 0)
+  ((inst make-amb Substitution)
+   (λ () (< n 2))
+   (λ ()
+     (set! n (add1 n))
+     (cond
+       [(= n 1) s]
+       [else
+        (define s1 (next))
+        (if s1 (test-answers s1 next) (amb-fail))]))))
 
 (: call/fresh (→ Symbol (→ Var Goal) Goal))
 (define (call/fresh name f) (f (var name)))
 
 (: ifte (→ Goal Goal Goal Goal))
 (define ((ifte g1 g2 g3) s)
-  (define-values (more? get)
-    (sequence-generate (in-amb/do (g1 s))))
-  (if (more?)
-      (g2 (make-amb more? get))
+  (define next (test-search g1 s))
+  (define s1 (next))
+  (if s1
+      (g2 (test-answers s1 next))
       (g3 s)))
 
 (: once (→ Goal Goal))
 (define ((once g) s)
-  (define-values (more? get)
-    (sequence-generate (in-amb/do (g s))))
-  (if (more?) (get) (amb)))
+  (or ((test-search g s)) (amb-fail)))
 
 
 ;;; Reification

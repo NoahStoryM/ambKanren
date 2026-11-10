@@ -3,8 +3,9 @@
 ;; The examples of The Reasoned Schemer, second edition, from
 ;; miniKanren-typed.  typed/miniKanren/amb/trs2 schedules suspended computations
 ;; with amb's global frontier instead of append-inf, so some examples
-;; produce their answers in a different order from the book (see
-;; "Order of Answers" in the documentation).  Those examples are listed
+;; produce their answers in a different order from the book.  This is
+;; deliberate: the book's order breaks the laws of the search (see
+;; "Order of Answers" in the documentation, and search.rkt).  Those examples are listed
 ;; in `known-order-differences` and checked less strictly:
 ;;
 ;;   same-answers  the same answers, in any order;

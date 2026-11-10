@@ -10,7 +10,7 @@
   '("base"
     "typed-racket-lib"
     "typed-data-queue"
-    ["typed-amb" #:version "2.0"]))
+    ["typed-amb" #:version "2.1"]))
 (define build-deps
   '("at-exp-lib"
     "rackunit-typed"

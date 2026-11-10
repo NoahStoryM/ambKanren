@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do current-amb-depth-first?)
+                     (only-in amb amb amb-fail in-amb/do current-amb-depth-first?)
                      typed/miniKanren/amb/trs2)
           scribble/example
           "utils.rkt"
@@ -50,21 +50,32 @@ already waiting in @racket[amb]'s frontier run first:
 
 @subsection[#:tag "trs2-order"]{Order of Answers}
 
-The two implementations produce the same answers but schedule
-suspended computations differently.  @mk2[append-inf] swaps a suspended
-stream only with the other side of the disjunction it belongs to, so
-the search is a tree of binary interleavings in which deeper
-disjunctions receive exponentially smaller shares.  @racket[suspend]
-sends the computation to the back of a single, global frontier, which
-is closer to breadth-first search.
+This module does not imitate the book's interleaving, on purpose.
+@mk2[append-inf] swaps a suspended stream only with the other side of
+the disjunction it belongs to, and that swap does not commute with
+@mk2[append-map-inf]: the order of answers depends on how disjunctions
+and conjunctions are grouped.  Reproducing it in direct style would
+mean rebuilding the stream at every disjunction.  Here, instead,
+@racket[disj2] is a choice of @racket[amb] and @racket[conj2] is
+function composition, so the usual laws of the search hold for the
+order of answers as well as for the answers: conjunction is
+associative, it distributes over disjunction, and @racket[fail] is a
+unit of disjunction.
 
-As a result, answers can come in a different order from the book, and
-the first @racket[n] answers returned by @racket[run] can differ even
-when all answers eventually appear.  Of the 285 examples of chapters 1
-to 9 of the book, 15 differ in this way: 9 return the same answers in
-a different order, and 6 return different answers for a bounded
-@racket[run]; the book's answers do appear when more answers are
-requested.
+@racket[suspend] sends the rest of the computation to the back of
+@racket[amb]'s frontier.  For a program without @racket[conda] or
+@racket[condu], answers therefore come in order of the number of
+relation calls on the path that produced them, and answers with the
+same number in depth-first order.  The answers are those of the book,
+but they can come in a different order, and the first @racket[n]
+answers returned by @racket[run] can differ even when all answers
+eventually appear.  Of the 285 examples of chapters 1 to 9 of the book,
+15 differ in this way: 9 return the same answers in a different order,
+and 6 return different answers for a bounded @racket[run]; the book's
+answers do appear when more answers are requested.  The module
+@racketmodname[typed/miniKanren/trs2] of the miniKanren-typed package
+follows the book's order exactly.
+
 The global frontier also keeps more partial computations alive, so
 programs that search deeply, such as the arithmetic relations of
 chapter 8, are noticeably slower than with streams.
@@ -90,7 +101,10 @@ Defined as @racket[(Immutable-HashTable Var Term)], with
 @deftype[Goal]{
 Defined as @racket[(→ Substitution Substitution)].  A goal returns one
 extension of the substitution, chosen with @racket[amb], and calls
-@racket[(amb)] when it has none.
+@racket[(amb-fail)] when it has none.  A goal written by hand should
+fail with @racket[(amb-fail)] too: inside the test of @racket[ifte] or
+@racket[once], @racket[(amb)] is a pause, not a failure (see
+@racket[suspend]).
 }
 
 @section[#:tag "trs2-interface"]{Running Programs}
@@ -133,10 +147,15 @@ an argument written as @racket[[x : type]] has the given type.
 @defproc[(suspend) Void]{
 Gives up control: the rest of the current computation continues after
 the computations already waiting in @racket[amb]'s frontier.  It is
-implemented with two choice points of one alternative each: the first
-is created with @racket[current-amb-depth-first?] set to @racket[#f],
-so that the second one, which holds the rest of the computation, is
-placed at the back of the frontier.
+implemented with two choice points: the first, of one alternative, is
+created with @racket[current-amb-depth-first?] set to @racket[#f], so
+that the second one, which holds the rest of the computation, is placed
+at the back of the frontier.  The second is
+@racket[(when (amb #t #f) (amb))]: in the search of @racket[run] its
+first alternative simply fails, and in the test search of
+@racket[ifte] and @racket[once] it is answered by that search's
+@tech[#:doc '(lib "amb/scribblings/amb.scrbl")]{empty handler}, which
+makes the pause visible there.
 }
 
 @deftogether[(@defform[(fresh (x ...) goal ...)]
@@ -163,8 +182,19 @@ Disjunction and conjunction.  @racket[disj2] applies the goal chosen by
 @deftogether[(@defproc[(ifte [g1 Goal] [g2 Goal] [g3 Goal]) Goal]
               @defproc[(once [g Goal]) Goal])]{
 The functions behind @racket[conda] and @racket[condu].  They search
-for the answers of @racket[g1] or @racket[g] with @racket[in-amb/do],
-so that they can tell whether there is one before committing.
+for the answers of @racket[g1] or @racket[g] with a search of their
+own, so that they can tell whether there is one before committing.
+Each pause of that search is a pause of the computation that runs the
+test, so a test that keeps pausing yields control like any other goal
+instead of blocking the search of @racket[run]:
+
+@ak-examples[
+(defrel (nevero) (nevero))
+(run 1 q (conde [(once (nevero))] [(== q 1)]))
+]
+
+@racket[ifte] runs @racket[g3] only when the test has finished without
+an answer, and @racket[g2] on every answer of the test.
 }
 
 @deftogether[(@defproc[(call/fresh [name Symbol] [f (→ Var Goal)]) Goal]
@@ -182,7 +212,7 @@ The functions behind @racket[fresh] and @racket[run].
               @defproc[(ext-s [x Var] [v Term] [s Substitution]) Substitution]
               @defproc[(unify [u Term] [v Term] [s Substitution]) Substitution])]{
 As in the second edition, except that @racket[ext-s] and @racket[unify]
-call @racket[(amb)] instead of returning @racket[#f].
+call @racket[(amb-fail)] instead of returning @racket[#f].
 }
 
 @deftogether[(@defproc[(reify-name [n Index]) Symbol]
