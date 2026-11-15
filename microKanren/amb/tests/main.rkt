@@ -1,22 +1,17 @@
 #lang typed/racket/base
 
-;; typed/microKanren/amb schedules suspended computations with amb's
-;; global frontier instead of mplus, so the two rember*o examples of
-;; miniKanren-wrappers.scm (from miniKanren-typed) produce their answers
-;; in a different order.  They are listed in `known-order-differences`
-;; and checked less strictly, as in the trs2 tests:
-;;
-;;   same-answers  the same answers, in any order;
-;;   same-count    a bounded run returns as many answers as microKanren,
-;;                 but not necessarily the same ones.
-;;
-;; Every other example is checked with check-equal? as usual.
+;; The stream reference and direct-style conjunction can return a
+;; different bounded prefix.  Keep the explicitly identified wrapper
+;; comparisons; all other results are checked for exact equality.
 
 (require racket/include
          (rename-in typed/rackunit
                     [check-equal? rackunit:check-equal?])
          (for-syntax racket/base racket/path)
-         "../main.rkt")
+         "../main.rkt"
+         typed/amb typed/amb/merge)
+
+(current-amb-merger amb-interleave)
 
 (begin-for-syntax
   (define known-order-differences

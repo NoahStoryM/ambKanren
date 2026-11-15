@@ -9,7 +9,8 @@
 
 (require "base.rkt"
          (except-in racket/match ==)
-         typed/amb)
+         typed/amb typed/amb/merge
+         "../../../private/search.rkt")
 
 (provide (all-from-out "base.rkt")
          (all-defined-out)
@@ -25,15 +26,10 @@
           [conji+ ∧i]))
 
 
-(define-syntax-rule (run n^ (x) g* ...)
-  (let ([n : Real (or n^ +inf.0)]
-        [x (var 'x)])
-    (define g (all g* ...))
-    (define s* (in-amb/do (g empty-s)))
-    (for/list : (Listof Term)
-              ([_ (in-range n)]         ; Limit MUST be checked first
-               [s : Substitution s*])   ; Eager sequence generator
-      (reify (walk* x s)))))
+(define-syntax-rule (run n (x) g* ...)
+  (let ([x (var 'x)])
+    (map (λ ([s : Substitution]) (reify (walk* x s)))
+         (take-answers n (λ () ((all g* ...) empty-s))))))
 (define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))
 
 (define-syntax-rule (λG (x) body ...) (ann (λ (x) body ...) Goal))
@@ -68,21 +64,15 @@
 (define-syntax-rule (ifi g0 g1 g2) (if-aux disji+ g0 g1 g2))
 (define-syntax-rule (ifa g0 g1 g2)
   (λG (s)
-    (define-values (more? get)
-      (sequence-generate (in-amb/do (g0 s))))
-    (if (more?)
-        (for/amb : Substitution
-                 ([_ (in-naturals)]
-                  #:break (not (more?)))
-          (g1 (get)))
+    (define-values (v next) (first-answer (λ () (g0 s))))
+    (if v
+        (g1 (parameterize ([current-amb-merger amb-append])
+              (make-amb (λ () (values v next)))))
         (g2 s))))
 (define-syntax-rule (ifu g0 g1 g2)
   (λG (s)
-    (define-values (more? get)
-      (sequence-generate (in-amb/do (g0 s))))
-    (if (more?)
-        (g1 (get))
-        (g2 s))))
+    (define-values (v next) (first-answer (λ () (g0 s))))
+    (if v (g1 (car v)) (g2 s))))
 
 (define-syntax cond-aux
   (syntax-rules (else)

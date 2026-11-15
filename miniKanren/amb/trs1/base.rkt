@@ -10,17 +10,14 @@
 
 (require "private/types.rkt"
          (except-in racket/match ==)
-         racket/promise
-         typed/data/queue
-         typed/amb)
+         typed/amb typed/amb/merge)
 
-(provide (all-from-out "private/types.rkt")
+(provide sequence->amb
+         (all-from-out "private/types.rkt")
          (all-defined-out))
 
 
-(: sequence->amb (∀ (a) (→ (Sequenceof a) a)))
 (: list->amb (∀ (a) (→ (Listof a) a)))
-(define (sequence->amb a*) (for/amb : a ([a a*]) a))
 (define (list->amb a*) (for/amb : a #:length (length a*) ([a a*]) a))
 
 (: var=? (→ Var Var Boolean))
@@ -106,92 +103,33 @@
 (define (succeed s) s)
 
 (: disj (→ Goal * Goal))
-(define (disj . g*)
-  (match (remq* (list fail) g*)
-    ['() fail]
-    [`(,g) g]
-    [`(,g1 ,g2) (λ (s) ((amb g1 g2) s))]
-    [g* (λ (s) ((list->amb g*) s))]))
+(define (disj . gs)
+  (λ (s)
+    ((parameterize ([current-amb-merger amb-append]) (sequence->amb gs)) s)))
 
 (: conj (→ Goal * Goal))
-(define (conj . g*)
-  (if (memq fail g*)
-      fail
-      (match (remq* (list succeed) g*)
-        ['() succeed]
-        [`(,g) g]
-        [`(,g1 ,g2) (λ (s) (g2 (g1 s)))]
-        [g* (λ (s) (foldl apply-goal s g*))])))
-
-(: mplusi (→ (Sequenceof Substitution) * (Sequenceof Substitution)))
-(define (mplusi . s**)
-  (: q (Queue (Pair (→ Boolean) (→ Substitution))
-              (Pair (→ Boolean) (→ Substitution))))
-  (define q (make-queue))
-  (for ([s* (in-list s**)])
-    (enqueue! q (call-with-values (λ () (sequence-generate s*)) cons)))
-  (define fail-s : Substitution #hash())
-  (: producer (→ Substitution))
-  (define (producer)
-    (if (queue-empty? q)
-        fail-s
-        (let* ([p (dequeue! q)])
-          (match-define (cons more? get) p)
-          (cond
-            [(more?) (enqueue! q p) (get)]
-            [else (producer)]))))
-  (in-producer producer (λ (s) (eq? s fail-s))))
-
-
-(: bindi (→ (Sequenceof Substitution) Goal (Sequenceof Substitution)))
-(define (bindi s* g)
-  (define-values (more? get) (sequence-generate s*))
+(define (conj . gs)
   (cond
-    [(more?)
-     (define gen
-       (delay
-         (call-with-values
-          (λ ()
-            (sequence-generate (bindi s* g)))
-          cons)))
-     (mplusi
-      (in-amb/do (g (get)))
-      ;; The rest is forced only when it is asked for an element, so
-      ;; that building the sequence does not recur into `bindi`.
-      (make-do-sequence
-       (λ ()
-         (define (pos->element _) ((cdr (force gen))))
-         (define (continue-with-pos? _) ((car (force gen))))
-         (values pos->element void (void) continue-with-pos? #f #f))))]
-    [else '()]))
+    [(null? gs) succeed]
+    [(null? (cdr gs)) (car gs)]
+    [else
+     (define first (car gs))
+     (define rest (apply conj (cdr gs)))
+     (λ (s) (rest (parameterize ([current-amb-merger amb-append])
+                   (amb-local* (λ () (first s))))))]))
 
 (: disji (→ Goal * Goal))
-(define (disji . g*)
-  (match (remq* (list fail) g*)
-    ['() fail]
-    [`(,g) g]
-    [`(,g1 ,g2)
-     (λ (s)
-       (sequence->amb
-        (mplusi (in-amb/do (g1 s))
-                (in-amb/do (g2 s)))))]
-    [g*
-     (λ (s)
-       (define s**
-         (for/list : (Listof (Sequenceof Substitution))
-                   ([g (in-list g*)])
-           (in-amb/do (g s))))
-       (sequence->amb (apply mplusi s**)))]))
+(define (disji . gs)
+  (λ (s)
+    ((parameterize ([current-amb-merger amb-alternate]) (sequence->amb gs)) s)))
 
 (: conji (→ Goal * Goal))
-(define (conji . g*)
-  (if (memq fail g*)
-      fail
-      (match (remq* (list succeed) g*)
-        ['() succeed]
-        [`(,g) g]
-        [`(,g . ,g*)
-         (λ (s)
-           (sequence->amb
-            (bindi (in-amb/do (g s))
-                   (apply conji g*))))])))
+(define (conji . gs)
+  (cond
+    [(null? gs) succeed]
+    [(null? (cdr gs)) (car gs)]
+    [else
+     (define first (car gs))
+     (define rest (apply conji (cdr gs)))
+     (λ (s) (rest (parameterize ([current-amb-merger amb-alternate])
+                   (amb-local* (λ () (first s))))))]))

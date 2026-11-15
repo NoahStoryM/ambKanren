@@ -9,12 +9,12 @@
 ;; Byrd, Oleg Kiselyov, and Jason Hemann, MIT License; see NOTICE.
 ;;
 ;; Goals are Substitution -> Substitution, and backtracking is done by
-;; amb instead of streams.  The suspension that the second edition
-;; inserts in every relation (an immature stream) is a choice point
-;; whose continuation is sent to the back of amb's frontier.
+;; amb instead of streams.  Each relation explicitly pauses; the merger
+;; of its choices determines the scheduling order.
 
 (require (for-syntax racket/base syntax/parse)
-         typed/amb)
+         typed/amb
+         "../../../private/search.rkt")
 
 (provide (all-defined-out))
 
@@ -85,34 +85,23 @@
 (: conj2 (→ Goal Goal Goal))
 (define ((conj2 g1 g2) s) (g2 (g1 s)))
 
-;; The suspension of an immature stream: give up control and continue
-;; after the computations already waiting in amb's frontier.  amb
-;; places a new choice point according to the previous choice point's
-;; `current-amb-depth-first?`, so the first, non-depth-first choice
-;; point sends the second one, which is the rest of this computation,
-;; to the back of the frontier.
 (: suspend (→ Void))
-(define (suspend)
-  (parameterize ([current-amb-depth-first? #f])
-    (amb (void)))
-  (amb (void)))
+(define suspend amb-pause)
 
 (: call/fresh (→ Symbol (→ Var Goal) Goal))
 (define (call/fresh name f) (f (var name)))
 
 (: ifte (→ Goal Goal Goal Goal))
 (define ((ifte g1 g2 g3) s)
-  (define-values (more? get)
-    (sequence-generate (in-amb/do (g1 s))))
-  (if (more?)
-      (g2 (make-amb more? get))
+  (define-values (v next) (first-answer (λ () (g1 s))))
+  (if v
+      (g2 (make-amb (λ () (values v next))))
       (g3 s)))
 
 (: once (→ Goal Goal))
 (define ((once g) s)
-  (define-values (more? get)
-    (sequence-generate (in-amb/do (g s))))
-  (if (more?) (get) (amb)))
+  (define-values (v next) (first-answer (λ () (g s))))
+  (if v (car v) (amb-fail)))
 
 
 ;;; Reification
@@ -145,10 +134,7 @@
 
 (: run-goal (→ (Option Natural) Goal (Listof Substitution)))
 (define (run-goal n g)
-  (for/list : (Listof Substitution)
-            ([_ (in-range (or n +inf.0))]
-             [s : Substitution (in-amb/do (g empty-s))])
-    s))
+  (take-answers n (λ () (g empty-s))))
 
 
 ;;; Syntax

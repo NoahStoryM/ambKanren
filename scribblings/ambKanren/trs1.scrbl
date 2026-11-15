@@ -1,7 +1,8 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do)
+                     (only-in amb amb in-amb/do amb-generate* amb-local* current-amb-merger)
+                     (only-in amb/merge amb-append amb-alternate)
                      typed/miniKanren/amb/trs1)
           scribble/example
           "utils.rkt"
@@ -96,7 +97,7 @@ must therefore be applied within the dynamic extent of an
                        #:contracts ([n (Option Real)])]
               @defform[(run* (x) goal ...)])]{
 Introduces a fresh variable @racket[x], applies the conjunction of the
-@racket[goal]s to the empty substitution inside @racket[in-amb/do],
+@racket[goal]s to the empty substitution inside @racket[amb-generate*],
 and returns a list of at most @racket[n] reified values of
 @racket[x].  When @racket[n] is @racket[#f], all values are returned,
 and the computation diverges if there are infinitely many.  The limit
@@ -230,7 +231,7 @@ first edition's implementation: @racket[cond-aux] turns each clause
 into @racket[(ifer test (all goal ...) rest)], and @racket[all-aux]
 builds a conjunction from a conjunction form.  @racket[ifa] and
 @racket[ifu] obtain the answers of the test with
-@racket[sequence-generate] over @racket[in-amb/do], so that they can
+@racket[sequence-generate] over @racket[amb-generate*], so that they can
 tell whether it has an answer before committing.
 }
 
@@ -241,15 +242,11 @@ tell whether it has an answer before committing.
               @defform[(disji+ goal ...)]
               @defform[(conji+ goal ...)])]{
 Interleaving disjunction and conjunction, used by @racket[condi] and
-@racket[alli].  @racket[disji] collects the answers of each goal as a
-sequence with @racket[in-amb/do], merges the sequences round-robin
-with @racket[mplusi], and chooses from the merged sequence with
-@racket[amb].  @racket[conji] collects the answers of its first goal
-as a sequence and passes it to @racket[bindi] with the conjunction of
-the remaining goals, so that the answers obtained from different
-answers of the first goal are interleaved.  An answer of a later goal
-is therefore reached even when an earlier goal has infinitely many
-answers.
+@racket[alli].  @racket[disji] selects @racket[amb-alternate] for the
+choice; @racket[conji] uses @racket[amb-local*] and the same merger to
+bind the answers of a goal before continuing.  The non-interleaving
+forms use @racket[amb-append].  The old sequence-based mplusi and bindi
+helpers are no longer part of this version.
 
 In the example below, @racket[counto] has an answer for every length,
 yet the answers with @racket['R] are reached:
@@ -265,18 +262,6 @@ yet the answers with @racket['R] are reached:
     (alli (counto n) (conde [(== side 'L)] [(== side 'R)]))
     (== q (cons side n))))
 ]
-}
-
-@deftogether[(@defproc[(mplusi [s* (Sequenceof Substitution)] ...)
-                       (Sequenceof Substitution)]
-              @defproc[(bindi [s* (Sequenceof Substitution)] [g Goal])
-                       (Sequenceof Substitution)])]{
-Sequence-level helpers corresponding to the first edition's
-@mk1[mplusi] and @mk1[bindi].  @racket[mplusi] merges sequences of
-substitutions round-robin.  @racket[bindi] merges the answers of
-@racket[g] on the first element of @racket[s*] with those of
-@racket[bindi] on the rest of @racket[s*], which is computed only when
-it is needed.
 }
 
 @section[#:tag "trs1-substitutions"]{Substitutions and Unification}

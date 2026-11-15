@@ -15,7 +15,7 @@
 ;; amb, and fails with (amb).  The stream operations (unit, mzero,
 ;; mplus, bind, pull) are therefore gone.
 
-(require typed/amb)
+(require typed/amb "../../private/search.rkt")
 (provide (all-defined-out))
 
 
@@ -81,16 +81,8 @@
 
 ;;; User-level forms (miniKanren-wrappers.scm)
 
-;; Moves the rest of the computation to the back of the search
-;; frontier, as returning an immature stream does in microKanren: the
-;; first choice point is explored breadth-first, so the second one,
-;; whose only alternative is the rest of the computation, is reached
-;; only after the choices already waiting.
 (: suspend (→ Void))
-(define (suspend)
-  (parameterize ([current-amb-depth-first? #f])
-    (amb (void)))
-  (amb (void)))
+(define suspend amb-pause)
 
 ;; Inverse-η-delay: suspends before running the goal, so that a
 ;; recursive relation gives the other choices a turn instead of looping.
@@ -132,15 +124,10 @@
 
 ;; Collects the results of a nondeterministic computation.
 (: take-all (∀ (a) (→ (→ a) (Listof a))))
-(define (take-all th)
-  (for/list : (Listof a) ([x : a (in-amb/do (th))]) x))
+(define (take-all th) (take-answers #f th))
 
 (: take (∀ (a) (→ Natural (→ a) (Listof a))))
-(define (take n th)
-  (for/list : (Listof a)
-            ([_ (in-range n)]          ; checked first, so that no
-             [x : a (in-amb/do (th))]) ; further answer is searched for
-    x))
+(define (take n th) (take-answers n th))
 
 ;; The value of the first variable, with its fresh variables reified.
 (: reify-1st (→ State Term))

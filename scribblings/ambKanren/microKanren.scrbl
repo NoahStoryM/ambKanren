@@ -1,7 +1,8 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do current-amb-depth-first?)
+                     (only-in amb amb in-amb/do amb-generate* amb-pause current-amb-merger)
+                     (only-in amb/merge amb-interleave amb-alternate amb-level amb-append)
                      typed/microKanren/amb)
           scribble/example
           "utils.rkt"
@@ -9,7 +10,8 @@
 
 @(define mk-eval
    (make-base-eval #:lang 'typed/racket/base
-                   '(require typed/microKanren/amb)))
+                   '(require typed/microKanren/amb typed/amb typed/amb/merge)
+                   '(current-amb-merger amb-interleave)))
 @(define-syntax-rule (mk-examples body ...)
    (examples #:eval mk-eval body ...))
 
@@ -46,13 +48,13 @@ goals: a goal returns a single state, chooses among its answers with
       (list @racket[disj] @mk0[(mplus (g1 s/c) (g2 s/c))] @racket[((amb g1 g2) s/c)])
       (list @racket[conj] @mk0[(bind (g1 s/c) g2)] @racket[(g2 (g1 s/c))])
       (list @racket[Zzz] @mk0[(λ (s/c) (λ () (g s/c)))] @racket[(λ (s/c) (suspend) (g s/c))])
-      (list @racket[take] @elem{force and collect the stream @mk0[(g empty-state)]} @elem{collect @racket[(in-amb/do (g empty-state))]}))]
+      (list @racket[take] @elem{force and collect the stream @mk0[(g empty-state)]} @elem{advance @racket[amb-generate*] until enough answers arrive}))]
 
 So success returns the state unchanged, conjunction is plain function
 composition, and disjunction is a choice made by @racket[amb].  The
 monadic structure has not gone away: it now lives in the continuation
-captured by @racket[amb], and @racket[in-amb/do] is what turns that
-control effect back into a sequence of answers.
+captured by @racket[amb], and @racket[amb-generate*] turns that control effect back into
+a generator of answers and pauses.
 
 The definitions that remain are those of
 @racketmodname[typed/microKanren], with these changes:
@@ -72,12 +74,10 @@ the nondeterministic computation, instead of a stream, and
 
 @subsection[#:tag "microKanren-order"]{Suspension and the Order of Answers}
 
-In microKanren, @mk0[Zzz] wraps a goal so that it returns an immature
-stream, and @mk0[mplus] swaps its two streams whenever the first one is
-immature; this is what lets a disjunction leave a branch that never
-produces an answer.  Here, @racket[Zzz] calls @racket[suspend], which
-lets the computations already waiting in @racket[amb]'s frontier run
-first:
+In microKanren, @mk0[Zzz] creates a suspended stream.  Here it calls
+@racket[amb-pause] before the goal.  The examples select
+@racket[amb-interleave] explicitly; the default merger of amb is
+@racket[amb-append], which does not switch sides on a pause.
 
 @mk-examples[
 (: relo (→ Term Goal))
@@ -85,14 +85,9 @@ first:
 (run 1 (x) (disj+ (relo '(5 . 6)) (== x 3)))
 ]
 
-The two schedules produce the same answers but not always in the same
-order.  @mk0[mplus] swaps a suspended stream only with the other side
-of the disjunction it belongs to, while @racket[suspend] sends the
-computation to the back of a single, global frontier, which is closer
-to breadth-first search.  All the tests of @tt{microKanren-test.scm}
-give the same results as microKanren; of the examples of
-@tt{miniKanren-wrappers.scm}, the two that use @tt{rember*o} return
-their answers in a different order.
+Disjunction uses binary choice and conjunction remains direct function
+composition.  Answer order can therefore differ from the stream-based
+implementation even with the same pause-based merger.
 
 @section[#:tag "microKanren-types"]{Types}
 
@@ -170,10 +165,11 @@ occurs check.
 These are the forms of @tt{miniKanren-wrappers.scm}.
 
 @defproc[(suspend) Void]{
-Sends the rest of the computation to the back of @racket[amb]'s
-frontier: it makes a choice point with
-@racket[current-amb-depth-first?] set to @racket[#f], and then a
-second one, which is placed behind the choices already waiting.
+One logical pause, implemented by @racket[amb-pause].  The merger at
+its enclosing choice determines whether another alternative gets a
+turn.  Use @racket[amb-interleave] for pause-based binary scheduling,
+@racket[amb-alternate] to switch at answers too, or @racket[amb-level]
+for rounds.  @racket[amb-append] keeps the turn at a pause.
 }
 
 @defform[(Zzz goal)]{
@@ -216,7 +212,7 @@ Runs the goals with fresh variables @racket[x ...] and returns at most
 Running goals: @racket[call/goal] runs @racket[g] in
 @racket[empty-state], and @racket[take] and @racket[take-all] collect
 at most @racket[n] (or all) results of @racket[(th)] with
-@racket[in-amb/do].
+@racket[amb-generate*], skipping pauses only at this outer boundary.
 }
 
 @deftogether[(@defproc[(reify-1st [s/c State]) Term]

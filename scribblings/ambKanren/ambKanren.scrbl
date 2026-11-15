@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do)
+                     (only-in amb amb amb-generate*)
                      typed/miniKanren/amb/trs1))
 
 @title{ambKanren: miniKanren Based on amb}
@@ -14,7 +14,10 @@ function from substitutions to substitutions (from states to states, in
 microKanren); when a goal fails it
 calls @racket[(amb)], and when it has several answers it chooses one of
 them with @racket[amb].  The search over all choices is performed by
-@racket[in-amb/do], which @racket[run] uses to collect answers.
+@racket[amb-generate*], which @racket[run] advances to collect answers.
+This version requires typed-amb 3.0.  Search scheduling uses
+@racketidfont{current-amb-merger} and explicit pauses; the v2 depth-first
+and fairness flags are no longer used.
 
 The package provides one module for each language it implements:
 

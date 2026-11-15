@@ -7,7 +7,7 @@
 ;; Daniel P. Friedman, MIT License (https://github.com/jasonhemann/microKanren);
 ;; streams are replaced by amb.  See NOTICE.
 
-(require racket/match typed/amb)
+(require racket/match typed/amb "../../../private/search.rkt")
 (provide (all-defined-out))
 
 
@@ -127,12 +127,8 @@
     [(_ [g ...] c ...)
      (disj+ (all g ...) (conde c ...))]))
 
-(define-syntax-rule (run n^ (x) g* ...)
-  (let ([n : Real (or n^ +inf.0)]
-        [x (var 'x)])
-    (define g (all g* ...))
-    (for/list : (Listof Term)
-              ([_ (in-range n)]          ; Limit MUST be checked first
-               [s (in-amb (g empty-s))]) ; Eager sequence generator
-      (reify (walk* x s)))))
+(define-syntax-rule (run n (x) g* ...)
+  (let ([x (var 'x)])
+    (map (λ ([s : Substitution]) (reify (walk* x s)))
+         (take-answers n (λ () ((all g* ...) '()))))))
 (define-syntax-rule (run* (x) g* ...) (run #f (x) g* ...))

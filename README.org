@@ -9,6 +9,8 @@
 - [[#license][License]]
 
 * Installation
+Version 3.0 requires ~typed-amb~ 3.0.
+
 Install the package with ~raco pkg install --auto ambKanren~.
 
 * Documentation
@@ -40,6 +42,25 @@ Reasoned Schemer/.
 (defrel (coloro c) (conde [(== c 'red)] [(== c 'green)]))
 (run* q (coloro q))
 #+end_src
+
+* Search scheduling in v3
+The old ~current-amb-depth-first?~, ~current-amb-fair?~ and
+~#:empty-handler~ interfaces are replaced by ~current-amb-merger~
+and explicit ~amb-pause~ events. For recursive TRS2 and microKanren
+searches, select a fair merger explicitly:
+
+#+begin_src racket
+(require typed/amb typed/amb/merge)
+(parameterize ([current-amb-merger amb-interleave])
+  (run 1 q (coloro q)))
+#+end_src
+
+~run~ consumes ~amb-generate*~ directly. Committed choice forwards
+pauses while looking for the first answer; it does not hide them in
+an answers-only sequence. TRS1 uses append for depth-first forms and
+alternate for answer-interleaving forms, with local binding for conjunction.
+Answer ordering differences and measured v2/v3 test times are recorded
+in ~MIGRATION-V3.md~.
 
 * License
 The original work in this package is distributed under the MIT License;
