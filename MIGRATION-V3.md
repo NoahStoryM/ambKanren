@@ -47,9 +47,9 @@ LC_ALL=C.UTF-8 AMB_MERGER=level BOOK_FOCUS=ch8.rktl:205 BOOK_TIMEOUT=600 BOOK_RE
 LC_ALL=C.UTF-8 AMB_MERGER=append BOOK_TIMEOUT=30 BOOK_RECORD=trs1.rktd timeout 120s racket tools/book-trs1.rkt
 ```
 
-## 验证与发布顺序
+## 首轮验证与发布顺序
 
-Racket 9.3 CS、`LC_ALL=C.UTF-8`。v2 与 v3 使用独立 PLTUSERHOME；v2 是 amb `6340911`、ambKanren `ad2586d`，v3 是本分支与 amb 的 v3 分支。验证前递归删除两个仓库生成的 compiled 目录。
+Racket 9.3 CS、`LC_ALL=C.UTF-8`。v2 与 v3 使用独立 PLTUSERHOME；v2 是 amb `6340911`、ambKanren `ad2586d`，首轮 v3 记录对应本包 `0488eea` 与 amb `48c97bb`。后续可信导入边界的验证与原生比较另列在下节。验证前递归删除两个仓库生成的 compiled 目录。
 
 - 带文档 `raco setup --check-pkg-deps --pkgs amb typed-amb` 和 `--pkgs ambKanren` 均通过，无错误、无警告、无依赖报告。
 - `timeout 360s raco test --timeout 120 -p amb typed-amb`：265 个测试通过，含现有 bench 程序；其输出不作为本次性能结论。amb 中四个可选书中模块及孤立的加载器、记录器已删除，kanren 规律测试保留，移除仅为可选书中测试引入的 typed-racket-lib build-dep。
@@ -57,7 +57,7 @@ Racket 9.3 CS、`LC_ALL=C.UTF-8`。v2 与 v3 使用独立 PLTUSERHOME；v2 是 a
 
 CI 临时先从 NoahStoryM/amb 的 v3 分支安装 amb/typed-amb。**amb v3 发布后改回包目录安装**。发布仍由 Noah 操作：先合并 amb #24，等包目录到 3.0，再改回本分支 CI 并合并本 PR。
 
-## 耗时记录
+## 首轮 v2 耗时记录
 
 书中分类记录器按每个例子单独启动线程以约束资源，其耗时不直接当作 v2/v3 性能比。单独的 `tools/test-times.py` 在已编译测试模块上、每次新 Racket 进程中用 time-apply 记录执行 CPU/real/GC，编译不计入；这是单次观察，不是优化或严格的性能 benchmark。
 
@@ -76,3 +76,36 @@ v2 的原始 TRS2 测试在第一轮 60 秒整文件预算下未完成；逐例 
 LC_ALL=C.UTF-8 PLTUSERHOME="$V2_HOME" timeout 390s python3 tools/test-times.py --racket "$RACKET" --repo "$V2_REPO" --timeout 180
 LC_ALL=C.UTF-8 PLTUSERHOME="$V3_HOME" timeout 390s python3 tools/test-times.py --racket "$RACKET" --repo "$V3_REPO" --timeout 180
 ```
+
+
+## 后续：可信 typed 边界与原生实现比较
+
+本轮采用 amb `c0c8fd9`：使用 dotted Merger、库内 unsafe-require/typed/provide，保留 shallow 前端以支持三种客户端模式；移除未使用的通用 Generator 别名，统一 for/amb 宏路径并复用空向量。本包的搜索算法未改变。
+
+这部分在修改后重新验证：先删 compiled，再在 Racket 9.3 CS / LC_ALL=C.UTF-8 下执行两个仓库带文档的 `raco setup --check-pkg-deps`，均通过、无警告或依赖错误。全部测试 amb/typed-amb **271 项通过**，ambKanren **711 项通过**。书中四策略完整分类沿用前面首轮记录，没有重复运行 level 的 293 秒慢例；本轮全部标准书中断言重新通过。
+
+原生基线为 miniKanren-typed `c197a5c`。`tools/native-trs1.rkt`、`tools/native-trs2.rkt` 调用原生实现，并且只包含与 ambKanren 相同的章节：TRS1 228 例（不含第 9 章）、TRS2 285 例（不含第 10 章）。它们的原生严格断言 **513 项通过**。将原生导入放在 test 子模块中，依然只需已有 build-deps。
+
+测量均使用已经编译的模块，一次预运行后，采样三次，每次新启动一个 Racket 进程；先完成原生组，再完成 amb 组，没有与测试或编译并行。预运行主要减少首次文件/页面缓存差异，不是跨进程 JIT 预热。time-apply 内包含模块加载、查询、收集、reification 和断言，不包含 Racket 进程启动；进程总墙钟另存原始 JSONL。
+
+下表单位为毫秒，各指标分别取三次采样的中位数，real 括号内为三次范围。相对比值以同章原生实现的 real 中位数为 1：
+
+| 测试 | 实现 | CPU 中位数 | real 中位数（范围） | GC 中位数 | real / 原生 |
+|---|---|---:|---:|---:|---:|
+| TRS1 | miniKanren-typed | 15465 | 15517 (15468–15921) | 295 | 1.000 |
+| TRS1 | ambKanren v3 | 22200 | 22228 (21477–22624) | 2995 | 1.432 |
+| TRS2 | miniKanren-typed | 12196 | 12220 (11876–12261) | 2471 | 1.000 |
+| TRS2 | ambKanren v3 | 17208 | 17233 (16326–19028) | 6016 | 1.410 |
+
+本次观测的 real 开销约为 TRS1 **+43.2%**、TRS2 **+41.0%**。TRS2 波动较大；仅三次样本、顺序分组测量，不能承诺所有查询都落在这个比例内，也不能把差额单独归因于导入检查、续延或分配。
+
+两边执行相同的书中查询，但算法语义仍有前文列出的区别：amb TRS2 的直接合取在两例只保留相同答案袋，原生实现则逐项符合书；断言成本也包含在时间内。这是实际书中套件的端到端记录，没有为了性能修改查询或改用局部 bind，也没有做后续优化。
+
+原始采样（含预运行）为 `research/v3-results/performance-native-native.jsonl`、`performance-amb-native.jsonl`。上节 v2 比较属于首次迁移时的历史采样，不与本轮数据混用。重跑前先清理 compiled 并完成带文档 setup，然后在本仓库根目录运行：
+
+```sh
+LC_ALL=C.UTF-8 timeout 600s python3 tools/test-times.py --racket "$(command -v racket)" --implementation native --warmups 1 --repeats 3 --timeout 120 > native.jsonl
+LC_ALL=C.UTF-8 timeout 600s python3 tools/test-times.py --racket "$(command -v racket)" --implementation amb --warmups 1 --repeats 3 --timeout 120 > amb.jsonl
+```
+
+排除 `warmup: true` 的记录后，再对 stdout 中 TIMING 的 CPU/real/GC 统计；每一条 exit 都必须为 0，并检查 stderr 没有断言失败。本次全部采样均符合此条件。
