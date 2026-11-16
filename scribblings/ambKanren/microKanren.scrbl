@@ -70,6 +70,10 @@ The definitions that remain are those of
 the nondeterministic computation, instead of a stream, and
 @racket[call/goal] returns a state.}
 
+@item{@racket[unify] calls @racket[(amb-fail)] instead of returning
+@racket[#f], so it returns a substitution, and @racket[==] needs no
+test.}
+
 @item{@racket[Zzz] calls @racket[suspend] (see below).}
 
 ]
@@ -168,10 +172,11 @@ search of @racket[g1] returns, as @racket[(g2 (amb-local (g1 s/c)))].
 
 @deftogether[(@defproc[(walk [u Term] [s Substitution]) Term]
               @defproc[(ext-s [x Var] [v Term] [s Substitution]) Substitution]
-              @defproc[(unify [u Term] [v Term] [s Substitution])
-                       (Option Substitution)])]{
+              @defproc[(unify [u Term] [v Term] [s Substitution]) Substitution])]{
 Walking, extending a substitution, and unification.  There is no
-occurs check.
+occurs check.  When @racket[u] and @racket[v] cannot be unified,
+@racket[unify] calls @racket[(amb-fail)] instead of returning
+@racket[#f], so it can only be called within a search, as goals are.
 }
 
 @section[#:tag "microKanren-wrappers"]{User-Level Forms}
