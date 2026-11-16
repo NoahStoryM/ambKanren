@@ -18,5 +18,6 @@
   (include (lib "typed/miniKanren/trs1/tests/ch6.rktl"))
   (include (lib "typed/miniKanren/trs1/tests/ch7.rktl"))
   (include (lib "typed/miniKanren/trs1/tests/ch8.rktl"))
+  (include (lib "typed/miniKanren/trs1/tests/ch9.rktl"))
   (include (lib "typed/miniKanren/trs1/tests/ch10.rktl"))
 )

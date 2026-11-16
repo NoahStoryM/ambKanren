@@ -25,8 +25,8 @@ This module implements the language of the first edition of
 The core follows @secref["microKanren"]: a goal returns one
 substitution and chooses among its answers with @racket[amb].  Unlike
 microKanren, there is no state and no variable counter (@racket[fresh]
-creates variables directly), and substitutions are immutable hash
-tables instead of association lists.
+creates variables directly).  Substitutions are association lists,
+as in @tt{miniKanren-typed}.
 
 The user-level language is that of the @emph{first} edition of @italic{The Reasoned Schemer}
 (Friedman, Byrd, and Kiselyov, MIT Press, 2005): @racket[run] with a
@@ -78,8 +78,8 @@ with @racket[eq?]; the name is only for printing.
 }
 
 @deftype[Substitution]{
-Defined as @racket[(Immutable-HashTable Var Term)], with
-@racket[eq?]-based keys.  As in other miniKanren implementations, the
+Defined as @racket[(Listof (Pair Var Term))], searched with
+@racket[assq] (variable identity).  As in other miniKanren implementations, the
 substitution is triangular: a variable may be associated with a term
 containing other associated variables.
 }
@@ -244,8 +244,9 @@ and the answers with @racket['R] are still reached:
               @defproc[(size-s [s Substitution]) Index]
               @defproc[(ext-s [x Var] [v Term] [s Substitution]) Substitution])]{
 Operations on substitutions.  @racket[ext-s] associates @racket[x]
-with @racket[v], and fails with @racket[(amb-fail)] when @racket[x] occurs
-in @racket[v].
+with @racket[v].  Ground data (recognized by @racket[data?]) skips the
+occurs check; otherwise the operation fails with @racket[(amb-fail)]
+when @racket[x] occurs in @racket[v].
 }
 
 @deftogether[(@defproc[(walk [v Term] [s Substitution]) Term]
