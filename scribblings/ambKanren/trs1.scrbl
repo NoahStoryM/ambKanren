@@ -246,8 +246,8 @@ Interleaving disjunction and conjunction, used by @racket[condi] and
 @racket[amb-alternate], which passes the turn at every answer.
 @racket[conji] binds the answers of each goal with a local search
 (@racket[amb-local*]) under the same merger before it goes on.  They
-replace @mk1[mplusi] and @mk1[bindi], which this version no longer
-provides.
+take the place of @mk1[mplusi] and @mk1[bindi], which this module
+does not provide.
 
 In the example below, @racket[counto] has an answer for every length,
 and the answers with @racket['R] are still reached:
