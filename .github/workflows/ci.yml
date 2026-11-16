@@ -16,11 +16,6 @@ jobs:
       - uses: bogdanp/setup-racket@v1.16
         with:
           version: "stable"
-      # After amb 3.0 reaches the package catalog, remove this source install.
-      - name: Install amb 3.0 from source
-        run: |
-          git clone --depth 1 --branch master https://github.com/NoahStoryM/amb.git "$RUNNER_TEMP/amb"
-          timeout 600s raco pkg install --auto --batch "$RUNNER_TEMP/amb/pkgs/amb" "$RUNNER_TEMP/amb/pkgs/typed-amb"
       - name: Install dependencies
         run: timeout 600s raco pkg install --auto --batch
       - name: Run tests
