@@ -1,7 +1,8 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do current-amb-depth-first?)
+                     (only-in amb amb amb-fail in-amb/do amb-generate* amb-local amb-pause current-amb-merger)
+                     (only-in amb/merge amb-interleave amb-alternate amb-level amb-append)
                      typed/microKanren/amb)
           scribble/example
           "utils.rkt"
@@ -9,7 +10,8 @@
 
 @(define mk-eval
    (make-base-eval #:lang 'typed/racket/base
-                   '(require typed/microKanren/amb)))
+                   '(require typed/microKanren/amb typed/amb typed/amb/merge)
+                   '(current-amb-merger amb-interleave)))
 @(define-syntax-rule (mk-examples body ...)
    (examples #:eval mk-eval body ...))
 
@@ -18,21 +20,20 @@
 
 This module is microKanren (Hemann and Friedman, @italic{μKanren: A
 Minimal Functional Core for Relational Programming}, Scheme Workshop
-2013) with its streams replaced by @racket[amb].  It follows
-@racketmodname[typed/microKanren] of the miniKanren-typed package, the
-Typed Racket rewrite of the code at
-@url{https://github.com/jasonhemann/microKanren}, definition by
-definition; the definitions that only exist to manipulate streams are
-gone.
+2013) with its streams replaced by @racket[amb].  It follows, definition
+by definition, @racketmodname[typed/microKanren] of the miniKanren-typed
+package, which is the Typed Racket version of the code at
+@url{https://github.com/jasonhemann/microKanren}.  The definitions that
+only manipulate streams are gone.
 
 @section[#:tag "microKanren-streams"]{From Streams to amb}
 
-In microKanren, a goal returns a stream of states: every answer at
-once, lazily.  The stream type is a monad, and the connectives are its
-operations.  With @racket[amb], the nondeterminism is an effect of
+In microKanren, a goal returns a stream of states: all its answers,
+produced lazily.  The stream type is a monad, and the connectives are
+its operations.  With @racket[amb], nondeterminism is an effect of
 evaluation rather than a value, so it disappears from the type of
-goals: a goal returns a single state, chooses among its answers with
-@racket[amb], and fails by calling @racket[(amb)].
+goals.  A goal returns a single state, chooses among its answers with
+@racket[amb], and fails by calling @racket[(amb-fail)].
 
 @tabular[#:style 'boxed
          #:sep @hspace[2]
@@ -42,17 +43,20 @@ goals: a goal returns a single state, chooses among its answers with
             @mk0[(→ State (Streamof State))]
             @racket[(→ State State)])
       (list "success" @mk0[(unit s/c)] @racket[s/c])
-      (list "failure" @mk0[mzero] @racket[(amb)])
+      (list "failure" @mk0[mzero] @racket[(amb-fail)])
       (list @racket[disj] @mk0[(mplus (g1 s/c) (g2 s/c))] @racket[((amb g1 g2) s/c)])
-      (list @racket[conj] @mk0[(bind (g1 s/c) g2)] @racket[(g2 (g1 s/c))])
+      (list @racket[conj] @mk0[(bind (g1 s/c) g2)] @racket[(g2 (amb-local (g1 s/c)))])
       (list @racket[Zzz] @mk0[(λ (s/c) (λ () (g s/c)))] @racket[(λ (s/c) (suspend) (g s/c))])
-      (list @racket[take] @elem{force and collect the stream @mk0[(g empty-state)]} @elem{collect @racket[(in-amb/do (g empty-state))]}))]
+      (list @racket[take] @elem{force and collect the stream @mk0[(g empty-state)]} @elem{advance @racket[amb-generate*] until enough answers arrive}))]
 
-So success returns the state unchanged, conjunction is plain function
-composition, and disjunction is a choice made by @racket[amb].  The
-monadic structure has not gone away: it now lives in the continuation
-captured by @racket[amb], and @racket[in-amb/do] is what turns that
-control effect back into a sequence of answers.
+Success returns the state unchanged, disjunction is a choice made by
+@racket[amb], and conjunction runs @racket[g2] on each answer of a
+local search of @racket[g1].  The monadic structure has not gone away:
+it lives in the continuation captured by @racket[amb], and
+@racket[amb-generate*] turns that control effect back into a generator
+of answers and pauses.  @racket[amb-local] does this for @racket[g1]
+alone and makes its answers one choice again, which is what
+@mk0[bind] does with the stream of @racket[g1].
 
 The definitions that remain are those of
 @racketmodname[typed/microKanren], with these changes:
@@ -72,12 +76,10 @@ the nondeterministic computation, instead of a stream, and
 
 @subsection[#:tag "microKanren-order"]{Suspension and the Order of Answers}
 
-In microKanren, @mk0[Zzz] wraps a goal so that it returns an immature
-stream, and @mk0[mplus] swaps its two streams whenever the first one is
-immature; this is what lets a disjunction leave a branch that never
-produces an answer.  Here, @racket[Zzz] calls @racket[suspend], which
-lets the computations already waiting in @racket[amb]'s frontier run
-first:
+In microKanren, @mk0[Zzz] creates a suspended stream.  Here it calls
+@racket[amb-pause] before the goal.  The default merger of amb,
+@racket[amb-append], does not pass the turn at a pause, so the
+examples select @racket[amb-interleave] explicitly.
 
 @mk-examples[
 (: relo (→ Term Goal))
@@ -85,14 +87,21 @@ first:
 (run 1 (x) (disj+ (relo '(5 . 6)) (== x 3)))
 ]
 
-The two schedules produce the same answers but not always in the same
-order.  @mk0[mplus] swaps a suspended stream only with the other side
-of the disjunction it belongs to, while @racket[suspend] sends the
-computation to the back of a single, global frontier, which is closer
-to breadth-first search.  All the tests of @tt{microKanren-test.scm}
-give the same results as microKanren; of the examples of
-@tt{miniKanren-wrappers.scm}, the two that use @tt{rember*o} return
-their answers in a different order.
+With @racket[amb-interleave], the answers come in the order of the
+stream-based implementation.  This is why conjunction is a local
+search rather than plain function composition,
+@racket[(g2 (g1 s/c))].
+
+Composition gives the same answers, but in another order.  It runs
+@racket[g2] inside the choices of @racket[g1], so the merger
+interleaves the runs of @racket[g2] following the shape of those
+choices.  @mk0[bind] interleaves them in the order of the answers of
+@racket[g1], with the pauses of @racket[g1] in between.  With
+composition, @racket[(conj (disj a b) g)] is
+@racket[(disj (conj a g) (conj b g))], order included, whereas
+@mk0[bind] keeps the answers of @racket[(disj a b)] together; several
+examples tell the two apart.  The price of the local search is one
+more search per conjunction.
 
 @section[#:tag "microKanren-types"]{Types}
 
@@ -133,7 +142,7 @@ Defined as @racket[(→ State State)].
 
 @defproc[(== [u Term] [v Term]) Goal]{
 Unifies @racket[u] and @racket[v] in the substitution of the state,
-and calls @racket[(amb)] if they cannot be unified.
+and calls @racket[(amb-fail)] if they cannot be unified.
 }
 
 @defproc[(call/fresh [f (→ Var Goal)]) Goal]{
@@ -145,8 +154,8 @@ incremented.
 @deftogether[(@defproc[(disj [g1 Goal] [g2 Goal]) Goal]
               @defproc[(conj [g1 Goal] [g2 Goal]) Goal])]{
 Disjunction runs @racket[g1] or @racket[g2], as chosen by
-@racket[amb]; conjunction runs @racket[g2] on the state returned by
-@racket[g1].
+@racket[amb]; conjunction runs @racket[g2] on each state that a local
+search of @racket[g1] returns, as @racket[(g2 (amb-local (g1 s/c)))].
 
 @mk-examples[
 (take-all
@@ -170,16 +179,17 @@ occurs check.
 These are the forms of @tt{miniKanren-wrappers.scm}.
 
 @defproc[(suspend) Void]{
-Sends the rest of the computation to the back of @racket[amb]'s
-frontier: it makes a choice point with
-@racket[current-amb-depth-first?] set to @racket[#f], and then a
-second one, which is placed behind the choices already waiting.
+One logical pause, implemented by @racket[amb-pause].  The merger of
+the enclosing choice decides whether another alternative gets the
+turn: @racket[amb-interleave] passes it at each pause,
+@racket[amb-alternate] at answers too, and @racket[amb-level] runs in
+rounds; @racket[amb-append] keeps the turn.
 }
 
 @defform[(Zzz goal)]{
 The inverse-η-delay: a goal that calls @racket[suspend] before running
-@racket[goal], so that a recursive relation gives the other choices a
-turn instead of looping.
+@racket[goal], so that a recursive relation gives the other
+alternatives a turn instead of looping.
 }
 
 @deftogether[(@defform[(conj+ goal ...+)]
@@ -213,10 +223,11 @@ Runs the goals with fresh variables @racket[x ...] and returns at most
               @defproc[(call/goal [g Goal]) State]
               @defproc[(take [n Natural] [th (→ a)]) (Listof a)]
               @defproc[(take-all [th (→ a)]) (Listof a)])]{
-Running goals: @racket[call/goal] runs @racket[g] in
-@racket[empty-state], and @racket[take] and @racket[take-all] collect
-at most @racket[n] (or all) results of @racket[(th)] with
-@racket[in-amb/do].
+Running goals.  @racket[call/goal] runs @racket[g] in
+@racket[empty-state].  @racket[take] and @racket[take-all] collect at
+most @racket[n] (or all) results of @racket[(th)] with
+@racket[amb-generate*]; they skip pauses only there, at the outermost
+level, so the pauses still schedule the search inside.
 }
 
 @deftogether[(@defproc[(reify-1st [s/c State]) Term]

@@ -2,15 +2,14 @@
 
 (define license 'MIT)
 (define collection "typed")
-(define version "2.1")
+(define version "3.0")
 
 (define pkg-desc "miniKanren based on amb")
 
 (define deps
   '("base"
     "typed-racket-lib"
-    "typed-data-queue"
-    ["typed-amb" #:version "2.0"]))
+    ["typed-amb" #:version "3.0"]))
 (define build-deps
   '("at-exp-lib"
     "rackunit-typed"

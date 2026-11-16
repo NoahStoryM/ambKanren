@@ -1,7 +1,8 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do current-amb-depth-first?)
+                     (only-in amb amb amb-fail in-amb/do amb-generate* amb-local amb-pause current-amb-merger)
+                     (only-in amb/merge amb-interleave amb-alternate amb-level amb-append)
                      typed/miniKanren/amb/trs2)
           scribble/example
           "utils.rkt"
@@ -9,7 +10,8 @@
 
 @(define ak-eval
    (make-base-eval #:lang 'typed/racket/base
-                   '(require typed/miniKanren/amb/trs2)))
+                   '(require typed/miniKanren/amb/trs2 typed/amb typed/amb/merge)
+                   '(current-amb-merger amb-interleave)))
 @(define-syntax-rule (ak-examples body ...)
    (examples #:eval ak-eval body ...))
 
@@ -34,14 +36,14 @@ edition.  What changes is the representation of goals:
 (list (list @bold{} @bold{second edition} @bold{typed/miniKanren/amb/trs2})
       (list "goal" @mk2[(→ Substitution (Streamof Substitution))] @racket[(→ Substitution Substitution)])
       (list @racket[disj2] @mk2[append-inf] @elem{a choice made by @racket[amb]})
-      (list @racket[conj2] @mk2[append-map-inf] "function composition")
-      (list "suspension" @elem{an immature stream, @mk2[(λ () ...)]} @elem{@racket[suspend]: a choice point sent to the back of the frontier}))]
+      (list @racket[conj2] @mk2[append-map-inf] @elem{a local search: @racket[(g2 (amb-local (g1 s)))]})
+      (list "suspension" @elem{an immature stream, @mk2[(λ () ...)]} @elem{@racket[suspend]: one logical pause}))]
 
-The second edition can switch away from a branch that never produces
-an answer, because @racket[defrel] suspends every call to a relation
-and @mk2[append-inf] swaps its two streams at each suspension.  Here,
-@racket[defrel] calls @racket[suspend], which lets the computations
-already waiting in @racket[amb]'s frontier run first:
+The second edition suspends every relation call.  Here
+@racket[defrel] calls @racket[amb-pause] instead.  When
+@racket[current-amb-merger] is @racket[amb-interleave], that pause lets
+the other side of a binary choice run.  The examples below select this
+merger explicitly:
 
 @ak-examples[
 (defrel (nevero) (nevero))
@@ -50,24 +52,28 @@ already waiting in @racket[amb]'s frontier run first:
 
 @subsection[#:tag "trs2-order"]{Order of Answers}
 
-The two implementations produce the same answers but schedule
-suspended computations differently.  @mk2[append-inf] swaps a suspended
-stream only with the other side of the disjunction it belongs to, so
-the search is a tree of binary interleavings in which deeper
-disjunctions receive exponentially smaller shares.  @racket[suspend]
-sends the computation to the back of a single, global frontier, which
-is closer to breadth-first search.
+With @racket[amb-interleave], all 285 examples of the book that the
+tests cover give the same answers, in the same order.
 
-As a result, answers can come in a different order from the book, and
-the first @racket[n] answers returned by @racket[run] can differ even
-when all answers eventually appear.  Of the 285 examples of chapters 1
-to 9 of the book, 15 differ in this way: 9 return the same answers in
-a different order, and 6 return different answers for a bounded
-@racket[run]; the book's answers do appear when more answers are
-requested.
-The global frontier also keeps more partial computations alive, so
-programs that search deeply, such as the arithmetic relations of
-chapter 8, are noticeably slower than with streams.
+This depends on @racket[conj2].  Like @mk2[append-map-inf], it searches
+@racket[g1] locally and continues with @racket[g2] from each answer,
+so the runs of @racket[g2] are interleaved in the order of the answers
+of @racket[g1], with the pauses of @racket[g1] in between.  Plain
+function composition, @racket[(g2 (g1 s))], gives the same answers but
+runs @racket[g2] inside the choices of @racket[g1], so the runs are
+interleaved following the shape of those choices.  With composition,
+@racket[(conj2 (disj2 a b) g)] is
+@racket[(disj2 (conj2 a g) (conj2 b g))], order included, whereas the
+book's bind keeps the answers of @racket[(disj2 a b)] together; two
+examples, in Chapter 8 and Chapter 9, return their answers in another
+order.  The price of the local search is one more search per
+conjunction.
+
+The other mergers give other orders: @racket[amb-alternate] also
+passes the turn at answers, and @racket[amb-level] runs in rounds of
+pauses.  With them, a bounded @racket[run] need not return the same
+answers as the book.  The migration report of the package records the
+examples that differ.
 
 @section[#:tag "trs2-types"]{Types}
 
@@ -90,7 +96,7 @@ Defined as @racket[(Immutable-HashTable Var Term)], with
 @deftype[Goal]{
 Defined as @racket[(→ Substitution Substitution)].  A goal returns one
 extension of the substitution, chosen with @racket[amb], and calls
-@racket[(amb)] when it has none.
+@racket[(amb-fail)] when it has none.
 }
 
 @section[#:tag "trs2-interface"]{Running Programs}
@@ -131,12 +137,11 @@ an argument written as @racket[[x : type]] has the given type.
 }
 
 @defproc[(suspend) Void]{
-Gives up control: the rest of the current computation continues after
-the computations already waiting in @racket[amb]'s frontier.  It is
-implemented with two choice points of one alternative each: the first
-is created with @racket[current-amb-depth-first?] set to @racket[#f],
-so that the second one, which holds the rest of the computation, is
-placed at the back of the frontier.
+One logical pause, implemented by @racket[amb-pause].  The merger of
+the enclosing choice decides whether another alternative gets the
+turn: @racket[amb-interleave] passes it at each pause,
+@racket[amb-alternate] at answers too, and @racket[amb-level] runs in
+rounds; @racket[amb-append] keeps the turn.
 }
 
 @deftogether[(@defform[(fresh (x ...) goal ...)]
@@ -157,14 +162,18 @@ Chapter 10.)
               @defproc[(disj2 [g1 Goal] [g2 Goal]) Goal]
               @defproc[(conj2 [g1 Goal] [g2 Goal]) Goal])]{
 Disjunction and conjunction.  @racket[disj2] applies the goal chosen by
-@racket[(amb g1 g2)], and @racket[conj2] is function composition.
+@racket[(amb g1 g2)], and @racket[conj2] applies @racket[g2] to each
+answer of a local search of @racket[g1], as
+@racket[(g2 (amb-local (g1 s)))]; see @secref["trs2-order"].
 }
 
 @deftogether[(@defproc[(ifte [g1 Goal] [g2 Goal] [g3 Goal]) Goal]
               @defproc[(once [g Goal]) Goal])]{
 The functions behind @racket[conda] and @racket[condu].  They search
-for the answers of @racket[g1] or @racket[g] with @racket[in-amb/do],
-so that they can tell whether there is one before committing.
+for the first answer with @racket[amb-generate*] and pass on every
+pause with @racket[amb-pause], so the enclosing search can still
+schedule other alternatives while the test runs.  A sequence observer
+that skipped the pauses would hide them from the outer merger.
 }
 
 @deftogether[(@defproc[(call/fresh [name Symbol] [f (→ Var Goal)]) Goal]
@@ -182,7 +191,7 @@ The functions behind @racket[fresh] and @racket[run].
               @defproc[(ext-s [x Var] [v Term] [s Substitution]) Substitution]
               @defproc[(unify [u Term] [v Term] [s Substitution]) Substitution])]{
 As in the second edition, except that @racket[ext-s] and @racket[unify]
-call @racket[(amb)] instead of returning @racket[#f].
+call @racket[(amb-fail)] instead of returning @racket[#f].
 }
 
 @deftogether[(@defproc[(reify-name [n Index]) Symbol]
