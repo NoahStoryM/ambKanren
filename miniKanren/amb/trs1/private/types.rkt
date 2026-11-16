@@ -5,7 +5,7 @@
 (define-type Literal (∪ Boolean Number Char Bytes String Keyword Null Symbol))
 (define-type Data (∪ Literal (Pair Data Data)))
 (define-type Term (∪ Literal Var (Pair Term Term)))
-(define-type Substitution (Immutable-HashTable Var Term))
+(define-type Substitution (Listof (Pair Var Term)))
 (define-type Goal (→ Substitution Substitution))
 
 (struct var ([name : Symbol])

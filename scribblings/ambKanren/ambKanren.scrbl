@@ -7,8 +7,13 @@
 @title{ambKanren: miniKanren Based on amb}
 @author[@author+email["Noah Ma" "noahstorym@gmail.com"]]
 
-ambKanren is a miniKanren whose search is not a stream of answers but
-the ambiguous operator @racket[amb] of the @racketmodname[typed/amb]
+ambKanren compares @racket[amb] with the books' streams and tests the
+resulting behavior.  The three implementations documented below follow
+@tt{miniKanren-typed},
+keeping the non-search code the same while replacing streams with
+@racket[amb].
+
+Its search uses the ambiguous operator @racket[amb] of the @racketmodname[typed/amb]
 library.  A goal is an ordinary function from substitutions to
 substitutions (from states to states, in microKanren).  A goal with
 several answers chooses one of them with @racket[amb]; a goal with none
@@ -48,24 +53,52 @@ edition (Friedman, Byrd, Kiselyov, and Hemann, MIT Press, 2018).}
 
 @section[#:tag "performance"]{Performance}
 
-The examples of the book that the tests of each edition cover were run
-with ambKanren and with the stream-based implementation of the same
-edition in miniKanren-typed.  The table gives the median of three runs
-of the compiled test modules (Racket 9.3 CS), and the memory that each
-run allocated in all.
+The compiled book tests were run with ambKanren and the stream-based
+implementation in miniKanren-typed, using the same association-list
+substitutions, ground-data shortcut and non-search definitions.
+The first edition now includes chapters 1--10 (254 checks); the second
+includes chapters 1--9 and arithmetic (285 checks).  Both use the same
+source test files and exact assertions, with no answer-order exceptions.
+
+Each implementation was run three times in a fresh process, strictly
+alternating streams and amb within each edition.  The tables show the
+median (minimum--maximum) of CPU seconds and cumulative allocated GB
+(10^9 bytes, not peak memory).  The ratio is amb's CPU median divided
+by the stream implementation's median.
 
 @tabular[#:style 'boxed
          #:sep @hspace[2]
          #:row-properties '(bottom-border ())
-         #:column-properties '(left right right right right)
-(list (list @bold{edition} @bold{miniKanren-typed} @bold{ambKanren} @bold{ratio} @bold{allocated (miniKanren-typed / ambKanren)})
-      (list "first (228 examples)" "15.7 s" "16.9 s" "1.08" "2.8 GB / 29.5 GB")
-      (list "second (285 examples)" "13.6 s" "15.1 s" "1.11" "6.1 GB / 19.8 GB"))]
+         #:column-properties '(left right right right)
+(list (list @bold{edition} @bold{streams: CPU s} @bold{amb: CPU s} @bold{ratio})
+      (list "first (254 checks)" "27.95 (26.98–29.29)" "54.01 (53.31–62.94)" "1.93")
+      (list "second (285 checks)" "22.12 (20.43–22.81)" "31.44 (29.22–33.95)" "1.42"))]
 
-The times are close, but ambKanren allocates much more.  Each effect of
-a search (a choice, a pause, the resumption of an alternative)
-captures or reinstates a continuation, at a cost of about a kilobyte,
-where a stream allocates a closure or a pair.  The first edition
-allocates the most, since each of its conjunctions is a local search.
-The measurements include the checks of the tests themselves, and vary
-with the machine and the version of Racket.
+@tabular[#:style 'boxed
+         #:sep @hspace[2]
+         #:row-properties '(bottom-border ())
+         #:column-properties '(left right right)
+(list (list @bold{edition} @bold{streams: allocated GB} @bold{amb: allocated GB})
+      (list "TRS1" "2.717815 (2.717814–2.717816)" "26.817041 (26.816964–26.817112)")
+      (list "TRS2" "6.104530 (6.104518–6.104530)" "19.389179 (19.389148–19.389869)"))]
+
+These measurements used Racket 9.3 CS on Linux x86-64, an Intel Xeon
+Platinum 8573C container with nine visible CPUs (affinity 0--8).
+Modules were compiled before measurement; process startup and
+compilation are excluded, while loading the compiled test modules and
+their checks is included.  A full garbage collection precedes each
+timed region.  CPU frequency and host load were not controlled, so
+results vary with the machine and the version of Racket.
+
+In this run, amb is slower and allocates substantially more in both
+editions.  Choices, pauses and local searches use continuation and
+generator machinery in place of stream pairs and suspensions; in the
+first edition, each nonfinal conjunction introduces a local search.
+The larger allocation is consistent with that mechanism, but this
+whole-module measurement does not isolate how much CPU time is spent
+capturing or restoring continuations.  It is not a same-machine
+hash-table/association-list ablation of the previous report.
+
+Raw samples, real and GC times, source hashes, reproduction commands
+and the complete source comparison are in
+@hyperlink["https://github.com/NoahStoryM/ambKanren/tree/master/research/v3-results/alignment-20261116"]{the alignment measurement report}.

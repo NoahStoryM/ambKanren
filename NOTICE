@@ -25,10 +25,10 @@ copyright holders.
    microKanren.scm and miniKanren-wrappers.scm in which streams are
    replaced by amb: a goal returns one state and chooses among its
    answers with amb, unit and mzero become returning the state and
-   (amb), mplus becomes a choice made by amb, bind becomes function
-   composition, the inverse-η-delay Zzz suspends the computation in
-   amb's frontier, and take and take-all collect the answers with
-   in-amb/do.  The other changes are type definitions and annotations
+   (amb-fail), mplus becomes a choice made by amb, and bind applies
+   the second goal to the answers of a local search of the first.
+   The inverse-η-delay Zzz calls amb-pause, and take and take-all
+   collect answers by advancing amb-generate*.  The other changes are type definitions and annotations
    throughout, variables that are structs holding their counter instead
    of vectors, and literals compared with equal? instead of eqv?.  The
    tests in microKanren/amb/tests/ are adapted from the test files.
@@ -67,10 +67,12 @@ copyright holders.
 2. The Reasoned Schemer, first edition
 
    Files:   miniKanren/amb/trs1/main.rkt
+            miniKanren/amb/trs1/base.rkt
+            miniKanren/amb/trs1/private/types.rkt
             miniKanren/amb/trs1/tests/interface.rkt
 
    Source:  Daniel P. Friedman, William E. Byrd, and Oleg Kiselyov,
-            The Reasoned Schemer, MIT Press, 2005, appendix A
+            The Reasoned Schemer, MIT Press, 2005, chapter 9 and appendix A
             ("Connecting the Wires").
 
    Copyright (C) 2005 Massachusetts Institute of Technology.
@@ -79,7 +81,9 @@ copyright holders.
    condu) follows the book; project is kept only in the tests as an
    exercise.  The cond-aux and all-aux macros
    keep the structure of the book's implementation.  The remaining
-   definitions are rewritten on top of amb.
+   definitions are rewritten on top of amb.  The non-search definitions
+   follow typed/miniKanren/trs1 in NoahStoryM/miniKanren-typed; failure
+   invokes amb-fail instead of returning #f.
 
 
 3. The Reasoned Schemer, second edition
@@ -96,8 +100,8 @@ copyright holders.
    condu, project, disj, conj) and the definitions of walk, unify,
    ifte, once, and reification follow that code.  Goals are rewritten
    on top of amb, without streams: disj2 is a choice made by amb,
-   conj2 is function composition, and the suspension that defrel
-   inserts is a choice point sent to the back of amb's frontier.  The
+   conj2 applies the second goal to the answers of a local search,
+   and the suspension that defrel inserts calls amb-pause.  The
    code is distributed under the following license:
 
    MIT License

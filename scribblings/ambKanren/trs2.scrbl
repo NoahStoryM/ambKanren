@@ -77,6 +77,19 @@ examples that differ.
 
 @section[#:tag "trs2-types"]{Types}
 
+@deftype[Literal]{
+Booleans, numbers, characters, byte strings, strings, keywords,
+@racket['()], and symbols.
+}
+
+@deftype[Data]{
+Defined as @racket[(∪ Literal (Pair Data Data))]: data without logic variables.
+}
+
+@defproc[(data? [v Any]) Boolean]{
+Recognizes @racket[Data], with a Typed Racket occurrence-typing filter.
+}
+
 @deftype[Term]{
 The type of terms: booleans, numbers, characters, byte strings,
 strings, keywords, symbols, @racket['()], logic variables
@@ -89,8 +102,8 @@ Logic variables, compared by identity.
 }
 
 @deftype[Substitution]{
-Defined as @racket[(Immutable-HashTable Var Term)], with
-@racket[eq?]-based keys.
+Defined as @racket[(Listof (Pair Var Term))], searched with
+@racket[assq] (variable identity).
 }
 
 @deftype[Goal]{
@@ -192,6 +205,8 @@ The functions behind @racket[fresh] and @racket[run].
               @defproc[(unify [u Term] [v Term] [s Substitution]) Substitution])]{
 As in the second edition, except that @racket[ext-s] and @racket[unify]
 call @racket[(amb-fail)] instead of returning @racket[#f].
+As in @tt{miniKanren-typed}, @racket[ext-s] skips the occurs check
+for ground data recognized by @racket[data?].
 }
 
 @deftogether[(@defproc[(reify-name [n Index]) Symbol]

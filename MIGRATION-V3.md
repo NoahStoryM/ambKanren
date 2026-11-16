@@ -152,7 +152,7 @@ amb `1c47e90` 起，`(amb)` 和空的 `for/amb` 与非空选择一致，经 `mak
 | TRS2 | 20.3 GB，15.7–15.8 s | 19.8 GB，14.3–15.0 s |
 | microKanren | 1.26 GB，1.91–1.96 s | 1.25 GB，1.80–1.98 s |
 
-## TRS1 公开接口整理（#22，同为 3.0）
+## TRS1 公开接口整理（#22／#23，同为 3.0）
 
 本次不改版本号，不保留兼容别名。仅整理
 `typed/miniKanren/amb/trs1`（及其 `main`、`base` 实现入口）的导出与
@@ -178,8 +178,8 @@ amb `1c47e90` 起，`(amb)` 和空的 `for/amb` 与非空选择一致，经 `mak
 | `disj+`、`disji+` | 3：不再导出 | `(conde [g] ...)`、`(condi [g] ...)` |
 | `Zzz` | 3：不再导出 | 需要显式延迟时写 `(λG (s) (g s))`；它从来不是 TRS1 的暂停操作 |
 | `apply-goal` | 3：不再导出 | 直接写 `(g s)` |
-| `apply-s` | 3：不再导出 | 内部哈希查询辅助；通常用 `walk`／`walk*`，它们会继续解引用 |
-| `s-empty?`、`s-has-key?` | 3：不再导出 | 内部哈希辅助；若明确操作表示，可用 `hash-empty?`、`hash-has-key?` |
+| `apply-s` | 3：不再导出 | 旧的私有查询辅助；通常用 `walk`／`walk*`，它们会继续解引用 |
+| `s-empty?`、`s-has-key?` | 3：不再导出 | 私有辅助；#24 后代换是关联表，可用 `null?`、`assq` 检查其表示 |
 | `var=?` | 3：不再导出 | TRS1 逻辑变量用 `eq?` 比较身份 |
 | `if-aux` | 3：不再导出 | 用 `ife`／`ifi` 等公开形式 |
 | `project` | 3：按 Noah 已定移出接口 | 只在练习测试 `tests/interface.rkt` 定义；TRS2 的 `project` 不变 |
@@ -204,7 +204,7 @@ TRS1 导入；本次不改它们。`suspend`／`pause`、microKanren 的 `take`�
 `NOTICE` 保留这些定义的来源说明，并记录 TRS1 组合器所在文件与测试中的
 `project`。
 
-### 本轮验证
+### #23 的验证（历史记录）
 
 Racket 9.3 CS，所有 Racket 命令均设置 `LC_ALL=C.UTF-8`。
 依赖：amb master `1223459`、miniKanren-typed master `c197a5c`；本分支从
@@ -222,3 +222,37 @@ ambKanren master `d97a0b6` 开出。版本仍为 3.0。
   独有的 16 个名字均为上述流接口。
   TRS2 共有 36 个名字，本库独有 `suspend`；microKanren 共有 32 个名字，
   本库独有 `suspend`、`take`、`take-all`，均保持原样。
+
+
+## 非搜索表示对齐（#24，同为 3.0）
+
+本轮从 #23 合并后的 master `ece8b5c` 开始。TRS1、TRS2 直接采用
+miniKanren-typed `c197a5c` 的 `Literal`、`Data`、`Term`、关联表
+`Substitution`、空代换、查找、出现检查、统一化及 reify 定义。
+TRS1 的 `size-s` 是 `length`，TRS2 的 `reify-s` 也按关联表长度起名。
+TRS2 同时补齐了参照库的 `Literal`、`Data`、`data?`。
+
+非搜索定义只保留失败表示的差别：`ext-s`、`unify` 不返回 `#f`，而是
+调用 `amb-fail`，对应返回类型去掉 `Option`；`data?` 为真的扩展与
+参照库一样不运行出现检查。目标、选择、暂停和答案收集继续使用 amb。
+逐定义的原文对照、所有剩余差异及理由见
+[ALIGNMENT.md](research/v3-results/alignment-20261116/ALIGNMENT.md)，
+`forms.json` 和三个 `.diff` 文件保留可检查的源码证据。
+
+TRS1 的第 9 章已直接 include 参照库同一份 `ch9.rktl`，测试、
+`tools/native-trs1.rkt` 与逐例记录器 `tools/book-trs1.rkt` 现在都覆盖
+第 1–10 章。TRS1 两边各 254 个启用的断言，TRS2 两边各 285 个，
+均使用原始 `check-equal?`，没有答案袋替代或顺序例外。参照测试文件
+自身已有的 `#;` 注释保留原样，没有新增跳过。两份原生入口加本库全部
+测试目录合计 **1353 tests passed**，逐项输出见同目录 `validation.txt`。
+
+microKanren 的非搜索代码已与参照库相同，本轮没有修改。
+**未定：demo 是否也要对齐。** 它已是关联表，但仍有自定义变量比较、
+无 `data?` 捷径的扩展、不同的辅助写法及直接合取；没有参照库的同名
+版本。建议保留为独立最小示例，不计入两版性能表。是否进一步对齐由
+Noah 决定，本轮不改 demo。
+
+新的交替测量、原始样本、环境及中位数／范围另存于
+[alignment-20261116](research/v3-results/alignment-20261116/README.md)。
+手册 Performance 使用这份数据；之前的性能记录属于各自历史源码与
+环境，不可当作本轮同机消融对照，也没有删除。

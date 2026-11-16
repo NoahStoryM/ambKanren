@@ -21,37 +21,47 @@
 
 ;;; Terms and substitutions
 
-(define-type Term
-  (∪ Boolean Number Char Bytes String Keyword Null Symbol
-     Var (Pair Term Term)))
-(define-type Substitution (Immutable-HashTable Var Term))
-(define-type Goal (→ Substitution Substitution))
+(define-type Literal (∪ Boolean Number Char Bytes String Keyword Null Symbol))
+(define-type Data (∪ Literal (Pair Data Data)))
+(define-type Term (∪ Literal Var (Pair Term Term)))
+(define-type Substitution (Listof (Pair Var Term)))
 
 (struct var ([name : Symbol])
   #:type-name Var
   #:transparent)
 
+(define-predicate data? Data)
+
 (: empty-s Substitution)
-(define empty-s #hasheq())
+(define empty-s '())
 
 (: walk (→ Term Substitution Term))
 (define (walk v s)
-  (if (and (var? v) (hash-has-key? s v))
-      (walk (hash-ref s v) s)
-      v))
+  (cond
+    [(and (var? v) (assq v s))
+     => (λ (a) (walk (cdr a) s))]
+    [else v]))
+
+;; As in the reference, ground terms skip the occurs check.
+;; Failure invokes amb-fail, so the result type has no Option.
+(: ext-s (case→
+          (→ Var Data Substitution Substitution)
+          (→ Var Term Substitution Substitution)))
+(define (ext-s x v s)
+  (cond
+    [(data? v) (cons (cons x v) s)]
+    [(occurs? x v s) (amb-fail)]
+    [else (cons (cons x v) s)]))
 
 (: occurs? (→ Var Term Substitution Boolean))
 (define (occurs? x v s)
   (let ([v (walk v s)])
     (cond
       [(var? v) (eq? v x)]
-      [(pair? v) (or (occurs? x (car v) s) (occurs? x (cdr v) s))]
+      [(pair? v)
+       (or (occurs? x (car v) s)
+           (occurs? x (cdr v) s))]
       [else #f])))
-
-;; Fails (with amb) instead of returning #f.
-(: ext-s (→ Var Term Substitution Substitution))
-(define (ext-s x v s)
-  (if (occurs? x v s) (amb-fail) (hash-set s x v)))
 
 (: unify (→ Term Term Substitution Substitution))
 (define (unify u v s)
@@ -61,10 +71,13 @@
       [(var? u) (ext-s u v s)]
       [(var? v) (ext-s v u s)]
       [(and (pair? u) (pair? v))
-       (unify (cdr u) (cdr v) (unify (car u) (car v) s))]
+       (let ([s (unify (car u) (car v) s)])
+         (and s (unify (cdr u) (cdr v) s)))]
       [(equal? u v) s]
       [else (amb-fail)])))
 
+
+(define-type Goal (→ Substitution Substitution))
 
 ;;; Goals
 
@@ -91,7 +104,8 @@
 (define suspend amb-pause)
 
 (: call/fresh (→ Symbol (→ Var Goal) Goal))
-(define (call/fresh name f) (f (var name)))
+(define (call/fresh name f)
+  (f (var name)))
 
 (: ifte (→ Goal Goal Goal Goal))
 (define ((ifte g1 g2 g3) s)
@@ -113,18 +127,21 @@
   (let ([v (walk v s)])
     (cond
       [(var? v) v]
-      [(pair? v) (cons (walk* (car v) s) (walk* (cdr v) s))]
+      [(pair? v)
+       (cons (walk* (car v) s)
+             (walk* (cdr v) s))]
       [else v])))
 
 (: reify-name (→ Index Symbol))
 (define (reify-name n)
   (string->symbol (format "_~a" n)))
 
+;; The names are symbols, hence ground, so this ext-s cannot fail.
 (: reify-s (→ Term Substitution Substitution))
 (define (reify-s v r)
   (let ([v (walk v r)])
     (cond
-      [(var? v) (hash-set r v (reify-name (hash-count r)))]
+      [(var? v) (ext-s v (reify-name (length r)) r)]
       [(pair? v) (reify-s (cdr v) (reify-s (car v) r))]
       [else r])))
 

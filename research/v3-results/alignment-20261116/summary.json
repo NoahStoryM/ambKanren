@@ -1,0 +1,96 @@
+{
+  "trs1": {
+    "native": {
+      "cpu_ms": {
+        "median": 27953,
+        "min": 26978,
+        "max": 29294
+      },
+      "real_ms": {
+        "median": 27999,
+        "min": 27119,
+        "max": 29338
+      },
+      "gc_ms": {
+        "median": 681,
+        "min": 618,
+        "max": 1176
+      },
+      "allocated_bytes": {
+        "median": 2717815008,
+        "min": 2717814208,
+        "max": 2717815712
+      }
+    },
+    "amb": {
+      "cpu_ms": {
+        "median": 54009,
+        "min": 53314,
+        "max": 62942
+      },
+      "real_ms": {
+        "median": 54184,
+        "min": 53612,
+        "max": 63110
+      },
+      "gc_ms": {
+        "median": 2468,
+        "min": 2275,
+        "max": 2661
+      },
+      "allocated_bytes": {
+        "median": 26817040928,
+        "min": 26816964464,
+        "max": 26817112240
+      }
+    },
+    "cpu_ratio": 1.9321360855722105
+  },
+  "trs2": {
+    "native": {
+      "cpu_ms": {
+        "median": 22124,
+        "min": 20432,
+        "max": 22813
+      },
+      "real_ms": {
+        "median": 22155,
+        "min": 20463,
+        "max": 22847
+      },
+      "gc_ms": {
+        "median": 4781,
+        "min": 3924,
+        "max": 5617
+      },
+      "allocated_bytes": {
+        "median": 6104529616,
+        "min": 6104518464,
+        "max": 6104530032
+      }
+    },
+    "amb": {
+      "cpu_ms": {
+        "median": 31438,
+        "min": 29219,
+        "max": 33950
+      },
+      "real_ms": {
+        "median": 31680,
+        "min": 29290,
+        "max": 33999
+      },
+      "gc_ms": {
+        "median": 5461,
+        "min": 5203,
+        "max": 6955
+      },
+      "allocated_bytes": {
+        "median": 19389178704,
+        "min": 19389148400,
+        "max": 19389869056
+      }
+    },
+    "cpu_ratio": 1.4209907792442595
+  }
+}
