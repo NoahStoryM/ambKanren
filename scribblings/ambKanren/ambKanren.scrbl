@@ -61,26 +61,28 @@ includes chapters 1--9 and arithmetic (285 checks).  Both use the same
 source test files and exact assertions, with no answer-order exceptions.
 
 Each implementation was run three times in a fresh process, strictly
-alternating streams and amb within each edition.  The tables show the
-median (minimum--maximum) of CPU seconds and cumulative allocated GB
-(10^9 bytes, not peak memory).  The ratio is amb's CPU median divided
-by the stream implementation's median.
+alternating streams and amb within each edition.  The CPU table shows
+the median (minimum--maximum) in seconds; the allocation table shows
+rounded medians of cumulative allocated GB (10^9 bytes, not peak
+memory).  Exact allocation values and ranges are in the report linked
+below.  The ratio is amb's CPU median divided by the stream
+implementation's median.
 
 @tabular[#:style 'boxed
          #:sep @hspace[2]
          #:row-properties '(bottom-border ())
          #:column-properties '(left right right right)
 (list (list @bold{edition} @bold{streams: CPU s} @bold{amb: CPU s} @bold{ratio})
-      (list "first (254 checks)" "27.95 (26.98–29.29)" "54.01 (53.31–62.94)" "1.93")
-      (list "second (285 checks)" "22.12 (20.43–22.81)" "31.44 (29.22–33.95)" "1.42"))]
+      (list "TRS1" "27.95 (26.98–29.29)" "54.01 (53.31–62.94)" "1.93")
+      (list "TRS2" "22.12 (20.43–22.81)" "31.44 (29.22–33.95)" "1.42"))]
 
 @tabular[#:style 'boxed
          #:sep @hspace[2]
          #:row-properties '(bottom-border ())
          #:column-properties '(left right right)
 (list (list @bold{edition} @bold{streams: allocated GB} @bold{amb: allocated GB})
-      (list "TRS1" "2.717815 (2.717814–2.717816)" "26.817041 (26.816964–26.817112)")
-      (list "TRS2" "6.104530 (6.104518–6.104530)" "19.389179 (19.389148–19.389869)"))]
+      (list "TRS1" "2.7" "26.8")
+      (list "TRS2" "6.1" "19.4"))]
 
 These measurements used Racket 9.3 CS on Linux x86-64, an Intel Xeon
 Platinum 8573C container with nine visible CPUs (affinity 0--8).
@@ -90,14 +92,13 @@ their checks is included.  A full garbage collection precedes each
 timed region.  CPU frequency and host load were not controlled, so
 results vary with the machine and the version of Racket.
 
-In this run, amb is slower and allocates substantially more in both
+amb is slower and allocates substantially more in both
 editions.  Choices, pauses and local searches use continuation and
 generator machinery in place of stream pairs and suspensions; in the
 first edition, each nonfinal conjunction introduces a local search.
 The larger allocation is consistent with that mechanism, but this
 whole-module measurement does not isolate how much CPU time is spent
-capturing or restoring continuations.  It is not a same-machine
-hash-table/association-list ablation of the previous report.
+capturing or restoring continuations.
 
 Raw samples, real and GC times, source hashes, reproduction commands
 and the complete source comparison are in
