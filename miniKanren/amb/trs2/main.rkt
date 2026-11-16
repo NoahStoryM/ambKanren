@@ -51,7 +51,7 @@
 ;; Fails (with amb) instead of returning #f.
 (: ext-s (→ Var Term Substitution Substitution))
 (define (ext-s x v s)
-  (if (occurs? x v s) (amb) (hash-set s x v)))
+  (if (occurs? x v s) (amb-fail) (hash-set s x v)))
 
 (: unify (→ Term Term Substitution Substitution))
 (define (unify u v s)
@@ -63,7 +63,7 @@
       [(and (pair? u) (pair? v))
        (unify (cdr u) (cdr v) (unify (car u) (car v) s))]
       [(equal? u v) s]
-      [else (amb)])))
+      [else (amb-fail)])))
 
 
 ;;; Goals
@@ -75,7 +75,7 @@
 (define (succeed s) s)
 
 (: fail Goal)
-(define (fail s) (amb))
+(define (fail s) (amb-fail))
 
 ;; mplus: a choice between the two goals.
 (: disj2 (→ Goal Goal Goal))

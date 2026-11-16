@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do amb-generate* amb-local* current-amb-merger)
+                     (only-in amb amb amb-fail in-amb/do amb-generate* amb-local* current-amb-merger)
                      (only-in amb/merge amb-append amb-alternate)
                      typed/miniKanren/amb/trs1)
           scribble/example
@@ -42,7 +42,7 @@ The differences from the book are:
 @itemlist[
 
 @item{There is no stream type, and @racket[ext-s] performs the occurs
-check, signalling failure with @racket[(amb)].}
+check, signalling failure with @racket[(amb-fail)].}
 
 @item{@racket[conde] is depth-first, as in the first edition: it
 corresponds to unfair @racket[amb].  The interleaving forms
@@ -78,7 +78,7 @@ containing other associated variables.
 Defined as @racket[(→ Substitution Substitution)].  Applying a goal to
 a substitution returns one extension of it under which the goal holds,
 chosen with @racket[amb]; the other extensions are explored when the
-search backtracks.  A goal with no answer calls @racket[(amb)].  Goals
+search backtracks.  A goal with no answer calls @racket[(amb-fail)].  Goals
 must therefore be applied within the dynamic extent of an
 @racket[amb] search such as @racket[in-amb/do].
 
@@ -114,7 +114,7 @@ never searches for an answer it will not return.  (Chapter 1.)
 @deftogether[(@defthing[succeed Goal]
               @defthing[fail Goal])]{
 @racket[succeed] is the identity function; @racket[fail] calls
-@racket[(amb)].  (Chapter 1.)
+@racket[(amb-fail)].  (Chapter 1.)
 }
 
 @defproc[(== [u Term] [v Term]) Goal]{
@@ -273,7 +273,7 @@ yet the answers with @racket['R] are reached:
               @defproc[(size-s [s Substitution]) Index]
               @defproc[(ext-s [x Var] [v Term] [s Substitution]) Substitution])]{
 Operations on substitutions.  @racket[ext-s] associates @racket[x]
-with @racket[v], and fails with @racket[(amb)] when @racket[x] occurs
+with @racket[v], and fails with @racket[(amb-fail)] when @racket[x] occurs
 in @racket[v].
 }
 
@@ -284,7 +284,7 @@ in @racket[v].
 @racket[walk] follows the associations of a variable until it reaches
 a term that is not an associated variable; @racket[walk*] does so
 throughout a term.  @racket[unify] returns an extension of @racket[s]
-that makes @racket[u] and @racket[v] equal, and calls @racket[(amb)]
+that makes @racket[u] and @racket[v] equal, and calls @racket[(amb-fail)]
 if there is none.  (Chapter 9.)
 }
 

@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do amb-generate* amb-local amb-pause current-amb-merger)
+                     (only-in amb amb amb-fail in-amb/do amb-generate* amb-local amb-pause current-amb-merger)
                      (only-in amb/merge amb-interleave amb-alternate amb-level amb-append)
                      typed/microKanren/amb)
           scribble/example
@@ -34,7 +34,7 @@ once, lazily.  The stream type is a monad, and the connectives are its
 operations.  With @racket[amb], the nondeterminism is an effect of
 evaluation rather than a value, so it disappears from the type of
 goals: a goal returns a single state, chooses among its answers with
-@racket[amb], and fails by calling @racket[(amb)].
+@racket[amb], and fails by calling @racket[(amb-fail)].
 
 @tabular[#:style 'boxed
          #:sep @hspace[2]
@@ -44,7 +44,7 @@ goals: a goal returns a single state, chooses among its answers with
             @mk0[(→ State (Streamof State))]
             @racket[(→ State State)])
       (list "success" @mk0[(unit s/c)] @racket[s/c])
-      (list "failure" @mk0[mzero] @racket[(amb)])
+      (list "failure" @mk0[mzero] @racket[(amb-fail)])
       (list @racket[disj] @mk0[(mplus (g1 s/c) (g2 s/c))] @racket[((amb g1 g2) s/c)])
       (list @racket[conj] @mk0[(bind (g1 s/c) g2)] @racket[(g2 (amb-local (g1 s/c)))])
       (list @racket[Zzz] @mk0[(λ (s/c) (λ () (g s/c)))] @racket[(λ (s/c) (suspend) (g s/c))])
@@ -140,7 +140,7 @@ Defined as @racket[(→ State State)].
 
 @defproc[(== [u Term] [v Term]) Goal]{
 Unifies @racket[u] and @racket[v] in the substitution of the state,
-and calls @racket[(amb)] if they cannot be unified.
+and calls @racket[(amb-fail)] if they cannot be unified.
 }
 
 @defproc[(call/fresh [f (→ Var Goal)]) Goal]{

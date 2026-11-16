@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do amb-generate* amb-local amb-pause current-amb-merger)
+                     (only-in amb amb amb-fail in-amb/do amb-generate* amb-local amb-pause current-amb-merger)
                      (only-in amb/merge amb-interleave amb-alternate amb-level amb-append)
                      typed/miniKanren/amb/trs2)
           scribble/example
@@ -94,7 +94,7 @@ Defined as @racket[(Immutable-HashTable Var Term)], with
 @deftype[Goal]{
 Defined as @racket[(→ Substitution Substitution)].  A goal returns one
 extension of the substitution, chosen with @racket[amb], and calls
-@racket[(amb)] when it has none.
+@racket[(amb-fail)] when it has none.
 }
 
 @section[#:tag "trs2-interface"]{Running Programs}
@@ -189,7 +189,7 @@ The functions behind @racket[fresh] and @racket[run].
               @defproc[(ext-s [x Var] [v Term] [s Substitution]) Substitution]
               @defproc[(unify [u Term] [v Term] [s Substitution]) Substitution])]{
 As in the second edition, except that @racket[ext-s] and @racket[unify]
-call @racket[(amb)] instead of returning @racket[#f].
+call @racket[(amb-fail)] instead of returning @racket[#f].
 }
 
 @deftogether[(@defproc[(reify-name [n Index]) Symbol]

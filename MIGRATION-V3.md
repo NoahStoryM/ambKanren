@@ -139,3 +139,15 @@ TRS2 的 `conj2` 和 microKanren 的 `conj` 由 `(g2 (g1 s))` 改为 `(g2 (amb-l
 | microKanren 累计分配 | 1.67 GB | 1.59 GB | — |
 
 TRS2 的局部 bind 多出约 18% 的分配；耗时差约 6%，与本环境的波动同一量级，不作为结论。
+
+## 后续：失败改用 `amb-fail`
+
+amb `1c47e90` 起，`(amb)` 和空的 `for/amb` 与非空选择一致，经 `make-amb` 并捕获续延；`amb-fail` 直接中止，不捕获。ambKanren 的失败（`fail`、`unify`、`ext-s` 的 occurs check，TRS1、TRS2、microKanren 和 demo）因此由 `(amb)` 改为 `(amb-fail)`，手册中的说法同步修改。事件不变，711 项测试通过。
+
+在 amb `1c47e90` 上同一时段测量（`research/v3-results/diagnosis/measure.rkt`，累计分配是确定的；耗时为 real，`(amb)` 两次、`amb-fail` 三次）：
+
+| 测试 | `(amb)` | `(amb-fail)` |
+|---|---:|---:|
+| TRS1 | 31.7 GB，18.3–19.9 s | 29.5 GB，16.8–17.0 s |
+| TRS2 | 20.3 GB，15.7–15.8 s | 19.8 GB，14.3–15.0 s |
+| microKanren | 1.26 GB，1.91–1.96 s | 1.25 GB，1.80–1.98 s |

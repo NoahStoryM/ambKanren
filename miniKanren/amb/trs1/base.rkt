@@ -35,7 +35,7 @@
 (define (apply-s s v) (hash-ref s v))
 (define (size-s s) (hash-count s))
 (define (ext-s x v s)
-  (when (occurs? x v s) (amb))
+  (when (occurs? x v s) (amb-fail))
   (hash-set s x v))
 
 (: apply-goal (→ Goal Substitution Substitution))
@@ -69,7 +69,7 @@
     [((cons v0 v1) (cons w0 w1))
      (unify v1 w1 (unify v0 w0 s))]
     [(v w) #:when (equal? v w) s]
-    [(_ _) (amb)]))
+    [(_ _) (amb-fail)]))
 
 
 (: occurs? (→ Var Term Substitution Boolean))
@@ -99,7 +99,7 @@
 
 (: fail Goal)
 (: succeed Goal)
-(define (fail _) (amb))
+(define (fail _) (amb-fail))
 (define (succeed s) s)
 
 (: disj (→ Goal * Goal))

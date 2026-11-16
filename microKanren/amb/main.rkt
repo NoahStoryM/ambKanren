@@ -12,7 +12,7 @@
 ;; This follows the Typed Racket rewrite typed/microKanren of the
 ;; miniKanren-typed package, except that a goal returns one state
 ;; instead of a stream of states: it chooses among its answers with
-;; amb, and fails with (amb).  The stream operations (unit, mzero,
+;; amb, and fails with amb-fail.  The stream operations (unit, mzero,
 ;; mplus, bind, pull) are therefore gone.
 
 (require typed/amb "../../private/search.rkt")
@@ -53,7 +53,7 @@
 (: == (→ Term Term Goal))
 (define ((== u v) s/c)
   (let ([s (unify u v (car s/c))])
-    (if s (cons s (cdr s/c)) (amb))))
+    (if s (cons s (cdr s/c)) (amb-fail))))
 
 (: unify (→ Term Term Substitution (Option Substitution)))
 (define (unify u v s)

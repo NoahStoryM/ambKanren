@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb amb-generate*)
+                     (only-in amb amb amb-fail amb-generate*)
                      typed/miniKanren/amb/trs1))
 
 @title{ambKanren: miniKanren Based on amb}
@@ -12,7 +12,7 @@ stream of answers but delegated to the ambiguous operator @racket[amb]
 of the @racketmodname[typed/amb] library.  A goal is an ordinary
 function from substitutions to substitutions (from states to states, in
 microKanren); when a goal fails it
-calls @racket[(amb)], and when it has several answers it chooses one of
+calls @racket[(amb-fail)], and when it has several answers it chooses one of
 them with @racket[amb].  The search over all choices is performed by
 @racket[amb-generate*], which @racket[run] advances to collect answers.
 This version requires typed-amb 3.0.  Search scheduling uses

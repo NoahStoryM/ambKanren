@@ -31,7 +31,7 @@
 (define empty-s '())
 (define (size-s s) (length s))
 (define (ext-s x v s)
-  (when (occurs? x v s) (amb))
+  (when (occurs? x v s) (amb-fail))
   `([,x . ,v] . ,s))
 
 (: occurs? (→ Var Term Substitution Boolean))
@@ -60,7 +60,7 @@
       [(and (pair? u) (pair? v))
        (unify (cdr u) (cdr v) (unify (car u) (car v) s))]
       [(equal? u v) s]
-      [else (amb)])))
+      [else (amb-fail)])))
 
 (: == (→ Term Term Goal))
 (define ((== u v) s) (unify u v s))
@@ -73,7 +73,7 @@
 
 (: fail Goal)
 (: succeed Goal)
-(define (fail s) (amb))
+(define (fail s) (amb-fail))
 (define (succeed s) s)
 
 
