@@ -7,17 +7,22 @@
 @title{ambKanren: miniKanren Based on amb}
 @author[@author+email["Noah Ma" "noahstorym@gmail.com"]]
 
-ambKanren is a miniKanren in which backtracking is not implemented by a
-stream of answers but delegated to the ambiguous operator @racket[amb]
-of the @racketmodname[typed/amb] library.  A goal is an ordinary
-function from substitutions to substitutions (from states to states, in
-microKanren); when a goal fails it
-calls @racket[(amb-fail)], and when it has several answers it chooses one of
-them with @racket[amb].  The search over all choices is performed by
-@racket[amb-generate*], which @racket[run] advances to collect answers.
-This version requires typed-amb 3.0.  Search scheduling uses
-@racketidfont{current-amb-merger} and explicit pauses; the v2 depth-first
-and fairness flags are no longer used.
+ambKanren is a miniKanren whose search is not a stream of answers but
+the ambiguous operator @racket[amb] of the @racketmodname[typed/amb]
+library.  A goal is an ordinary function from substitutions to
+substitutions (from states to states, in microKanren).  A goal with
+several answers chooses one of them with @racket[amb]; a goal with none
+calls @racket[(amb-fail)].  @racket[run] collects the answers with
+@racket[amb-generate*].
+
+This version requires typed-amb 3.0.  The search strategy is the
+merger of @racket[amb], the value of
+@racketidfont{current-amb-merger}.  The default merger,
+@racketidfont{amb-append}, is depth-first.  microKanren and the second
+edition pause at every relation call, as the books suspend there, so
+their recursive programs need @racketidfont{amb-interleave}, the
+interleaving of the books.  The first edition does not pause: its
+interleaving forms choose their own merger.
 
 The package provides one module for each language it implements:
 
