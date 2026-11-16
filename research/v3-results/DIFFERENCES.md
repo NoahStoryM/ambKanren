@@ -2,6 +2,8 @@
 
 同一答案袋按出现次数比较；same-count 只表示数量相同。超时不等于发散证明。
 
+TRS2 的合取是局部 bind `(g2 (amb-local (g1 s)))`。直接合取 `(g2 (g1 s))` 下另有 interleave 的 ch8:205、ch9:167 和 alternate 的 ch8:205 三处只差顺序，见 [MIGRATION-V3.md](../../MIGRATION-V3.md) 的“合取改为局部 bind”。
+
 | 配置 | 例子 | 分类 | 原因／判断 |
 |---|---|---|---|
 | alternate | ch1.rktl:246 | same-answers | 答案也切换执行侧，区别于书的暂停交织；答案袋相同，属预期差别。 |
@@ -9,7 +11,6 @@
 | alternate | ch7.rktl:100 | same-answers | 答案也切换执行侧，区别于书的暂停交织；答案袋相同，属预期差别。 |
 | alternate | ch8.rktl:92 | same-answers | 答案也切换执行侧，区别于书的暂停交织；答案袋相同，属预期差别。 |
 | alternate | ch8.rktl:122 | same-answers | 答案也切换执行侧，区别于书的暂停交织；答案袋相同，属预期差别。 |
-| alternate | ch8.rktl:205 | same-answers | 答案也切换执行侧，区别于书的暂停交织；答案袋相同，属预期差别。 |
 | alternate | ch9.rktl:167 | same-answers | 答案也切换执行侧，区别于书的暂停交织；答案袋相同，属预期差别。 |
 | append | ch1.rktl:242 | same-answers | append 深度优先改变 枚举顺序；答案袋相同，属预期差别。 |
 | append | ch1.rktl:256 | same-answers | append 深度优先改变 枚举顺序；答案袋相同，属预期差别。 |
@@ -41,8 +42,6 @@
 | append | ch9.rktl:154 | timeout | 预算内未完成；未判定答案差异，不能据此断言 bug 或发散。 |
 | append | ch9.rktl:167 | timeout | 预算内未完成；未判定答案差异，不能据此断言 bug 或发散。 |
 | append | ch9.rktl:186 | timeout | 预算内未完成；未判定答案差异，不能据此断言 bug 或发散。 |
-| interleave | ch8.rktl:205 | same-answers | 直接合取与书的 bind 不同；局部 bind 对照恢复为与书完全一致，属预期差别。 |
-| interleave | ch9.rktl:167 | same-answers | 直接合取与书的 bind 不同；局部 bind 对照恢复为与书完全一致，属预期差别。 |
 | level | ch3.rktl:115 | same-answers | 同步暂停轮次改变 答案顺序；答案袋相同，属预期差别。 |
 | level | ch3.rktl:119 | same-answers | 同步暂停轮次改变 答案顺序；答案袋相同，属预期差别。 |
 | level | ch3.rktl:213 | same-count | 同步暂停轮次改变 有界 run 的答案前缀，属预期差别。 |
@@ -55,6 +54,6 @@
 | level | ch8.rktl:122 | same-answers | 同步暂停轮次改变 答案顺序；答案袋相同，属预期差别。 |
 | level | ch8.rktl:155 | same-answers | 同步暂停轮次改变 答案顺序；答案袋相同，属预期差别。 |
 | level | ch8.rktl:160 | same-count | 同步暂停轮次改变 有界 run 的答案前缀，属预期差别。 |
-| level | ch8.rktl:205 | same-answers | 600 秒单例复核在 293 秒完成；答案袋相同，顺序不同，属同步轮次的预期差别。 |
+| level | ch8.rktl:205 | same-answers | 600 秒单例复核在 338 秒完成；答案袋相同，顺序不同，属同步轮次的预期差别。 |
 | level | ch9.rktl:167 | same-answers | 同步暂停轮次改变 答案顺序；答案袋相同，属预期差别。 |
 | level | ch9.rktl:186 | same-count | 同步暂停轮次改变 有界 run 的答案前缀，属预期差别。 |

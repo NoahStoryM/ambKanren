@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do amb-generate* amb-pause current-amb-merger)
+                     (only-in amb amb in-amb/do amb-generate* amb-local amb-pause current-amb-merger)
                      (only-in amb/merge amb-interleave amb-alternate amb-level amb-append)
                      typed/microKanren/amb)
           scribble/example
@@ -46,15 +46,18 @@ goals: a goal returns a single state, chooses among its answers with
       (list "success" @mk0[(unit s/c)] @racket[s/c])
       (list "failure" @mk0[mzero] @racket[(amb)])
       (list @racket[disj] @mk0[(mplus (g1 s/c) (g2 s/c))] @racket[((amb g1 g2) s/c)])
-      (list @racket[conj] @mk0[(bind (g1 s/c) g2)] @racket[(g2 (g1 s/c))])
+      (list @racket[conj] @mk0[(bind (g1 s/c) g2)] @racket[(g2 (amb-local (g1 s/c)))])
       (list @racket[Zzz] @mk0[(λ (s/c) (λ () (g s/c)))] @racket[(λ (s/c) (suspend) (g s/c))])
       (list @racket[take] @elem{force and collect the stream @mk0[(g empty-state)]} @elem{advance @racket[amb-generate*] until enough answers arrive}))]
 
-So success returns the state unchanged, conjunction is plain function
-composition, and disjunction is a choice made by @racket[amb].  The
-monadic structure has not gone away: it now lives in the continuation
-captured by @racket[amb], and @racket[amb-generate*] turns that control effect back into
-a generator of answers and pauses.
+So success returns the state unchanged, disjunction is a choice made by
+@racket[amb], and conjunction runs @racket[g2] on each answer of a local
+search of @racket[g1].  The monadic structure has not gone away: it now
+lives in the continuation captured by @racket[amb], and
+@racket[amb-generate*] turns that control effect back into a generator
+of answers and pauses.  @racket[amb-local] does this for @racket[g1]
+alone, and makes its answers one choice again, which is what
+@mk0[bind] does with the stream of @racket[g1].
 
 The definitions that remain are those of
 @racketmodname[typed/microKanren], with these changes:
@@ -85,9 +88,18 @@ In microKanren, @mk0[Zzz] creates a suspended stream.  Here it calls
 (run 1 (x) (disj+ (relo '(5 . 6)) (== x 3)))
 ]
 
-Disjunction uses binary choice and conjunction remains direct function
-composition.  Answer order can therefore differ from the stream-based
-implementation even with the same pause-based merger.
+With @racket[amb-interleave], the answers come in the order of the
+stream-based implementation.  This is why conjunction is a local
+search rather than plain function composition, @racket[(g2 (g1 s/c))].
+Composition gives the same answers, but it runs @racket[g2] inside the
+choices of @racket[g1], so the merger interleaves the continuations of
+@racket[g2] in the shape of those choices.  @mk0[bind] interleaves them
+in the order of the answers of @racket[g1], with the pauses of
+@racket[g1] in between.  With composition,
+@racket[(conj (disj a b) g)] is @racket[(disj (conj a g) (conj b g))],
+order included; @mk0[bind] keeps the answers of @racket[(disj a b)]
+together, and several examples tell the two apart.  The local search costs one more search per
+conjunction.
 
 @section[#:tag "microKanren-types"]{Types}
 
@@ -140,8 +152,8 @@ incremented.
 @deftogether[(@defproc[(disj [g1 Goal] [g2 Goal]) Goal]
               @defproc[(conj [g1 Goal] [g2 Goal]) Goal])]{
 Disjunction runs @racket[g1] or @racket[g2], as chosen by
-@racket[amb]; conjunction runs @racket[g2] on the state returned by
-@racket[g1].
+@racket[amb]; conjunction runs @racket[g2] on each state that a local
+search of @racket[g1] returns, as @racket[(g2 (amb-local (g1 s/c)))].
 
 @mk-examples[
 (take-all

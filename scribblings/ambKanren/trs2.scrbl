@@ -1,7 +1,7 @@
 #lang scribble/manual
 
 @(require (for-label typed/racket/base
-                     (only-in amb amb in-amb/do amb-generate* amb-pause current-amb-merger)
+                     (only-in amb amb in-amb/do amb-generate* amb-local amb-pause current-amb-merger)
                      (only-in amb/merge amb-interleave amb-alternate amb-level amb-append)
                      typed/miniKanren/amb/trs2)
           scribble/example
@@ -36,7 +36,7 @@ edition.  What changes is the representation of goals:
 (list (list @bold{} @bold{second edition} @bold{typed/miniKanren/amb/trs2})
       (list "goal" @mk2[(→ Substitution (Streamof Substitution))] @racket[(→ Substitution Substitution)])
       (list @racket[disj2] @mk2[append-inf] @elem{a choice made by @racket[amb]})
-      (list @racket[conj2] @mk2[append-map-inf] "function composition")
+      (list @racket[conj2] @mk2[append-map-inf] @elem{a local search: @racket[(g2 (amb-local (g1 s)))]})
       (list "suspension" @elem{an immature stream, @mk2[(λ () ...)]} @elem{@racket[suspend]: one logical pause}))]
 
 The second edition suspends every relation call.  Here
@@ -53,14 +53,25 @@ explicitly select this merger:
 @subsection[#:tag "trs2-order"]{Order of Answers}
 
 The strategy is @racket[current-amb-merger], rather than the global
-frontier of amb v2.  With @racket[amb-interleave], 283 of the 285 book
-examples agree exactly; two return the same answers in another order.
-Those differences arise from direct function composition for
-@racket[conj2], whereas the book uses local stream binding.  They also
-occur in amb's reference kanren tests.  @racket[amb-alternate] changes
-order at answers too; @racket[amb-level] uses synchronized pause rounds.
-The migration report records each differing example and the tested
-conditions.  These mergers need not give the same bounded prefix.
+frontier of amb v2.  With @racket[amb-interleave], all 285 book
+examples agree exactly, in the order of the book.
+
+This depends on @racket[conj2].  Like @mk2[append-map-inf], it searches
+@racket[g1] locally and continues with @racket[g2] from each answer, so
+the continuations of @racket[g2] are interleaved in the order of the
+answers of @racket[g1], with the pauses of @racket[g1] in between.
+Plain function composition, @racket[(g2 (g1 s))], gives the same
+answers, but runs @racket[g2] inside the choices of @racket[g1], so they
+are interleaved in the shape of those choices.  With composition,
+@racket[(conj2 (disj2 a b) g)] is @racket[(disj2 (conj2 a g) (conj2 b g))],
+order included; the book's bind keeps the answers of
+@racket[(disj2 a b)] together.  With composition, two examples
+(Chapter 8 and Chapter 9) return their answers in another order.  The local search costs one more search per conjunction.
+
+@racket[amb-alternate] changes order at answers too; @racket[amb-level]
+uses synchronized pause rounds.  The migration report records each
+differing example and the tested conditions.  These mergers need not
+give the same bounded prefix.
 
 @section[#:tag "trs2-types"]{Types}
 
@@ -149,7 +160,9 @@ Chapter 10.)
               @defproc[(disj2 [g1 Goal] [g2 Goal]) Goal]
               @defproc[(conj2 [g1 Goal] [g2 Goal]) Goal])]{
 Disjunction and conjunction.  @racket[disj2] applies the goal chosen by
-@racket[(amb g1 g2)], and @racket[conj2] is function composition.
+@racket[(amb g1 g2)], and @racket[conj2] applies @racket[g2] to each
+answer of a local search of @racket[g1], as
+@racket[(g2 (amb-local (g1 s)))]; see @secref["trs2-order"].
 }
 
 @deftogether[(@defproc[(ifte [g1 Goal] [g2 Goal] [g3 Goal]) Goal]

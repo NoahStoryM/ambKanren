@@ -648,7 +648,7 @@
     "class": "same",
     "expected": "equal",
     "location": "ch2.rktl:188",
-    "milliseconds": 15.0
+    "milliseconds": 0.0
   },
   {
     "actual": "equal",
@@ -1026,7 +1026,7 @@
     "class": "same",
     "expected": "equal",
     "location": "ch4.rktl:83",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "equal",
@@ -1383,7 +1383,7 @@
     "class": "same",
     "expected": "equal",
     "location": "ch6.rktl:104",
-    "milliseconds": 39540.0
+    "milliseconds": 27370.0
   },
   {
     "actual": "equal",
@@ -1544,35 +1544,35 @@
     "class": "same-count",
     "expected": "((_0 () _0) (() (_0 . _1) (_0 . _1)) ((1) (1) (0 1)) ((1) (0 _0 . _1) (1 _0 . _1)) ((1) (1 1) (0 0 1)) ((0 1) (0 1) (0 0 1)) ((1) (1 0 _0 . _1) (0 1 _0 . _1)) ((0 _0 . _1) (1) (1 _0 . _1)) ((1) (1 1 1) (0 0 0 1)) ((1 1) (0 1) (1 0 1)) ((1 1) (1) (0 0 1)) ((1) (1 1 0 _0 . _1) (0 0 1 _0 . _1)) ((1) (1 1 1 1) (0 0 0 0 1)) ((1) (1 1 1 0 _0 . _1) (0 0 0 1 _0 . _1)) ((1 0 _0 . _1) (1) (0 1 _0 . _1)) ((1) (1 1 1 1 1) (0 0 0 0 0 1)) ((0 1) (1 1) (1 0 1)) ((1 1 1) (1) (0 0 0 1)) ((1 1) (1 1) (0 1 1)))",
     "location": "ch7.rktl:100",
-    "milliseconds": 2.0
+    "milliseconds": 3.0
   },
   {
     "actual": "equal",
     "class": "same",
     "expected": "equal",
     "location": "ch7.rktl:123",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "(((1 0 1) ()) (() (1 0 1)) ((1) (0 0 1)) ((1 1) (0 1)) ((0 1) (1 1)) ((0 0 1) (1)))",
     "class": "same-answers",
     "expected": "(((1 0 1) ()) (() (1 0 1)) ((1) (0 0 1)) ((0 0 1) (1)) ((1 1) (0 1)) ((0 1) (1 1)))",
     "location": "ch7.rktl:127",
-    "milliseconds": 1.0
+    "milliseconds": 2.0
   },
   {
     "actual": "(((1 0 1) ()) (() (1 0 1)) ((1) (0 0 1)) ((1 1) (0 1)) ((0 1) (1 1)) ((0 0 1) (1)))",
     "class": "same-answers",
     "expected": "(((1 0 1) ()) (() (1 0 1)) ((1) (0 0 1)) ((0 0 1) (1)) ((1 1) (0 1)) ((0 1) (1 1)))",
     "location": "ch7.rktl:136",
-    "milliseconds": 1.0
+    "milliseconds": 2.0
   },
   {
     "actual": "equal",
     "class": "same",
     "expected": "equal",
     "location": "ch7.rktl:145",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "equal",
@@ -1586,21 +1586,21 @@
     "class": "same",
     "expected": "equal",
     "location": "ch7.rktl:153",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "equal",
     "class": "same",
     "expected": "equal",
     "location": "ch7.rktl:165",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "equal",
     "class": "same",
     "expected": "equal",
     "location": "ch7.rktl:169",
-    "milliseconds": 1.0
+    "milliseconds": 2.0
   },
   {
     "actual": "equal",
@@ -1621,7 +1621,7 @@
     "class": "same-answers",
     "expected": "((() _0 ()) ((_0 . _1) () ()) ((1) (_0 . _1) (_0 . _1)) ((_0 _1 . _2) (1) (_0 _1 . _2)) ((0 1) (_0 _1 . _2) (0 _0 _1 . _2)) ((0 0 1) (_0 _1 . _2) (0 0 _0 _1 . _2)) ((1 _0 . _1) (0 1) (0 1 _0 . _1)) ((0 0 0 1) (_0 _1 . _2) (0 0 0 _0 _1 . _2)) ((1 _0 . _1) (0 0 1) (0 0 1 _0 . _1)) ((0 1 _0 . _1) (0 1) (0 0 1 _0 . _1)))",
     "location": "ch8.rktl:8",
-    "milliseconds": 1.0
+    "milliseconds": 2.0
   },
   {
     "actual": "equal",
@@ -1635,7 +1635,7 @@
     "class": "same",
     "expected": "equal",
     "location": "ch8.rktl:25",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "equal",
@@ -1656,7 +1656,7 @@
     "class": "same",
     "expected": "equal",
     "location": "ch8.rktl:40",
-    "milliseconds": 4.0
+    "milliseconds": 9.0
   },
   {
     "actual": "equal",
@@ -1712,7 +1712,7 @@
     "class": "same-count",
     "expected": "((() ()) ((1) (1)) (() (_0 . _1)) ((_0 1) (_1 1)) ((1) (_0 _1 . _2)) ((_0 _1 1) (_2 _3 1)) ((_0 1) (_1 _2 _3 . _4)) ((_0 _1 _2 1) (_3 _4 _5 1)))",
     "location": "ch8.rktl:92",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "equal",
@@ -1726,7 +1726,7 @@
     "class": "same-count",
     "expected": "((() ()) ((1) (0 1)) ((0 1) (0 0 1)) ((1 1) (0 1 1)) ((1 _0 1) (0 1 _0 1)) ((0 0 1) (0 0 0 1)) ((0 1 1) (0 0 1 1)) ((1 _0 _1 1) (0 1 _0 _1 1)) ((0 1 _0 1) (0 0 1 _0 1)) ((0 0 0 1) (0 0 0 0 1)))",
     "location": "ch8.rktl:108",
-    "milliseconds": 2.0
+    "milliseconds": 3.0
   },
   {
     "actual": "((() ()) ((1) (1)) (() (_0 . _1)) ((1) (_0 _1 . _2)) ((_0 1) (_1 1)) ((_0 1) (_1 _2 _3 . _4)) ((_0 _1 1) (_2 _3 1)) ((_0 _1 1) (_2 _3 _4 _5 . _6)) ((_0 _1 _2 1) (_3 _4 _5 1)))",
@@ -1740,7 +1740,7 @@
     "class": "same",
     "expected": "equal",
     "location": "ch8.rktl:135",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "equal",
@@ -1754,7 +1754,7 @@
     "class": "same",
     "expected": "equal",
     "location": "ch8.rktl:143",
-    "milliseconds": 2.0
+    "milliseconds": 0.0
   },
   {
     "actual": "equal",
@@ -1768,7 +1768,7 @@
     "class": "same",
     "expected": "equal",
     "location": "ch8.rktl:151",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "((_0 _1 _2 _3 . _4) (1 1 1) (0 1 1))",
@@ -1782,14 +1782,14 @@
     "class": "same-count",
     "expected": "((() (_0 . _1) () ()) ((1) (_0 _1 . _2) () (1)) ((_0 1) (_1 _2 _3 . _4) () (_0 1)) ((_0 _1 1) (_2 _3 _4 _5 . _6) () (_0 _1 1)))",
     "location": "ch8.rktl:160",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
     "actual": "equal",
     "class": "same",
     "expected": "equal",
     "location": "ch8.rktl:167",
-    "milliseconds": 2.0
+    "milliseconds": 5.0
   },
   {
     "actual": "equal",
@@ -1824,28 +1824,28 @@
     "class": "same",
     "expected": "equal",
     "location": "ch8.rktl:192",
-    "milliseconds": 1.0
+    "milliseconds": 2.0
   },
   {
     "actual": "equal",
     "class": "same",
     "expected": "equal",
     "location": "ch8.rktl:201",
-    "milliseconds": 0.0
+    "milliseconds": 1.0
   },
   {
-    "actual": "((() (_0 _1 . _2) (0 0 1 0 0 0 1)) ((1) (_0 _1 . _2) (1 1 0 0 0 0 1)) ((0 1) (0 1 1) (0 0 1)) ((0 0 0 1) (0 1) (0 0 1)) ((0 0 1) (1 1) (0 0 1)) ((0 1 1) (0 1) (0 0 0 0 0 1)) ((1 1) (1 1) (1 0 0 1 0 1)) ((1 0 1) (0 1) (1 1 0 1 0 1)) ((1 1 1) (0 1) (1 1 0 0 1)))",
-    "class": "same-answers",
+    "actual": "#f",
+    "class": "timeout",
     "expected": "((() (_0 _1 . _2) (0 0 1 0 0 0 1)) ((1) (_0 _1 . _2) (1 1 0 0 0 0 1)) ((0 1) (0 1 1) (0 0 1)) ((1 1) (1 1) (1 0 0 1 0 1)) ((0 0 1) (1 1) (0 0 1)) ((0 0 0 1) (0 1) (0 0 1)) ((1 0 1) (0 1) (1 1 0 1 0 1)) ((0 1 1) (0 1) (0 0 0 0 0 1)) ((1 1 1) (0 1) (1 1 0 0 1)))",
     "location": "ch8.rktl:205",
-    "milliseconds": 293011.0
+    "milliseconds": 60000.0
   },
   {
     "actual": "equal",
     "class": "same",
     "expected": "equal",
     "location": "ch8.rktl:218",
-    "milliseconds": 5455.0
+    "milliseconds": 5767.0
   },
   {
     "actual": "equal",
@@ -1971,21 +1971,21 @@
     "class": "same",
     "expected": "equal",
     "location": "ch9.rktl:142",
-    "milliseconds": 1.0
+    "milliseconds": 3.0
   },
   {
     "actual": "equal",
     "class": "same",
     "expected": "equal",
     "location": "ch9.rktl:154",
-    "milliseconds": 3.0
+    "milliseconds": 4.0
   },
   {
     "actual": "(((1 1) (1 1) (0 1 1)) ((1 1) () (1 1)) (() (1 1) (1 1)) ((1 1) (0 1) (1 0 1)) ((0 1) (1 1) (1 0 1)) ((0 1) () (0 1)) ((1) (1 1) (0 0 1)) (() (0 1) (0 1)) ((1) (1) (0 1)) ((0 1) (0 1) (0 0 1)) ((1) () (1)) (() (1) (1)) ((1 1) (1) (0 0 1)) ((1) (0 1) (1 1)) (() () ()) ((0 1) (1) (1 1)))",
     "class": "same-answers",
     "expected": "((() (1 1) (1 1)) ((1 1) () (1 1)) ((1 1) (1 1) (0 1 1)) (() (0 1) (0 1)) ((1 1) (0 1) (1 0 1)) (() (1) (1)) ((1 1) (1) (0 0 1)) ((1) (1 1) (0 0 1)) (() () ()) ((1) (1) (0 1)) ((1) (0 1) (1 1)) ((0 1) () (0 1)) ((1) () (1)) ((0 1) (0 1) (0 0 1)) ((0 1) (1 1) (1 0 1)) ((0 1) (1) (1 1)))",
     "location": "ch9.rktl:167",
-    "milliseconds": 6.0
+    "milliseconds": 8.0
   },
   {
     "actual": "(((1 1 1) (1 1 1) (0 1 1 1)))",

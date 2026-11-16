@@ -81,9 +81,11 @@
 (: disj2 (→ Goal Goal Goal))
 (define ((disj2 g1 g2) s) ((amb g1 g2) s))
 
-;; bind: function composition.
+;; bind: g2 continues from each answer of a local search of g1, so
+;; the answers of g1 are one choice, merged in the order of the answers
+;; (append-map-inf), not in the shape of the choices inside g1.
 (: conj2 (→ Goal Goal Goal))
-(define ((conj2 g1 g2) s) (g2 (g1 s)))
+(define ((conj2 g1 g2) s) (g2 (amb-local (g1 s))))
 
 (: suspend (→ Void))
 (define suspend amb-pause)

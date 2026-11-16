@@ -7,7 +7,7 @@
 - microKanren、TRS2 的 `suspend` 是 `amb-pause`。调用者通过 `current-amb-merger` 指定策略；默认 append 不提供公平调度，测试和手册中的递归例子明确选择 interleave。
 - 四种语言的 `run` 最终都使用 `private/search.rkt` 的 `take-answers`，直接推进 `amb-generate*`。取够答案后不再推进；`run 0` 不运行目标。
 - `first-answer` 用生成器循环逐个转发暂停。TRS2 的 once/ifte（因而 conda/condu）和 TRS1 的 ifa/ifu 都使用它，不通过会跳过暂停的 sequence 寻找首答案。
-- TRS1 的普通析取/局部合取选 append，交错形式选 alternate，与 amb 仓库的参考层一致。TRS2 保留现有“合取即函数复合”；没有悄悄改成书的 bind。
+- TRS1 的普通析取/局部合取选 append，交错形式选 alternate，与 amb 仓库的参考层一致。TRS2 首轮保留“合取即函数复合”；后来 TRS2 与 microKanren 的合取都改为局部 bind `(g2 (amb-local (g1 s)))`，与 miniKanren-typed 一致，见“合取改为局部 bind”。
 - 只使用 typed/amb、typed/amb/base、typed/amb/merge 的公开接口；没有依赖 amb 私有模块或 prompt tag。移除 typed-data-queue 依赖。
 - demo 保留简洁的 TRS1 风格，run 同样直接读取生成器。
 
@@ -16,6 +16,8 @@
 源：miniKanren-typed `c197a5c98c40d8d409b37fa4cc54f135b1b5c7e3`。TRS1 延续现有测试的章节范围（1–8、10，228 例）；TRS2 是 1–9（含 arith，285 例）。没有从依赖仓库复制书中源码。
 
 `tools/book-trs1.rkt`、`tools/book-trs2.rkt` 仍用完整 TR 类型检查，仅把每次书中断言交给有界记录器。`same-answers` 比较含重数的答案袋；`same-count` 仅说明数量相同，不宣称答案相同。不同配置的资源预算不同，不能把这些统计当成相同预算的速度排名。
+
+下表是首轮记录（TRS2 直接合取）；改为局部 bind 后的结果见“合取改为局部 bind”。
 
 | 语言/策略 | 与书逐项相同 | 仅顺序不同 | 仅数量相同 | 超时/资源未完成 |
 |---|---:|---:|---:|---:|
@@ -32,7 +34,7 @@ TRS1 的局部运算显式选定 append/alternate，所以改变外层参数不�
 
 与 amb 仓库迁移前参考测试对照：TRS1 是 228/228，TRS2 interleave 是 283+2，alternate 是 278+7，完全一致。参考层 level 的历史记录为 270+9+6；本次初始 60 秒预算下 ch8:205 未完成；随后用 600 秒单例预算复核，在 293 秒完成、分类 same-answers。复核后的 270+9+6 与参考层完全一致。中间的 60 秒和 180 秒记录仅表示当时未完成。
 
-**原因验证**：临时副本只把 TRS2 `conj2` 改成 `(g2 (amb-local* (λ () (g1 s))))`，interleave 下恢复 **285/285** 与书完全一致；未把这个变体作为新的公共 API。默认两处差异 ch8:205、ch9:167 因此来自直接合取与局部 bind 的差别，不是丢解。
+**原因验证**：临时副本只把 TRS2 `conj2` 改成 `(g2 (amb-local* (λ () (g1 s))))`，interleave 下恢复 **285/285** 与书完全一致；后来采用了这个定义（见“合取改为局部 bind”）。首轮的两处差异 ch8:205、ch9:167 因此来自直接合取与局部 bind 的差别，不是丢解。
 
 逐例列表、分类和原因在 [research/v3-results/DIFFERENCES.md](research/v3-results/DIFFERENCES.md)，各 JSON 文件保存每例分类、耗时，以及不一致答案/期望（长结果记录长度与 SHA1 摘要）。alternate/level/append 与书的策略不同，有限 run 的顺序或前缀改变是预期差别。超时只记为未完成，不以它证明发散，也不据此判断 bug；append 本来没有公平性保证。
 
@@ -109,3 +111,31 @@ LC_ALL=C.UTF-8 timeout 600s python3 tools/test-times.py --racket "$(command -v r
 ```
 
 排除 `warmup: true` 的记录后，再对 stdout 中 TIMING 的 CPU/real/GC 统计；每一条 exit 都必须为 0，并检查 stderr 没有断言失败。本次全部采样均符合此条件。
+
+## 后续：合取改为局部 bind
+
+TRS2 的 `conj2` 和 microKanren 的 `conj` 由 `(g2 (g1 s))` 改为 `(g2 (amb-local (g1 s)))`，与 miniKanren-typed 的 bind 一致：g1 先在局部搜索中求解，g2 依次从它的每个答案继续，所以 merger 按 g1 的答案顺序交替执行 g2 的各个分支，g1 的暂停夹在其间，这就是 `append-map-inf` 的结构。直接复合让 g2 在 g1 的各个选择内运行，交替执行的顺序随这些选择的形状而定；它满足 `(conj2 (disj2 a b) g)` 就是 `(disj2 (conj2 a g) (conj2 b g))`，连顺序也相同，书的 bind 则把 `(disj2 a b)` 的答案放在一起处理。手册的“Order of Answers”（TRS2）和“Suspension and the Order of Answers”（microKanren）作了相应说明。原因的诊断和性能分析在 issue #18。
+
+测试：TRS2 的 285 个书中例子、microKanren 的全部例子（含原来按 same-answers、same-count 放宽的 `wrappers.rktl:37`、`:66`）现在都用 `check-equal?` 逐项比较，`known-order-differences` 机制已删除。验证时先删除 compiled，Racket 9.3 CS、`LC_ALL=C.UTF-8`，带文档的 `raco setup --check-pkg-deps --pkgs ambKanren` 通过，无错误、无警告；`raco test -p ambKanren` **711 项通过**。amb 为 `81bf0c9`。
+
+书中例子分类（命令同上，`research/v3-results/v3-trs2-*.json` 已按本次结果更新）：
+
+| 语言/策略 | 与书逐项相同 | 仅顺序不同 | 仅数量相同 | 超时/资源未完成 |
+|---|---:|---:|---:|---:|
+| TRS2 append（每例 1 秒） | 255 | 6 | 7 | 17 |
+| TRS2 interleave（每例 30 秒） | **285** | 0 | 0 | 0 |
+| TRS2 alternate（每例 30 秒） | 279 | 6 | 0 | 0 |
+| TRS2 level（60 秒筛查，慢例 600 秒复核） | 270 | 9 | 6 | 0 |
+
+与首轮相比，interleave 的 ch8:205、ch9:167 和 alternate 的 ch8:205 变为逐项相同；append 与 level 的分类不变，level 的 ch8:205 在 60 秒筛查中未完成，600 秒单例复核在 338 秒完成，仍为 same-answers。`v3-trs2-bind.json` 是首轮对这个定义的对照记录，现在与默认实现一致。
+
+耗时（同一进程环境中交替运行 3 次，中位数与范围，单位毫秒，脚本为 `research/v3-results/diagnosis/measure.rkt`）：
+
+| 测试 | 直接合取 | 局部 bind | 原生 miniKanren-typed |
+|---|---:|---:|---:|
+| TRS2 real | 16266 (15702–16401) | 17306 (16534–17332) | 12758 (12426–13130) |
+| TRS2 累计分配 | 24.1 GB | 28.4 GB | 6.1 GB |
+| microKanren real | 2025 (1905–2412) | 2194 (1891–2197) | — |
+| microKanren 累计分配 | 1.67 GB | 1.59 GB | — |
+
+TRS2 的局部 bind 多出约 18% 的分配；耗时差约 6%，与本环境的波动同一量级，不作为结论。

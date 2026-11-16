@@ -1,57 +1,18 @@
 #lang typed/racket/base
 
 ;; The examples of The Reasoned Schemer, second edition, from
-;; miniKanren-typed.  typed/miniKanren/amb/trs2 schedules suspended computations
-;; with direct-style conjunction instead of the book's bind, so two examples
-;; produce their answers in a different order from the book (see
-;; "Order of Answers" in the documentation).  Those examples are listed
-;; in `known-order-differences` and checked less strictly:
-;;
-;;   same-answers  the same answers, in any order;
-;;   same-count    a bounded run returns as many answers as the book,
-;;                 but not necessarily the same ones (the book's answers
-;;                 appear when more answers are requested).
-;;
-;; Every other example is checked with check-equal? as usual.
+;; miniKanren-typed.  conj2 binds locally, as the book does, so with
+;; amb-interleave every example is checked with check-equal? (see
+;; "Order of Answers" in the documentation).
 
 (require racket/include
          (except-in racket/match ==)
-         (rename-in (except-in typed/rackunit fail)
-                    [check-equal? rackunit:check-equal?])
+         (except-in typed/rackunit fail)
          (only-in racket/list make-list)
-         (for-syntax racket/base racket/path)
          "../main.rkt"
          typed/amb typed/amb/merge)
 
 (current-amb-merger amb-interleave)
-
-(begin-for-syntax
-  (define known-order-differences
-    #hash(["ch8.rktl:205" . same-answers]
-          ["ch9.rktl:167" . same-answers]))
-  (define (difference-kind stx)
-    (define src (syntax-source stx))
-    (and (path? src)
-         (hash-ref known-order-differences
-                   (format "~a:~a" (file-name-from-path src) (syntax-line stx))
-                   #f))))
-
-(: same-answers? (→ (Listof Any) (Listof Any) Boolean))
-(define (same-answers? actual expected)
-  (and (= (length actual) (length expected))
-       (for/and : Boolean ([a (in-list actual)]) (and (member a expected) #t))
-       (for/and : Boolean ([e (in-list expected)]) (and (member e actual) #t))))
-
-(define-syntax (check-equal? stx)
-  (syntax-case stx ()
-    [(_ actual expected . more)
-     (case (difference-kind stx)
-       [(same-answers)
-        (syntax/loc stx (check-true (same-answers? actual expected)))]
-       [(same-count)
-        (syntax/loc stx (rackunit:check-equal? (length actual) (length expected)))]
-       [else
-        (syntax/loc stx (rackunit:check-equal? actual expected . more))])]))
 
 (include (lib "typed/miniKanren/trs2/tests/ch1.rktl"))
 (include (lib "typed/miniKanren/trs2/tests/ch2.rktl"))

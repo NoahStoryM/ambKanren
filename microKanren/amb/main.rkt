@@ -75,8 +75,9 @@
 (: disj (→ Goal Goal Goal))
 (define ((disj g1 g2) s/c) ((amb g1 g2) s/c))
 
+;; bind: g2 continues from each answer of a local search of g1.
 (: conj (→ Goal Goal Goal))
-(define ((conj g1 g2) s/c) (g2 (g1 s/c)))
+(define ((conj g1 g2) s/c) (g2 (amb-local (g1 s/c))))
 
 
 ;;; User-level forms (miniKanren-wrappers.scm)
