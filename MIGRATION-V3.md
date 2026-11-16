@@ -155,12 +155,13 @@ amb `1c47e90` 起，`(amb)` 和空的 `for/amb` 与非空选择一致，经 `mak
 ## TRS1 公开接口整理（#22，同为 3.0）
 
 本次不改版本号，不保留兼容别名。仅整理
-`typed/miniKanren/amb/trs1`（及其 `main`、`base` 实现入口）的导出；
-搜索算法和求值次序保持不变。内部组合器移到 `main.rkt`，供宏展开使用，
+`typed/miniKanren/amb/trs1`（及其 `main`、`base` 实现入口）的导出与
+`all-aux` 定义；
+底层仍使用局部 amb 搜索。内部组合器移到 `main.rkt`，供宏展开使用，
 不再通过 `base.rkt` 或主模块导出。
 
 下表逐项覆盖 issue #22 的 TRS1 差异名单。分类 1 是表示差异，分类 2
-是书中已有且应与参照库对齐的名字，分类 3 是不再公开的实验／内部接口。
+是与参照库对齐的接口（含 Noah 指定补齐的类型辅助），分类 3 是不再公开的实验／内部接口。
 没有把类型不同的函数直接改名来凑齐导出名单。
 
 | 名字 | 分类／处理 | 迁移方式或理由 |
@@ -171,7 +172,7 @@ amb `1c47e90` 起，`(amb)` 和空的 `for/amb` 与非空选择一致，经 `mak
 | `Streamof`、`Suspension` | 1：不补 | 参照库的流类型 |
 | `empty-stream`、`stream`、`stream-cons` | 1：不补 | 参照库的流构造 |
 | `stream-empty?`、`stream-singleton?`、`stream-first`、`stream-rest` | 1：不补 | 参照库的流访问 |
-| `conj`、`conji` | 3：不再导出 | 通常改用 `all`、`alli`；旧函数先求值参数，新形式延迟目标表达式，并非任意上下文的直接替换 |
+| `conj`、`conji` | 3：不再导出 | 通常改用 `all`、`alli`；旧函数先求值全部参数，新形式在构造时求值首目标、应用时构造其余目标，并非任意上下文的直接替换 |
 | `disj`、`disji` | 3：不再导出 | 通常改用 `conde`、`condi`，每个目标各占一个子句；同样注意目标构造的求值时机 |
 | `conj+`、`conji+` | 3：不再导出 | `all`、`alli` |
 | `disj+`、`disji+` | 3：不再导出 | `(conde [g] ...)`、`(condi [g] ...)` |
@@ -185,15 +186,17 @@ amb `1c47e90` 起，`(amb)` 和空的 `for/amb` 与非空选择一致，经 `mak
 | `run∞` | 3：删除别名 | `run*` |
 | `≡`、`∃`、`⊤`、`⊥` | 3：删除别名 | 分别用 `==`、`fresh`、`succeed`、`fail` |
 | `∧`、`∧i`、`∨`、`∨i` | 3：删除别名 | 分别用 `all`、`alli`、单目标子句的 `conde`、`condi` |
-| `Literal`、`Data`、`data?` | **未定** | 参照库新增的类型辅助，既非流表示差异，也非书中改名接口；本 PR 保持缺省，是否补齐请 Noah 决定 |
+| `Literal`、`Data`、`data?` | 2：按 Noah 已定补齐 | 类型定义与谓词和 miniKanren-typed 相同；`Term` 改为引用 `Literal`，可接受的项不变 |
 
-分类 2 本次没有发现需要改名或补入的确定项目；书中语言形式已经同名。
 共有名字也不意味着类型完全相同：例如 `Goal`、`Substitution`、`unify`、
 `ext-s` 仍遵循 amb／哈希表示。
 
-**未定**：两边都公开的 `all-aux` 仍各有自己的参数约定。参照库接受
-流绑定函数，本库接受合取语法形式；本 PR 保持现状，没有把它改成新公共
-协议，也没有删除这个共有名字。
+`all-aux` 的定义及 `all`／`alli` 的调用形式与
+miniKanren-typed 完全一致：空目标返回 `succeed`，单目标原样返回，多个目标
+在构造时求值首目标，应用时递归构造剩余目标。它接受绑定运算符 `bnd`，
+不再接受旧版的合取形式参数。与参照库的表示差异集中在私有的 `bind`／
+`bindi` 语法：它们捕获答案表达式，在 append／alternate 的局部 amb
+搜索上应用后继目标；不导出与流绑定函数同名但类型不同的接口。
 
 microKanren 与 demo 自己定义 `conj+`、`disj+`、`Zzz`、`var=?`，并不从
 TRS1 导入；本次不改它们。`suspend`／`pause`、microKanren 的 `take`／
@@ -208,14 +211,14 @@ Racket 9.3 CS，所有 Racket 命令均设置 `LC_ALL=C.UTF-8`。
 ambKanren master `d97a0b6` 开出。版本仍为 3.0。
 
 - 对 microKanren、TRS1、TRS2、demo 的全部 `tests` 目录执行
-  `raco test --timeout 180`：**766 tests passed**。
+  `raco test --timeout 180`：**788 tests passed**。
 - 沿用既有书中例子：TRS1 第 1–8、10 章，TRS2 第 1–9 章，demo 既有范围；
   没有新增跳过。TRS1 第 9 章原本未整体引入（替换表示不同），本轮另将
   `project` 的练习定义和对应书中断言放入 `tests/interface.rkt`。
 - `raco setup --pkgs amb miniKanren-typed ambKanren`：退出码 0，
   三份手册均构建、渲染完成，无未定义交叉引用或警告。
 - 用 `module->exports` 合并变量与语法导出，只取 phase 0，复查结果：
-  TRS1 共有 37 个名字，本库独有 `list->amb`、`sequence->amb`；参照库
-  独有的 19 个名字为上述流接口及未定的 `Literal`、`Data`、`data?`。
+  TRS1 共有 40 个名字，本库独有 `list->amb`、`sequence->amb`；参照库
+  独有的 16 个名字均为上述流接口。
   TRS2 共有 36 个名字，本库独有 `suspend`；microKanren 共有 32 个名字，
   本库独有 `suspend`、`take`、`take-all`，均保持原样。

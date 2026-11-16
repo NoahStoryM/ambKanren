@@ -52,6 +52,19 @@ they give the answers in the order of the book.}
 
 @section[#:tag "trs1-types"]{Types}
 
+@deftype[Literal]{
+Booleans, numbers, characters, byte strings, strings, keywords,
+@racket['()], and symbols.
+}
+
+@deftype[Data]{
+Defined as @racket[(∪ Literal (Pair Data Data))]: data without logic variables.
+}
+
+@defproc[(data? [v Any]) Boolean]{
+Recognizes @racket[Data], with a Typed Racket occurrence-typing filter.
+}
+
 @deftype[Term]{
 The type of terms: booleans, numbers, characters, byte strings,
 strings, keywords, symbols, @racket['()], logic variables
@@ -139,7 +152,9 @@ A function annotated with the type @racket[Goal].  For example,
 @deftogether[(@defform[(all goal ...)]
               @defform[(alli goal ...)])]{
 Conjunction.  With no goals, both forms are @racket[succeed].
-Goal expressions are delayed until the resulting goal is applied.
+A single goal is returned unchanged.  With multiple goals, the first
+goal expression is evaluated when the conjunction is built; the rest
+is built when the resulting goal is applied, as in the reference implementation.
 @racket[all] explores answers depth-first with @racket[amb-append];
 @racket[alli] interleaves them with @racket[amb-alternate], binding
 answers through a local search.  (Chapter 6.)
@@ -184,11 +199,16 @@ answer only.  (Chapter 10.)
               @defform[(ifa g0 g1 g2)]
               @defform[(ifu g0 g1 g2)]
               @defform[(cond-aux ifer clause ...)]
-              @defform[(all-aux conjunction-form goal ...)])]{
+              @defform[(all-aux bnd goal ...)])]{
 The building blocks of the forms above, with the structure of the
 first edition's implementation: @racket[cond-aux] turns each clause
 into @racket[(ifer test (all goal ...) rest)], and @racket[all-aux]
-builds a conjunction with a conjunction form.  @racket[ifa] and
+has the same definition as in @tt{miniKanren-typed}: its empty case is
+@racket[succeed], its single-goal case is that goal unchanged, and its
+recursive case applies @racket[(bnd (g^ s) (all-aux bnd goal ...))].
+The private binding forms used by @racket[all] and @racket[alli]
+capture the first argument in a local @racket[amb] search; they are
+not exported stream-binding functions.  @racket[ifa] and
 @racket[ifu] search for the first answer of the test with
 @racket[amb-generate*], passing on every pause, so that they know
 whether it has an answer before they commit.

@@ -73,13 +73,25 @@
 (define-syntax-rule (conj+  g ...) (conj  (Zzz g) ...))
 (define-syntax-rule (conji+ g ...) (conji (Zzz g) ...))
 
+;; Binding forms capture the answer expression in a local amb search.
+;; They stay private: unlike the reference library's bind functions,
+;; they operate on an amb computation rather than an explicit stream.
+(define-syntax-rule (bind e g)
+  (g (parameterize ([current-amb-merger amb-append]) (amb-local e))))
+(define-syntax-rule (bindi e g)
+  (g (parameterize ([current-amb-merger amb-alternate]) (amb-local e))))
+
 (define-syntax all-aux
   (syntax-rules ()
-    [(_ conj+) succeed]
-    [(_ conj+ g) (Zzz g)]
-    [(_ conj+ g ...) (conj+ g ...)]))
-(define-syntax-rule (all  g ...) (all-aux conj+  g ...))
-(define-syntax-rule (alli g ...) (all-aux conji+ g ...))
+    [(_ bnd) succeed]
+    [(_ bnd g) g]
+    [(_ bnd g0 g ...)
+     (let ([g^ g0])
+       (λG (s)
+         (bnd (g^ s)
+              (all-aux bnd g ...))))]))
+(define-syntax-rule (all  g ...) (all-aux bind  g ...))
+(define-syntax-rule (alli g ...) (all-aux bindi g ...))
 
 (define-syntax-rule (if-aux disj+ g0 g1 g2) (disj+ (all g0 g1) g2))
 (define-syntax-rule (ife g0 g1 g2) (if-aux disj+  g0 g1 g2))
