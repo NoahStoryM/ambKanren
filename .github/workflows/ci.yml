@@ -17,10 +17,10 @@ jobs:
         with:
           version: "stable"
       # After amb 3.0 reaches the package catalog, remove this source install.
-      - name: Install amb v3 from source
+      - name: Install amb 3.0 from source
         run: |
-          git clone --depth 1 --branch v3 https://github.com/NoahStoryM/amb.git "$RUNNER_TEMP/amb-v3"
-          timeout 600s raco pkg install --auto --batch "$RUNNER_TEMP/amb-v3/pkgs/amb" "$RUNNER_TEMP/amb-v3/pkgs/typed-amb"
+          git clone --depth 1 --branch master https://github.com/NoahStoryM/amb.git "$RUNNER_TEMP/amb"
+          timeout 600s raco pkg install --auto --batch "$RUNNER_TEMP/amb/pkgs/amb" "$RUNNER_TEMP/amb/pkgs/typed-amb"
       - name: Install dependencies
         run: timeout 600s raco pkg install --auto --batch
       - name: Run tests
