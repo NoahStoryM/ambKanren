@@ -25,9 +25,8 @@ This module implements the language of the first edition of
 The core follows @secref["microKanren"]: a goal returns one
 substitution and chooses among its answers with @racket[amb].  Unlike
 microKanren, there is no state and no variable counter (@racket[fresh]
-creates variables directly), @racket[disj] and @racket[conj] take any
-number of goals, and substitutions are immutable hash tables instead of
-association lists.
+creates variables directly), and substitutions are immutable hash
+tables instead of association lists.
 
 The user-level language is that of the @emph{first} edition of @italic{The Reasoned Schemer}
 (Friedman, Byrd, and Kiselyov, MIT Press, 2005): @racket[run] with a
@@ -60,10 +59,9 @@ strings, keywords, symbols, @racket['()], logic variables
 }
 
 @deftogether[(@deftype[Var]
-              @defstruct*[var ([name Symbol]) #:transparent]
-              @defproc[(var=? [x Var] [y Var]) Boolean])]{
+              @defstruct*[var ([name Symbol]) #:transparent])]{
 Logic variables.  Variables are compared by identity
-(@racket[var=?] is @racket[eq?]); the name is only for printing.
+with @racket[eq?]; the name is only for printing.
 }
 
 @deftype[Substitution]{
@@ -85,7 +83,7 @@ Goals must therefore be applied within the dynamic extent of an
 (define x (var 'x))
 (for/list : (Listof Term)
           ([s : Substitution
-              (in-amb/do ((disj (== x 1) (== x 2)) empty-s))])
+              (in-amb/do ((conde [(== x 1)] [(== x 2)]) empty-s))])
   (walk x s))
 ]
 }
@@ -133,56 +131,18 @@ Binds each @racket[x] to a new variable and behaves as
 is applied.  (Chapter 1.)
 }
 
-@defform[(project (x ...) goal ...)]{
-Rebinds each @racket[x] to its value under the current substitution
-(as by @racket[walk*]) and then behaves as @racket[(all goal ...)].
-This lets the goals inspect the values with ordinary Racket code.
-(Chapter 9.)
-
-@ak-examples[
-(run* (q)
-  (fresh (n)
-    (conde [(== n 3)] [(== n 4)])
-    (project (n)
-      (if (exact-integer? n) (== q (* n n)) fail))))
-]
-}
-
-@deftogether[(@defproc[(disj [g Goal] ...) Goal]
-              @defproc[(conj [g Goal] ...) Goal])]{
-N-ary disjunction and conjunction of goals, with @racket[amb-append]
-as their merger.  @racket[disj] chooses one of the goals with
-@racket[amb] and applies it.  @racket[conj] applies the goals in order:
-each goal after the first is applied to every answer of a local search
-of the goal before it.  @racket[(conj)] is @racket[succeed], and
-@racket[(conj g)] is @racket[g].
-
-These are functions, so their arguments are evaluated before the goal
-is built.  For recursive relations, use @racket[disj+] and
-@racket[conj+], or the forms below.
-}
-
-@deftogether[(@defform[(Zzz goal)]
-              @defform[(λG (s) body ...+)])]{
-@racket[(Zzz goal)] is the η-expansion @racket[(λG (s) (goal s))]: it
-delays the evaluation of the expression @racket[goal] until the goal is
-applied, which keeps recursive relations from looping while they are
-being built.  Unlike @tt{Zzz} in @secref["microKanren"], it does not
-pause; interleaving comes from @racket[condi] and @racket[alli]
-instead.  @racket[λG] is @racket[λ] annotated with the type
-@racket[Goal].
-}
-
-@deftogether[(@defform[(disj+ goal ...)]
-              @defform[(conj+ goal ...)])]{
-@racket[disj] and @racket[conj] applied to @racket[(Zzz goal) ...].
+@defform[(λG (s) body ...+)]{
+A function annotated with the type @racket[Goal].  For example,
+@racket[(λG (s) ((== x 1) s))] is a goal.
 }
 
 @deftogether[(@defform[(all goal ...)]
               @defform[(alli goal ...)])]{
-Conjunction.  @racket[(all)] is @racket[succeed] and
-@racket[(all goal)] is @racket[(Zzz goal)]; otherwise @racket[all] is
-@racket[conj+] and @racket[alli] is @racket[conji+].  (Chapter 6.)
+Conjunction.  With no goals, both forms are @racket[succeed].
+Goal expressions are delayed until the resulting goal is applied.
+@racket[all] explores answers depth-first with @racket[amb-append];
+@racket[alli] interleaves them with @racket[amb-alternate], binding
+answers through a local search.  (Chapter 6.)
 }
 
 @deftogether[(@defform[#:literals (else)
@@ -224,8 +184,7 @@ answer only.  (Chapter 10.)
               @defform[(ifa g0 g1 g2)]
               @defform[(ifu g0 g1 g2)]
               @defform[(cond-aux ifer clause ...)]
-              @defform[(all-aux conj+ goal ...)]
-              @defform[(if-aux disj+ g0 g1 g2)])]{
+              @defform[(all-aux conjunction-form goal ...)])]{
 The building blocks of the forms above, with the structure of the
 first edition's implementation: @racket[cond-aux] turns each clause
 into @racket[(ifer test (all goal ...) rest)], and @racket[all-aux]
@@ -237,17 +196,12 @@ whether it has an answer before they commit.
 
 @subsection[#:tag "trs1-interleaving"]{Interleaving}
 
-@deftogether[(@defproc[(disji [g Goal] ...) Goal]
-              @defproc[(conji [g Goal] ...) Goal]
-              @defform[(disji+ goal ...)]
-              @defform[(conji+ goal ...)])]{
-Interleaving disjunction and conjunction, used by @racket[condi] and
-@racket[alli].  @racket[disji] makes its choice with
-@racket[amb-alternate], which passes the turn at every answer.
-@racket[conji] binds the answers of each goal with a local search
-(@racket[amb-local*]) under the same merger before it goes on.  They
-take the place of @mk1[mplusi] and @mk1[bindi], which this module
-does not provide.
+@racket[condi] chooses clauses with @racket[amb-alternate], which
+passes the turn at every answer.  @racket[alli] binds the answers of
+each goal through a local search (@racket[amb-local*]) under the same
+merger before continuing.  These forms take the place of the
+stream-based @mk1[mplusi] and @mk1[bindi]; this module does not provide
+those stream operations.
 
 In the example below, @racket[counto] has an answer for every length,
 and the answers with @racket['R] are still reached:
@@ -263,14 +217,10 @@ and the answers with @racket['R] are still reached:
     (alli (counto n) (conde [(== side 'L)] [(== side 'R)]))
     (== q (cons side n))))
 ]
-}
 
 @section[#:tag "trs1-substitutions"]{Substitutions and Unification}
 
 @deftogether[(@defthing[empty-s Substitution]
-              @defproc[(s-empty? [s Substitution]) Boolean]
-              @defproc[(s-has-key? [x Var] [s Substitution]) Boolean]
-              @defproc[(apply-s [s Substitution] [x Var]) Term]
               @defproc[(size-s [s Substitution]) Index]
               @defproc[(ext-s [x Var] [v Term] [s Substitution]) Substitution])]{
 Operations on substitutions.  @racket[ext-s] associates @racket[x]
@@ -296,30 +246,9 @@ Reification: unassociated variables are replaced by @racket['_.0],
 @racket['_.1], and so on, in order of first appearance.  (Chapter 9.)
 }
 
-@deftogether[(@defproc[(apply-goal [g Goal] [s Substitution]) Substitution]
-              @defproc[(sequence->amb [s (Sequenceof a)]) a]
+@deftogether[(@defproc[(sequence->amb [s (Sequenceof a)]) a]
               @defproc[(list->amb [l (Listof a)]) a])]{
-Small helpers: @racket[apply-goal] applies a goal (for use with
-@racket[foldl]), and @racket[sequence->amb] and @racket[list->amb]
-choose an element with @racket[amb].
-}
-
-@section[#:tag "trs1-aliases"]{Symbolic Aliases}
-
-@deftogether[(@defidform[run∞]
-              @defidform[⊤]
-              @defidform[⊥]
-              @defidform[≡]
-              @defidform[∃]
-              @defidform[∨]
-              @defidform[∧]
-              @defidform[∨i]
-              @defidform[∧i])]{
-Aliases for @racket[run*], @racket[succeed], @racket[fail],
-@racket[==], @racket[fresh], @racket[disj+], @racket[conj+],
-@racket[disji+], and @racket[conji+].
-
-@ak-examples[
-(run∞ (q) (∃ (a b) (∨ (≡ a 1) (≡ a 2)) (≡ b a) (≡ q (list a b))))
-]
+Choose an element with @racket[amb].  These operations belong to the
+@racket[amb] representation and have no stream counterpart in this
+module's interface.
 }

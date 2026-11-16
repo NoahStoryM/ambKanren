@@ -4,8 +4,9 @@
 ;;
 ;; The interface follows The Reasoned Schemer, first edition (Friedman,
 ;; Byrd, and Kiselyov, MIT Press, 2005).  The cond-aux and all-aux macros
-;; keep the structure of the book's appendix A; run, project, and the
-;; if-forms are rewritten on top of amb.  See NOTICE.
+;; keep the structure of the book's appendix A; run and the
+;; if-forms are rewritten on top of amb.  The internal goal combinators
+;; and delay forms are adapted from microKanren.  See NOTICE.
 
 (require "base.rkt"
          (except-in racket/match ==)
@@ -13,17 +14,43 @@
          "../../../private/search.rkt")
 
 (provide (all-from-out "base.rkt")
-         (all-defined-out)
-         (rename-out
-          [run* run∞]
-          [succeed ⊤]
-          [fail ⊥]
-          [== ≡]
-          [fresh ∃]
-          [disj+ ∨]
-          [conj+ ∧]
-          [disji+ ∨i]
-          [conji+ ∧i]))
+         run run* λG fresh
+         all alli all-aux
+         ife ifi ifa ifu
+         conde condi conda condu cond-aux)
+
+
+(: disj (→ Goal * Goal))
+(define (disj . gs)
+  (λ (s)
+    ((parameterize ([current-amb-merger amb-append]) (sequence->amb gs)) s)))
+
+(: conj (→ Goal * Goal))
+(define (conj . gs)
+  (cond
+    [(null? gs) succeed]
+    [(null? (cdr gs)) (car gs)]
+    [else
+     (define first (car gs))
+     (define rest (apply conj (cdr gs)))
+     (λ (s) (rest (parameterize ([current-amb-merger amb-append])
+                   (amb-local* (λ () (first s))))))]))
+
+(: disji (→ Goal * Goal))
+(define (disji . gs)
+  (λ (s)
+    ((parameterize ([current-amb-merger amb-alternate]) (sequence->amb gs)) s)))
+
+(: conji (→ Goal * Goal))
+(define (conji . gs)
+  (cond
+    [(null? gs) succeed]
+    [(null? (cdr gs)) (car gs)]
+    [else
+     (define first (car gs))
+     (define rest (apply conji (cdr gs)))
+     (λ (s) (rest (parameterize ([current-amb-merger amb-alternate])
+                   (amb-local* (λ () (first s))))))]))
 
 
 (define-syntax-rule (run n (x) g* ...)
@@ -40,11 +67,6 @@
     [(_ () g ...) (all g ...)]
     [(_ (x ...) g ...)
      (Zzz (let ([x (var 'x)] ...) (all g ...)))]))
-(define-syntax project
-  (syntax-rules ()
-    [(_ () g ...) (all g ...)]
-    [(_ (x ...) g ...)
-     (λG (s) (let ([x (walk* x s)] ...) ((all g ...) s)))]))
 
 (define-syntax-rule (disj+  g ...) (disj  (Zzz g) ...))
 (define-syntax-rule (disji+ g ...) (disji (Zzz g) ...))

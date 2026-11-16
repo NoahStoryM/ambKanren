@@ -151,3 +151,71 @@ amb `1c47e90` 起，`(amb)` 和空的 `for/amb` 与非空选择一致，经 `mak
 | TRS1 | 31.7 GB，18.3–19.9 s | 29.5 GB，16.8–17.0 s |
 | TRS2 | 20.3 GB，15.7–15.8 s | 19.8 GB，14.3–15.0 s |
 | microKanren | 1.26 GB，1.91–1.96 s | 1.25 GB，1.80–1.98 s |
+
+## TRS1 公开接口整理（#22，同为 3.0）
+
+本次不改版本号，不保留兼容别名。仅整理
+`typed/miniKanren/amb/trs1`（及其 `main`、`base` 实现入口）的导出；
+搜索算法和求值次序保持不变。内部组合器移到 `main.rkt`，供宏展开使用，
+不再通过 `base.rkt` 或主模块导出。
+
+下表逐项覆盖 issue #22 的 TRS1 差异名单。分类 1 是表示差异，分类 2
+是书中已有且应与参照库对齐的名字，分类 3 是不再公开的实验／内部接口。
+没有把类型不同的函数直接改名来凑齐导出名单。
+
+| 名字 | 分类／处理 | 迁移方式或理由 |
+| --- | --- | --- |
+| `list->amb`、`sequence->amb` | 1：保留 | 从列表／序列中选择答案，属于 amb 表示 |
+| `bind`、`bindi`、`mplus`、`mplusi` | 1：不补流接口 | 参照库操作流及其悬置；本库在目标内部用 amb 和局部搜索实现组合，类型不同 |
+| `case∞`、`map∞`、`λF` | 1：不补 | 参照库的流分派、收集、悬置构造 |
+| `Streamof`、`Suspension` | 1：不补 | 参照库的流类型 |
+| `empty-stream`、`stream`、`stream-cons` | 1：不补 | 参照库的流构造 |
+| `stream-empty?`、`stream-singleton?`、`stream-first`、`stream-rest` | 1：不补 | 参照库的流访问 |
+| `conj`、`conji` | 3：不再导出 | 通常改用 `all`、`alli`；旧函数先求值参数，新形式延迟目标表达式，并非任意上下文的直接替换 |
+| `disj`、`disji` | 3：不再导出 | 通常改用 `conde`、`condi`，每个目标各占一个子句；同样注意目标构造的求值时机 |
+| `conj+`、`conji+` | 3：不再导出 | `all`、`alli` |
+| `disj+`、`disji+` | 3：不再导出 | `(conde [g] ...)`、`(condi [g] ...)` |
+| `Zzz` | 3：不再导出 | 需要显式延迟时写 `(λG (s) (g s))`；它从来不是 TRS1 的暂停操作 |
+| `apply-goal` | 3：不再导出 | 直接写 `(g s)` |
+| `apply-s` | 3：不再导出 | 内部哈希查询辅助；通常用 `walk`／`walk*`，它们会继续解引用 |
+| `s-empty?`、`s-has-key?` | 3：不再导出 | 内部哈希辅助；若明确操作表示，可用 `hash-empty?`、`hash-has-key?` |
+| `var=?` | 3：不再导出 | TRS1 逻辑变量用 `eq?` 比较身份 |
+| `if-aux` | 3：不再导出 | 用 `ife`／`ifi` 等公开形式 |
+| `project` | 3：按 Noah 已定移出接口 | 只在练习测试 `tests/interface.rkt` 定义；TRS2 的 `project` 不变 |
+| `run∞` | 3：删除别名 | `run*` |
+| `≡`、`∃`、`⊤`、`⊥` | 3：删除别名 | 分别用 `==`、`fresh`、`succeed`、`fail` |
+| `∧`、`∧i`、`∨`、`∨i` | 3：删除别名 | 分别用 `all`、`alli`、单目标子句的 `conde`、`condi` |
+| `Literal`、`Data`、`data?` | **未定** | 参照库新增的类型辅助，既非流表示差异，也非书中改名接口；本 PR 保持缺省，是否补齐请 Noah 决定 |
+
+分类 2 本次没有发现需要改名或补入的确定项目；书中语言形式已经同名。
+共有名字也不意味着类型完全相同：例如 `Goal`、`Substitution`、`unify`、
+`ext-s` 仍遵循 amb／哈希表示。
+
+**未定**：两边都公开的 `all-aux` 仍各有自己的参数约定。参照库接受
+流绑定函数，本库接受合取语法形式；本 PR 保持现状，没有把它改成新公共
+协议，也没有删除这个共有名字。
+
+microKanren 与 demo 自己定义 `conj+`、`disj+`、`Zzz`、`var=?`，并不从
+TRS1 导入；本次不改它们。`suspend`／`pause`、microKanren 的 `take`／
+`take-all` 也属于其他入口，本次只在 PR 导出复查中报告，不作接口决定。
+`NOTICE` 保留这些定义的来源说明，并记录 TRS1 组合器所在文件与测试中的
+`project`。
+
+### 本轮验证
+
+Racket 9.3 CS，所有 Racket 命令均设置 `LC_ALL=C.UTF-8`。
+依赖：amb master `1223459`、miniKanren-typed master `c197a5c`；本分支从
+ambKanren master `d97a0b6` 开出。版本仍为 3.0。
+
+- 对 microKanren、TRS1、TRS2、demo 的全部 `tests` 目录执行
+  `raco test --timeout 180`：**766 tests passed**。
+- 沿用既有书中例子：TRS1 第 1–8、10 章，TRS2 第 1–9 章，demo 既有范围；
+  没有新增跳过。TRS1 第 9 章原本未整体引入（替换表示不同），本轮另将
+  `project` 的练习定义和对应书中断言放入 `tests/interface.rkt`。
+- `raco setup --pkgs amb miniKanren-typed ambKanren`：退出码 0，
+  三份手册均构建、渲染完成，无未定义交叉引用或警告。
+- 用 `module->exports` 合并变量与语法导出，只取 phase 0，复查结果：
+  TRS1 共有 37 个名字，本库独有 `list->amb`、`sequence->amb`；参照库
+  独有的 19 个名字为上述流接口及未定的 `Literal`、`Data`、`data?`。
+  TRS2 共有 36 个名字，本库独有 `suspend`；microKanren 共有 32 个名字，
+  本库独有 `suspend`、`take`、`take-all`，均保持原样。
