@@ -4,8 +4,9 @@
 ;;
 ;; The interface follows The Reasoned Schemer, first edition (Friedman,
 ;; Byrd, and Kiselyov, MIT Press, 2005).  The cond-aux and all-aux macros
-;; keep the structure of the book's appendix A; run, project, and the
-;; if-forms are rewritten on top of amb.  See NOTICE.
+;; keep the structure of the book's appendix A; run and the
+;; if-forms are rewritten on top of amb.  The internal goal combinators
+;; and delay forms are adapted from microKanren.  See NOTICE.
 
 (require "base.rkt"
          (except-in racket/match ==)
@@ -13,17 +14,43 @@
          "../../../private/search.rkt")
 
 (provide (all-from-out "base.rkt")
-         (all-defined-out)
-         (rename-out
-          [run* run∞]
-          [succeed ⊤]
-          [fail ⊥]
-          [== ≡]
-          [fresh ∃]
-          [disj+ ∨]
-          [conj+ ∧]
-          [disji+ ∨i]
-          [conji+ ∧i]))
+         run run* λG fresh
+         all alli all-aux
+         ife ifi ifa ifu
+         conde condi conda condu cond-aux)
+
+
+(: disj (→ Goal * Goal))
+(define (disj . gs)
+  (λ (s)
+    ((parameterize ([current-amb-merger amb-append]) (sequence->amb gs)) s)))
+
+(: conj (→ Goal * Goal))
+(define (conj . gs)
+  (cond
+    [(null? gs) succeed]
+    [(null? (cdr gs)) (car gs)]
+    [else
+     (define first (car gs))
+     (define rest (apply conj (cdr gs)))
+     (λ (s) (rest (parameterize ([current-amb-merger amb-append])
+                   (amb-local* (λ () (first s))))))]))
+
+(: disji (→ Goal * Goal))
+(define (disji . gs)
+  (λ (s)
+    ((parameterize ([current-amb-merger amb-alternate]) (sequence->amb gs)) s)))
+
+(: conji (→ Goal * Goal))
+(define (conji . gs)
+  (cond
+    [(null? gs) succeed]
+    [(null? (cdr gs)) (car gs)]
+    [else
+     (define first (car gs))
+     (define rest (apply conji (cdr gs)))
+     (λ (s) (rest (parameterize ([current-amb-merger amb-alternate])
+                   (amb-local* (λ () (first s))))))]))
 
 
 (define-syntax-rule (run n (x) g* ...)
@@ -40,24 +67,31 @@
     [(_ () g ...) (all g ...)]
     [(_ (x ...) g ...)
      (Zzz (let ([x (var 'x)] ...) (all g ...)))]))
-(define-syntax project
-  (syntax-rules ()
-    [(_ () g ...) (all g ...)]
-    [(_ (x ...) g ...)
-     (λG (s) (let ([x (walk* x s)] ...) ((all g ...) s)))]))
 
 (define-syntax-rule (disj+  g ...) (disj  (Zzz g) ...))
 (define-syntax-rule (disji+ g ...) (disji (Zzz g) ...))
 (define-syntax-rule (conj+  g ...) (conj  (Zzz g) ...))
 (define-syntax-rule (conji+ g ...) (conji (Zzz g) ...))
 
+;; Binding forms capture the answer expression in a local amb search.
+;; They stay private: unlike the reference library's bind functions,
+;; they operate on an amb computation rather than an explicit stream.
+(define-syntax-rule (bind e g)
+  (g (parameterize ([current-amb-merger amb-append]) (amb-local e))))
+(define-syntax-rule (bindi e g)
+  (g (parameterize ([current-amb-merger amb-alternate]) (amb-local e))))
+
 (define-syntax all-aux
   (syntax-rules ()
-    [(_ conj+) succeed]
-    [(_ conj+ g) (Zzz g)]
-    [(_ conj+ g ...) (conj+ g ...)]))
-(define-syntax-rule (all  g ...) (all-aux conj+  g ...))
-(define-syntax-rule (alli g ...) (all-aux conji+ g ...))
+    [(_ bnd) succeed]
+    [(_ bnd g) g]
+    [(_ bnd g0 g ...)
+     (let ([g^ g0])
+       (λG (s)
+         (bnd (g^ s)
+              (all-aux bnd g ...))))]))
+(define-syntax-rule (all  g ...) (all-aux bind  g ...))
+(define-syntax-rule (alli g ...) (all-aux bindi g ...))
 
 (define-syntax-rule (if-aux disj+ g0 g1 g2) (disj+ (all g0 g1) g2))
 (define-syntax-rule (ife g0 g1 g2) (if-aux disj+  g0 g1 g2))

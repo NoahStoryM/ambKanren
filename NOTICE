@@ -11,7 +11,8 @@ copyright holders.
 
    Files:   microKanren/amb/main.rkt
             microKanren/amb/tests/programs.rktl, core.rktl
-            miniKanren/amb/trs1/base.rkt, miniKanren/amb/demo/main.rkt
+            miniKanren/amb/trs1/base.rkt, miniKanren/amb/trs1/main.rkt
+            miniKanren/amb/demo/main.rkt
 
    Source:  https://github.com/jasonhemann/microKanren
             (microKanren.scm, miniKanren-wrappers.scm,
@@ -32,7 +33,7 @@ copyright holders.
    of vectors, and literals compared with equal? instead of eqv?.  The
    tests in microKanren/amb/tests/ are adapted from the test files.
 
-   In miniKanren/amb/trs1/base.rkt and miniKanren/amb/demo/main.rkt,
+   In miniKanren/amb/trs1/{base,main}.rkt and miniKanren/amb/demo/main.rkt,
    the definitions of walk, unify, the binary disj and conj, the
    Zzz-style delay, conj+ and disj+, and reification are adapted from
    microKanren, with streams replaced by amb, named variables instead of
@@ -66,6 +67,7 @@ copyright holders.
 2. The Reasoned Schemer, first edition
 
    Files:   miniKanren/amb/trs1/main.rkt
+            miniKanren/amb/trs1/tests/interface.rkt
 
    Source:  Daniel P. Friedman, William E. Byrd, and Oleg Kiselyov,
             The Reasoned Schemer, MIT Press, 2005, appendix A
@@ -74,7 +76,8 @@ copyright holders.
    Copyright (C) 2005 Massachusetts Institute of Technology.
 
    The user-level language (run, fresh, all/alli, conde/condi/conda/
-   condu, project) follows the book, and the cond-aux and all-aux macros
+   condu) follows the book; project is kept only in the tests as an
+   exercise.  The cond-aux and all-aux macros
    keep the structure of the book's implementation.  The remaining
    definitions are rewritten on top of amb.
 

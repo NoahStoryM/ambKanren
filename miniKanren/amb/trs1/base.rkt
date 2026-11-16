@@ -3,18 +3,21 @@
 ;; The core of ambKanren: substitutions, unification, and goal
 ;; combinators built on amb.
 ;;
-;; walk, unify, disj/conj, Zzz-style delay, and reification are adapted
+;; walk, unify, and reification are adapted
 ;; from microKanren, Copyright (C) 2013 Jason Hemann and Daniel P.
 ;; Friedman, MIT License (https://github.com/jasonhemann/microKanren);
 ;; streams are replaced by amb.  See NOTICE.
 
 (require "private/types.rkt"
          (except-in racket/match ==)
-         typed/amb typed/amb/merge)
+         typed/amb)
 
 (provide sequence->amb
          (all-from-out "private/types.rkt")
-         (all-defined-out))
+         empty-s size-s ext-s
+         walk walk* == unify occurs?
+         reify-name reify-s reify
+         fail succeed list->amb)
 
 
 (: list->amb (∀ (a) (→ (Listof a) a)))
@@ -101,35 +104,3 @@
 (: succeed Goal)
 (define (fail _) (amb-fail))
 (define (succeed s) s)
-
-(: disj (→ Goal * Goal))
-(define (disj . gs)
-  (λ (s)
-    ((parameterize ([current-amb-merger amb-append]) (sequence->amb gs)) s)))
-
-(: conj (→ Goal * Goal))
-(define (conj . gs)
-  (cond
-    [(null? gs) succeed]
-    [(null? (cdr gs)) (car gs)]
-    [else
-     (define first (car gs))
-     (define rest (apply conj (cdr gs)))
-     (λ (s) (rest (parameterize ([current-amb-merger amb-append])
-                   (amb-local* (λ () (first s))))))]))
-
-(: disji (→ Goal * Goal))
-(define (disji . gs)
-  (λ (s)
-    ((parameterize ([current-amb-merger amb-alternate]) (sequence->amb gs)) s)))
-
-(: conji (→ Goal * Goal))
-(define (conji . gs)
-  (cond
-    [(null? gs) succeed]
-    [(null? (cdr gs)) (car gs)]
-    [else
-     (define first (car gs))
-     (define rest (apply conji (cdr gs)))
-     (λ (s) (rest (parameterize ([current-amb-merger amb-alternate])
-                   (amb-local* (λ () (first s))))))]))
