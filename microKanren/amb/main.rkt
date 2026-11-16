@@ -52,10 +52,10 @@
 
 (: == (→ Term Term Goal))
 (define ((== u v) s/c)
-  (let ([s (unify u v (car s/c))])
-    (if s (cons s (cdr s/c)) (amb-fail))))
+  (cons (unify u v (car s/c)) (cdr s/c)))
 
-(: unify (→ Term Term Substitution (Option Substitution)))
+;; Fails with amb-fail where microKanren returns #f.
+(: unify (→ Term Term Substitution Substitution))
 (define (unify u v s)
   (let ([u (walk u s)] [v (walk v s)])
     (cond
@@ -63,9 +63,9 @@
       [(var? u) (ext-s u v s)]
       [(var? v) (ext-s v u s)]
       [(and (pair? u) (pair? v))
-       (let ([s (unify (car u) (car v) s)])
-         (and s (unify (cdr u) (cdr v) s)))]
-      [else (and (equal? u v) s)])))
+       (unify (cdr u) (cdr v) (unify (car u) (car v) s))]
+      [(equal? u v) s]
+      [else (amb-fail)])))
 
 (: call/fresh (→ (→ Var Goal) Goal))
 (define ((call/fresh f) s/c)
