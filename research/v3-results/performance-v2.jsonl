@@ -1,2 +1,0 @@
-{"edition": "trs1", "sample": 0, "exit": 0, "wall_seconds": 23.33211018199995, "stdout": "Test code in chapter 1\nTest code in chapter 2\nTest code in chapter 3\nTest code in chapter 4\nTest code in chapter 5\nTest code in chapter 6\nTest code in chapter 7\nTest code in chapter 8\nTest code in chapter 10\nTIMING (22489 22575 3803)\n", "stderr": ""}
-{"edition": "trs2", "sample": 0, "timeout_seconds": 180}
