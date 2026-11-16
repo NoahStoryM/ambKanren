@@ -62,8 +62,10 @@ sequence of answers.  Conjunction binds locally, as the books do, so
 with ~amb-interleave~ the second edition gives the answers of the book
 in the book's order.  TRS1 uses ~amb-append~ for its depth-first forms
 and ~amb-alternate~ for its interleaving forms.  Failure is ~amb-fail~.
-The differences in answer order under other mergers, and the measured
-times, are recorded in ~MIGRATION-V3.md~.
+The differences in answer order under other mergers, the measured
+times, and the scripts that produced them are kept on the
+[[https://github.com/NoahStoryM/ambKanren/tree/archive/v3-research][archive/v3-research]]
+branch.
 
 * License
 The original work in this package is distributed under the MIT License;

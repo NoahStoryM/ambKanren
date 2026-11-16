@@ -56,7 +56,7 @@ edition (Friedman, Byrd, Kiselyov, and Hemann, MIT Press, 2018).}
 The compiled book tests were run with ambKanren and the stream-based
 implementation in miniKanren-typed, using the same association-list
 substitutions, ground-data shortcut and non-search definitions.
-The first edition now includes chapters 1--10 (254 checks); the second
+The first edition includes chapters 1--10 (254 checks); the second
 includes chapters 1--9 and arithmetic (285 checks).  Both use the same
 source test files and exact assertions, with no answer-order exceptions.
 
@@ -102,4 +102,4 @@ capturing or restoring continuations.
 
 Raw samples, real and GC times, source hashes, reproduction commands
 and the complete source comparison are in
-@hyperlink["https://github.com/NoahStoryM/ambKanren/tree/master/research/v3-results/alignment-20261116"]{the alignment measurement report}.
+@hyperlink["https://github.com/NoahStoryM/ambKanren/tree/archive/v3-research/research/v3-results/alignment-20261116"]{the alignment measurement report}.
