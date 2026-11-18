@@ -58,3 +58,7 @@
 (check-equal? built '(first rest))
 (check-equal? (g empty-s) empty-s)
 (check-equal? built '(first rest rest))
+
+(test-case "fresh with no variables delays its goals"
+  (check-equal? (run* (q) fail (fresh () (error 'early "forced"))) '())
+  (check-equal? (run* (q) (fresh () (== q 'answer))) '(answer)))

@@ -52,16 +52,19 @@ merger explicitly:
 
 @subsection[#:tag "trs2-order"]{Order of Answers}
 
-With @racket[amb-interleave], all 285 examples of the book that the
-tests cover give the same answers, in the same order.
+With @racket[amb-interleave] and the default shuffler, all 285
+examples of the book that the tests cover give the same answers in
+the same order.
 
 This depends on @racket[conj2].  Like @mk2[append-map-inf], it searches
 @racket[g1] locally and continues with @racket[g2] from each answer,
 so the runs of @racket[g2] are interleaved in the order of the answers
 of @racket[g1], with the pauses of @racket[g1] in between.  Plain
-function composition, @racket[(g2 (g1 s))], gives the same answers but
-runs @racket[g2] inside the choices of @racket[g1], so the runs are
-interleaved following the shape of those choices.  With composition,
+function composition, @racket[(g2 (g1 s))], runs @racket[g2] inside
+the choices of @racket[g1], so the runs are interleaved following the
+shape of those choices.  When both versions completely enumerate a
+pure search without pruning, they produce the same answers in
+possibly different orders.  With composition,
 @racket[(conj2 (disj2 a b) g)] is
 @racket[(disj2 (conj2 a g) (conj2 b g))], order included, whereas the
 book's bind keeps the answers of @racket[(disj2 a b)] together; two

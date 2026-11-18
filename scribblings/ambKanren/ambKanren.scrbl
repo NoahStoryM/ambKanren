@@ -23,11 +23,13 @@ calls @racket[(amb-fail)].  @racket[run] collects the answers with
 The search strategy is the
 merger of @racket[amb], the value of
 @racketidfont{current-amb-merger}.  The default merger,
-@racketidfont{amb-append}, is depth-first.  microKanren and the second
-edition pause at every relation call, as the books suspend there, so
-their recursive programs need @racketidfont{amb-interleave}, the
-interleaving of the books.  The first edition does not pause: its
-interleaving forms choose their own merger.
+@racketidfont{amb-append}, is depth-first.  In microKanren,
+@racketidfont{Zzz} and the forms that use it pause before running a
+goal.  In the second edition, @racketidfont{defrel} pauses at each call
+to the relation.  Use @racketidfont{amb-interleave} to give another
+branch a turn at these pauses when an infinite branch would otherwise
+keep it from producing an answer.  The first edition's interleaving
+forms choose their own merger and interleave at answers.
 
 The package provides one module for each language it implements:
 

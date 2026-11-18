@@ -62,11 +62,10 @@
 (define-syntax-rule (λG (x) body ...) (ann (λ (x) body ...) Goal))
 (define-syntax-rule (Zzz g) (λG (s) (g s)))
 
-(define-syntax fresh
-  (syntax-rules ()
-    [(_ () g ...) (all g ...)]
-    [(_ (x ...) g ...)
-     (Zzz (let ([x (var 'x)] ...) (all g ...)))]))
+(define-syntax-rule (fresh (x ...) g ...)
+  (λG (s)
+    (let ([x (var 'x)] ...)
+      ((all g ...) s))))
 
 (define-syntax-rule (disj+  g ...) (disj  (Zzz g) ...))
 (define-syntax-rule (disji+ g ...) (disji (Zzz g) ...))
