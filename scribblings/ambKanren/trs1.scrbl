@@ -39,14 +39,16 @@ The differences from the book are:
 
 @itemlist[
 
-@item{There is no stream type.  @racket[ext-s] performs the occurs
-check, and fails with @racket[(amb-fail)].}
+@item{Goals use @racket[amb] in place of streams.  Unification through
+@racket[==] uses the occurs check, as in @tt{miniKanren-typed}, and
+fails with @racket[(amb-fail)].}
 
 @item{@racket[conde] is depth-first, as in the first edition, and
 uses @racket[amb-append].  The interleaving forms @racket[condi] and
-@racket[alli] follow @mk1[mplusi] and @mk1[bindi] of the first edition,
-but are written with @racket[amb] (see @secref["trs1-interleaving"]);
-they give the answers in the order of the book.}
+@racket[alli] follow @mk1[mplusi] and @mk1[bindi] of the first edition
+(see @secref["trs1-interleaving"]).  With the default shuffler, the
+book examples covered by the tests give the same answers in the same
+order.}
 
 ]
 
@@ -140,8 +142,9 @@ with @racket[v], and fails if they do not unify.  (Chapter 1.)
 
 @defform[(fresh (x ...) goal ...)]{
 Binds each @racket[x] to a new variable and behaves as
-@racket[(all goal ...)].  The variables are created each time the goal
-is applied.  (Chapter 1.)
+@racket[(all goal ...)].  Each application creates the variables
+before running the conjunction.  The form with no variables also
+delays the conjunction until application.  (Chapter 1.)
 }
 
 @defform[(λG (s) body ...+)]{
@@ -183,14 +186,17 @@ the clauses depth-first; @racket[condi] interleaves their answers.
 
 @deftogether[(@defform[(conda clause ...)]
               @defform[(condu clause ...)])]{
-Committed choice: the first goal of each clause is a test, and the
-first clause whose test succeeds is the only one used.  @racket[conda]
-continues with every answer of the test, @racket[condu] with its first
-answer only.  (Chapter 10.)
+Committed choice.  The first goal of each non-final clause is a
+test.  Once a test succeeds, that clause is the only one used.
+@racket[conda] continues with every answer of the test and
+@racket[condu] continues with its first answer.  If no earlier test
+succeeds, the final clause runs as an ordinary @racket[all],
+including when it is the only clause.  (Chapter 10.)
 
 @ak-examples[
 (run* (q) (conda [(conde [(== q 1)] [(== q 2)])] [(== q 3)]))
 (run* (q) (condu [(conde [(== q 1)] [(== q 2)])] [(== q 3)]))
+(run* (q) (condu [(conde [(== q 1)] [(== q 2)])]))
 ]
 }
 
@@ -201,11 +207,12 @@ answer only.  (Chapter 10.)
               @defform[(cond-aux ifer clause ...)]
               @defform[(all-aux bnd goal ...)])]{
 The building blocks of the forms above, with the structure of the
-first edition's implementation: @racket[cond-aux] turns each clause
-into @racket[(ifer test (all goal ...) rest)], and @racket[all-aux]
-has the same definition as in @tt{miniKanren-typed}: its empty case is
-@racket[succeed], its single-goal case is that goal unchanged, and its
-recursive case applies @racket[(bnd (g^ s) (all-aux bnd goal ...))].
+first edition's implementation.  @racket[cond-aux] turns each
+non-final clause into @racket[(ifer test (all goal ...) rest)] and
+the final clause into @racket[all].  @racket[all-aux] follows
+@tt{miniKanren-typed}: its empty case is @racket[succeed], its
+single-goal case is that goal unchanged, and its recursive case
+applies @racket[(bnd (g^ s) (all-aux bnd goal ...))].
 The private binding forms used by @racket[all] and @racket[alli]
 capture the first argument in a local @racket[amb] search; they are
 not exported stream-binding functions.  @racket[ifa] and
@@ -218,10 +225,9 @@ whether it has an answer before they commit.
 
 @racket[condi] chooses clauses with @racket[amb-alternate], which
 passes the turn at every answer.  @racket[alli] binds the answers of
-each goal through a local search (@racket[amb-local*]) under the same
-merger before continuing.  These forms take the place of the
-stream-based @mk1[mplusi] and @mk1[bindi]; this module does not provide
-those stream operations.
+each non-final goal through a local search (@racket[amb-local])
+under the same merger and continues from each answer.  These forms
+take the place of the stream-based @mk1[mplusi] and @mk1[bindi].
 
 In the example below, @racket[counto] has an answer for every length,
 and the answers with @racket['R] are still reached:

@@ -46,9 +46,10 @@ Reasoned Schemer/.
 * Search scheduling in v3
 The search strategy is the merger of amb, ~current-amb-merger~; the
 v2 parameters ~current-amb-depth-first?~ and ~current-amb-fair?~, and
-~#:empty-handler~, are gone.  microKanren and TRS2 pause at every
-relation call, so their recursive searches need a fair merger,
-selected explicitly:
+~#:empty-handler~, are gone.  In microKanren, ~Zzz~ and the forms
+that use it pause before running a goal.  In TRS2, ~defrel~ pauses at
+each call to the relation.  If an infinite branch can keep another
+branch from giving an answer, select a fair merger explicitly.
 
 #+begin_src racket
 (require typed/amb typed/amb/merge)
@@ -58,10 +59,10 @@ selected explicitly:
 
 ~run~ reads ~amb-generate*~ directly.  Committed choice passes on the
 pauses while it looks for the first answer, instead of hiding them in a
-sequence of answers.  Conjunction binds locally, as the books do, so
-with ~amb-interleave~ the second edition gives the answers of the book
-in the book's order.  TRS1 uses ~amb-append~ for its depth-first forms
-and ~amb-alternate~ for its interleaving forms.  Failure is ~amb-fail~.
+sequence of answers.  With ~amb-interleave~ and the default shuffler,
+TRS2 matches the answers and order of the book examples covered by
+the tests.  TRS1 uses ~amb-append~ for its depth-first forms and
+~amb-alternate~ for its interleaving forms.  Failure is ~amb-fail~.
 The differences in answer order under other mergers, the measured
 times, and the scripts that produced them are kept on the
 [[https://github.com/NoahStoryM/ambKanren/tree/archive/v3-research][archive/v3-research]]

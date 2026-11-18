@@ -12,6 +12,7 @@
     ["typed-amb" #:version "3.0"]))
 (define build-deps
   '("at-exp-lib"
+    "rackunit-lib"
     "rackunit-typed"
     ["miniKanren-typed" #:version "1.1"]
     "scribble-lib"

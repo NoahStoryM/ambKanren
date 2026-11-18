@@ -29,11 +29,10 @@ only manipulate streams are gone.
 @section[#:tag "microKanren-streams"]{From Streams to amb}
 
 In microKanren, a goal returns a stream of states: all its answers,
-produced lazily.  The stream type is a monad, and the connectives are
-its operations.  With @racket[amb], nondeterminism is an effect of
-evaluation rather than a value, so it disappears from the type of
-goals.  A goal returns a single state, chooses among its answers with
-@racket[amb], and fails by calling @racket[(amb-fail)].
+produced lazily.  Conjunction uses stream bind to run one goal on
+each answer of another.  With @racket[amb], a goal has a single state
+as its return type, chooses among its answers with @racket[amb], and
+fails by calling @racket[(amb-fail)].
 
 @tabular[#:style 'boxed
          #:sep @hspace[2]
@@ -51,12 +50,12 @@ goals.  A goal returns a single state, chooses among its answers with
 
 Success returns the state unchanged, disjunction is a choice made by
 @racket[amb], and conjunction runs @racket[g2] on each answer of a
-local search of @racket[g1].  The monadic structure has not gone away:
-it lives in the continuation captured by @racket[amb], and
-@racket[amb-generate*] turns that control effect back into a generator
-of answers and pauses.  @racket[amb-local] does this for @racket[g1]
-alone and makes its answers one choice again, which is what
-@mk0[bind] does with the stream of @racket[g1].
+local search of @racket[g1].  @racket[amb-generate*] provides a
+generator of answers and pauses.  @racket[amb-local] generates the
+events of @racket[g1] on demand, supplying each answer as an
+alternative of one choice that continues in @racket[g2].  This
+implements the same scheduling as @mk0[bind] with the stream of
+@racket[g1] under @racket[amb-interleave] and the default shuffler.
 
 The definitions that remain are those of
 @racketmodname[typed/microKanren], with these changes:
@@ -81,7 +80,9 @@ test.}
 @subsection[#:tag "microKanren-order"]{Suspension and the Order of Answers}
 
 In microKanren, @mk0[Zzz] creates a suspended stream.  Here it calls
-@racket[amb-pause] before the goal.  The default merger of amb,
+@racket[amb-pause] before the goal.  The wrapper forms that use
+@racket[Zzz] inherit this pause.  Calling a goal directly adds no
+pause of its own.  The default merger of amb,
 @racket[amb-append], does not pass the turn at a pause, so the
 examples select @racket[amb-interleave] explicitly.
 
@@ -91,21 +92,33 @@ examples select @racket[amb-interleave] explicitly.
 (run 1 (x) (disj+ (relo '(5 . 6)) (== x 3)))
 ]
 
-With @racket[amb-interleave], the answers come in the order of the
-stream-based implementation.  This is why conjunction is a local
-search rather than plain function composition,
-@racket[(g2 (g1 s/c))].
-
-Composition gives the same answers, but in another order.  It runs
-@racket[g2] inside the choices of @racket[g1], so the merger
+With @racket[amb-interleave] and the default shuffler, conjunction
+uses a local search to follow the answer order of the stream-based
+implementation.  Plain function composition, @racket[(g2 (g1 s/c))],
+runs @racket[g2] inside the choices of @racket[g1], so the merger
 interleaves the runs of @racket[g2] following the shape of those
 choices.  @mk0[bind] interleaves them in the order of the answers of
-@racket[g1], with the pauses of @racket[g1] in between.  With
-composition, @racket[(conj (disj a b) g)] is
-@racket[(disj (conj a g) (conj b g))], order included, whereas
-@mk0[bind] keeps the answers of @racket[(disj a b)] together; several
-examples tell the two apart.  The price of the local search is one
-more search per conjunction.
+@racket[g1], with the pauses of @racket[g1] in between.  When both
+versions completely enumerate a pure search without pruning, they
+produce the same answers in possibly different orders.  A bounded
+@racket[run] observes the difference.
+
+Stream bind and @racket[conj] can both change the order of answers
+when conjunctions are regrouped.  Conjunction is therefore not
+associative under equality of ordered answers.
+
+@mk-examples[
+(: association-query (→ Boolean (Listof Term)))
+(define (association-query left?)
+  (run 2 (q x y z)
+    (== q (list x y z))
+    (let ([a (disj (== x 'a) (== x 'b))]
+          [b (disj (== y 'l) (== y 'r))]
+          [c (disj (== z 'u) (Zzz (== z 'v)))])
+      (if left? (conj (conj a b) c) (conj a (conj b c))))))
+(association-query #t)
+(association-query #f)
+]
 
 @section[#:tag "microKanren-types"]{Types}
 
@@ -174,9 +187,10 @@ search of @racket[g1] returns, as @racket[(g2 (amb-local (g1 s/c)))].
               @defproc[(ext-s [x Var] [v Term] [s Substitution]) Substitution]
               @defproc[(unify [u Term] [v Term] [s Substitution]) Substitution])]{
 Walking, extending a substitution, and unification.  There is no
-occurs check.  When @racket[u] and @racket[v] cannot be unified,
-@racket[unify] calls @racket[(amb-fail)] instead of returning
-@racket[#f], so it can only be called within a search, as goals are.
+occurs check.  @racket[unify] returns the resulting substitution on
+success.  When @racket[u] and @racket[v] cannot be unified,
+@racket[unify] calls @racket[(amb-fail)].  Call it within a search to
+handle that case as search failure.
 }
 
 @section[#:tag "microKanren-wrappers"]{User-Level Forms}
