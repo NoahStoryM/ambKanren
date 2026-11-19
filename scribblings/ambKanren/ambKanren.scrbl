@@ -55,9 +55,10 @@ edition (Friedman, Byrd, Kiselyov, and Hemann, MIT Press, 2018).}
 
 @section[#:tag "performance"]{Performance}
 
-The compiled book tests were run with ambKanren and the stream-based
-implementation in miniKanren-typed, using the same association-list
-substitutions, ground-data shortcut and non-search definitions.
+On November 20, 2026, ambKanren @tt{136b9a8} with amb @tt{88ed8cb} was
+compared with the stream-based implementation in miniKanren-typed
+@tt{c197a5c}.  Both use the same association-list substitutions,
+ground-data shortcut and non-search definitions.
 The first edition includes chapters 1--10 (254 checks); the second
 includes chapters 1--9 and arithmetic (285 checks).  Both use the same
 source test files and exact assertions, with no answer-order exceptions.
@@ -65,26 +66,25 @@ source test files and exact assertions, with no answer-order exceptions.
 Each implementation was run three times in a fresh process, strictly
 alternating streams and amb within each edition.  The CPU table shows
 the median (minimum--maximum) in seconds; the allocation table shows
-rounded medians of cumulative allocated GB (10^9 bytes, not peak
-memory).  Exact allocation values and ranges are in the report linked
-below.  The ratio is amb's CPU median divided by the stream
-implementation's median.
+rounded medians of cumulative allocations in decimal GB (10^9 bytes).
+The ratio is amb's CPU median divided by the stream implementation's
+median.
 
 @tabular[#:style 'boxed
          #:sep @hspace[2]
          #:row-properties '(bottom-border ())
          #:column-properties '(left right right right)
 (list (list @bold{edition} @bold{streams: CPU s} @bold{amb: CPU s} @bold{ratio})
-      (list "TRS1" "27.95 (26.98–29.29)" "54.01 (53.31–62.94)" "1.93")
-      (list "TRS2" "22.12 (20.43–22.81)" "31.44 (29.22–33.95)" "1.42"))]
+      (list "TRS1" "16.22 (15.81–16.77)" "28.84 (28.26–31.28)" "1.78")
+      (list "TRS2" "14.07 (13.10–15.01)" "18.90 (17.88–19.76)" "1.34"))]
 
 @tabular[#:style 'boxed
          #:sep @hspace[2]
          #:row-properties '(bottom-border ())
          #:column-properties '(left right right)
 (list (list @bold{edition} @bold{streams: allocated GB} @bold{amb: allocated GB})
-      (list "TRS1" "2.7" "26.8")
-      (list "TRS2" "6.1" "19.4"))]
+      (list "TRS1" "2.72" "26.72")
+      (list "TRS2" "6.10" "19.39"))]
 
 These measurements used Racket 9.3 CS on Linux x86-64, an Intel Xeon
 Platinum 8573C container with nine visible CPUs (affinity 0--8).
@@ -102,6 +102,6 @@ The larger allocation is consistent with that mechanism, but this
 whole-module measurement does not isolate how much CPU time is spent
 capturing or restoring continuations.
 
-Raw samples, real and GC times, source hashes, reproduction commands
-and the complete source comparison are in
-@hyperlink["https://github.com/NoahStoryM/ambKanren/tree/archive/v3-research/research/v3-results/alignment-20261116"]{the alignment measurement report}.
+The
+@hyperlink["https://github.com/NoahStoryM/ambKanren/tree/archive/v3-research/research/v3-results/alignment-20261116"]{earlier alignment report}
+describes the source comparison and how to run the benchmark.
