@@ -55,10 +55,9 @@ edition (Friedman, Byrd, Kiselyov, and Hemann, MIT Press, 2018).}
 
 @section[#:tag "performance"]{Performance}
 
-On November 20, 2026, ambKanren @tt{136b9a8} with amb @tt{88ed8cb} was
-compared with the stream-based implementation in miniKanren-typed
-@tt{c197a5c}.  Both use the same association-list substitutions,
-ground-data shortcut and non-search definitions.
+The compiled book tests were run with ambKanren and the stream-based
+implementation in miniKanren-typed, using the same association-list
+substitutions, ground-data shortcut and non-search definitions.
 The first edition includes chapters 1--10 (254 checks); the second
 includes chapters 1--9 and arithmetic (285 checks).  Both use the same
 source test files and exact assertions, with no answer-order exceptions.
@@ -102,7 +101,5 @@ The larger allocation is consistent with that mechanism, but this
 whole-module measurement does not isolate how much CPU time is spent
 capturing or restoring continuations.
 
-The @hyperlink["https://github.com/NoahStoryM/ambKanren/pull/28"]{November 20 measurement record}
-lists every sample.  The
-@hyperlink["https://github.com/NoahStoryM/ambKanren/tree/archive/v3-research/research/v3-results/alignment-20261116"]{earlier alignment report}
-describes the source comparison and how to run the benchmark.
+The @hyperlink["https://github.com/NoahStoryM/ambKanren/pull/28"]{measurement record}
+lists the raw samples and links to the benchmark instructions.
