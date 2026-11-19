@@ -102,6 +102,7 @@ The larger allocation is consistent with that mechanism, but this
 whole-module measurement does not isolate how much CPU time is spent
 capturing or restoring continuations.
 
-The
+The @hyperlink["https://github.com/NoahStoryM/ambKanren/pull/28"]{November 20 measurement record}
+lists every sample.  The
 @hyperlink["https://github.com/NoahStoryM/ambKanren/tree/archive/v3-research/research/v3-results/alignment-20261116"]{earlier alignment report}
 describes the source comparison and how to run the benchmark.
