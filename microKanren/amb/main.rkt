@@ -82,13 +82,10 @@
 
 ;;; User-level forms (miniKanren-wrappers.scm)
 
-(: suspend (→ Void))
-(define suspend amb-pause)
-
 ;; Inverse-η-delay: suspends before running the goal, so that a
 ;; recursive relation gives the other choices a turn instead of looping.
 (define-syntax-rule (Zzz g)
-  (λ ([s/c : State]) (suspend) (g s/c)))
+  (λ ([s/c : State]) (amb-pause) (g s/c)))
 
 (define-syntax conj+
   (syntax-rules ()
