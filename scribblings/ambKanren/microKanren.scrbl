@@ -45,7 +45,7 @@ fails by calling @racket[(amb-fail)].
       (list "failure" @mk0[mzero] @racket[(amb-fail)])
       (list @racket[disj] @mk0[(mplus (g1 s/c) (g2 s/c))] @racket[((amb g1 g2) s/c)])
       (list @racket[conj] @mk0[(bind (g1 s/c) g2)] @racket[(g2 (amb-local (g1 s/c)))])
-      (list @racket[Zzz] @mk0[(λ (s/c) (λ () (g s/c)))] @racket[(λ (s/c) (suspend) (g s/c))])
+      (list @racket[Zzz] @mk0[(λ (s/c) (λ () (g s/c)))] @racket[(λ (s/c) (amb-pause) (g s/c))])
       (list @racket[take] @elem{force and collect the stream @mk0[(g empty-state)]} @elem{advance @racket[amb-generate*] until enough answers arrive}))]
 
 Success returns the state unchanged, disjunction is a choice made by
@@ -73,7 +73,7 @@ the nondeterministic computation, instead of a stream, and
 @racket[#f], so it returns a substitution, and @racket[==] needs no
 test.}
 
-@item{@racket[Zzz] calls @racket[suspend] (see below).}
+@item{@racket[Zzz] calls @racket[amb-pause] (see below).}
 
 ]
 
@@ -197,16 +197,8 @@ handle that case as search failure.
 
 These are the forms of @tt{miniKanren-wrappers.scm}.
 
-@defproc[(suspend) Void]{
-One logical pause, implemented by @racket[amb-pause].  The merger of
-the enclosing choice decides whether another alternative gets the
-turn: @racket[amb-interleave] passes it at each pause,
-@racket[amb-alternate] at answers too, and @racket[amb-level] runs in
-rounds; @racket[amb-append] keeps the turn.
-}
-
 @defform[(Zzz goal)]{
-The inverse-η-delay: a goal that calls @racket[suspend] before running
+The inverse-η-delay: a goal that calls @racket[amb-pause] before running
 @racket[goal], so that a recursive relation gives the other
 alternatives a turn instead of looping.
 }

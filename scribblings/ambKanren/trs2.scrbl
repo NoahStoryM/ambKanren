@@ -37,7 +37,7 @@ edition.  What changes is the representation of goals:
       (list "goal" @mk2[(→ Substitution (Streamof Substitution))] @racket[(→ Substitution Substitution)])
       (list @racket[disj2] @mk2[append-inf] @elem{a choice made by @racket[amb]})
       (list @racket[conj2] @mk2[append-map-inf] @elem{a local search: @racket[(g2 (amb-local (g1 s)))]})
-      (list "suspension" @elem{an immature stream, @mk2[(λ () ...)]} @elem{@racket[suspend]: one logical pause}))]
+      (list "suspension" @elem{an immature stream, @mk2[(λ () ...)]} @elem{@racket[amb-pause]: one logical pause}))]
 
 The second edition suspends every relation call.  Here
 @racket[defrel] calls @racket[amb-pause] instead.  When
@@ -146,18 +146,10 @@ Success, failure, and unification with the occurs check.  (Chapter 1.)
          (defrel (name arg ...) goal ...)
          #:grammar ([arg x [x : type]])]{
 Defines @racket[name] as a relation whose result is a @racket[Goal]
-that calls @racket[suspend] before running the conjunction of the
+that calls @racket[amb-pause] before running the conjunction of the
 @racket[goal]s.  A plain argument @racket[x] has type @racket[Term];
 an argument written as @racket[[x : type]] has the given type.
 (Chapter 1.)
-}
-
-@defproc[(suspend) Void]{
-One logical pause, implemented by @racket[amb-pause].  The merger of
-the enclosing choice decides whether another alternative gets the
-turn: @racket[amb-interleave] passes it at each pause,
-@racket[amb-alternate] at answers too, and @racket[amb-level] runs in
-rounds; @racket[amb-append] keeps the turn.
 }
 
 @deftogether[(@defform[(fresh (x ...) goal ...)]

@@ -68,10 +68,7 @@
       [(var? v) (ext-s v w s)]
       [(var? w) (ext-s w v s)]
       [(and (pair? v) (pair? w))
-       (cond
-         [(unify (car v) (car w) s)
-          => (λ (s) (unify (cdr v) (cdr w) s))]
-         [else (amb-fail)])]
+       (unify (cdr v) (cdr w) (unify (car v) (car w) s))]
       [(equal? v w) s]
       [else (amb-fail)])))
 
