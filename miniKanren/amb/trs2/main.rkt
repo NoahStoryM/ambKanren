@@ -99,9 +99,6 @@
 (: conj2 (→ Goal Goal Goal))
 (define ((conj2 g1 g2) s) (g2 (amb-local (g1 s))))
 
-(: suspend (→ Void))
-(define suspend amb-pause)
-
 (: call/fresh (→ Symbol (→ Var Goal) Goal))
 (define (call/fresh name f)
   (f (var name)))
@@ -181,7 +178,7 @@
          [[x:id : t] arg]))
      #'(define (name param ...) : Goal
          (λ (s)
-           (suspend)
+           (amb-pause)
            ((conj g ...) s)))]))
 
 (define-syntax run
