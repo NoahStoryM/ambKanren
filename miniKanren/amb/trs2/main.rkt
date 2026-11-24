@@ -71,8 +71,7 @@
       [(var? u) (ext-s u v s)]
       [(var? v) (ext-s v u s)]
       [(and (pair? u) (pair? v))
-       (let ([s (unify (car u) (car v) s)])
-         (and s (unify (cdr u) (cdr v) s)))]
+       (unify (cdr u) (cdr v) (unify (car u) (car v) s))]
       [(equal? u v) s]
       [else (amb-fail)])))
 
@@ -99,6 +98,9 @@
 ;; (append-map-inf), not in the shape of the choices inside g1.
 (: conj2 (→ Goal Goal Goal))
 (define ((conj2 g1 g2) s) (g2 (amb-local (g1 s))))
+
+(: suspend (→ Void))
+(define suspend amb-pause)
 
 (: call/fresh (→ Symbol (→ Var Goal) Goal))
 (define (call/fresh name f)
@@ -179,7 +181,7 @@
          [[x:id : t] arg]))
      #'(define (name param ...) : Goal
          (λ (s)
-           (amb-pause)
+           (suspend)
            ((conj g ...) s)))]))
 
 (define-syntax run
