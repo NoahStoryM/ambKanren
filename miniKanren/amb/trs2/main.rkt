@@ -57,7 +57,7 @@
 (define (occurs? x v s)
   (let ([v (walk v s)])
     (cond
-      [(var? v) (eq? v x)]
+      [(var? v) (eqv? v x)]
       [(pair? v)
        (or (occurs? x (car v) s)
            (occurs? x (cdr v) s))]
@@ -67,7 +67,7 @@
 (define (unify u v s)
   (let ([u (walk u s)] [v (walk v s)])
     (cond
-      [(eq? u v) s]
+      [(eqv? u v) s]
       [(var? u) (ext-s u v s)]
       [(var? v) (ext-s v u s)]
       [(and (pair? u) (pair? v))
